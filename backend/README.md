@@ -63,6 +63,46 @@ Autentificare prin header `Authorization: Bearer <token>`.
 | `POST` | `/api/groups/join` | intră cu `{ inviteCode }` |
 | `GET` | `/api/groups` | grupurile mele |
 | `GET` | `/api/groups/:id/leaderboard` | clasament de grup după ROI |
+| `GET` | `/api/groups/:id/members` | membri cu email mascat |
+
+### Etapa 2 — social
+
+| Metodă | Rută | Descriere |
+| --- | --- | --- |
+| `GET` | `/api/groups/:id/feed` | feed de activitate (paginat) |
+| `POST` | `/api/events/:id/reactions` | comută o reacție `{ emoji }` |
+| `GET` / `POST` | `/api/events/:id/comments` | listează / adaugă comentariu |
+
+### Etapa 3 — timp real
+
+WebSocket la `/ws?token=<JWT>`; mesaje client: `{ action: 'subscribe', groupId }`.
+Server emite `NEW_ACTIVITY`, `PRICE_UPDATE`, `PRICE_JUMP`, `NOTIFICATION`.
+
+| Metodă | Rută | Descriere |
+| --- | --- | --- |
+| `POST` | `/api/push/register` | înregistrează token Expo `{ token }` |
+| `POST` | `/api/market/tick` | avansează prețurile (dev/demo) |
+| `GET` | `/api/market/prices` | prețuri curente |
+
+### Etapa 4 — provocări & gamificare
+
+| Metodă | Rută | Descriere |
+| --- | --- | --- |
+| `POST` / `GET` | `/api/groups/:id/tournaments` | creează / listează turnee |
+| `POST` | `/api/tournaments/:id/join` | înscriere în turneu |
+| `GET` | `/api/tournaments/:id/leaderboard` | clasament turneu (ROI în fereastră) |
+| `GET` | `/api/groups/:id/leaderboard/sharpe` | clasament ajustat la risc (Sharpe) |
+| `GET` | `/api/me/badges` | insignele mele + catalog |
+
+### Etapa 5 — educativ
+
+| Metodă | Rută | Descriere |
+| --- | --- | --- |
+| `GET` | `/api/academy/missions` | misiuni + progres |
+| `POST` | `/api/academy/missions/:id/complete` | marchează finalizată |
+| `GET` / `POST` | `/api/academy/quizzes/:id[/submit]` | quiz / trimite răspunsuri |
+| `POST` | `/api/academy/calculator/compound` | calculator dobândă compusă |
+| `GET` | `/api/academy/risk-score` | scor de risc al portofoliului |
 
 ## Note
 
