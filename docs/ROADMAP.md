@@ -2,38 +2,43 @@
 
 Plan de dezvoltare pe etape. Fiecare etapă livrează ceva demonstrabil.
 
+> Stare: Etapele 1–5 sunt implementate în backend (105 teste pure verzi) și validate
+> end-to-end pe PostgreSQL. Aplicația mobilă (Expo) acoperă Etapele 1–2 + academia.
+> Rămâne: OAuth Google/Apple, WebSocket/push pe client, ecrane de turnee/quiz pe mobil.
+
 ## Etapa 0 — Fundație
-- [ ] Alegere stack mobil (React Native + Expo recomandat).
-- [ ] Schelet backend (Express + TypeScript + Prisma + PostgreSQL).
-- [ ] Portează modulele pure din „Portofoliu Virtual" (lib/portfolio, priceSim,
-      orders, dividends, leaderboard, paginate, academy) + testele lor.
-- [ ] Auth: OAuth (Google/Apple) + JWT.
+- [x] Alegere stack mobil (React Native + Expo).
+- [x] Schelet backend (Express + TypeScript + Prisma + PostgreSQL).
+- [x] Module pure (lib/portfolio, priceSim, leaderboard, paginate, trading, invite,
+      social, notifications, risk, gamification, finance, academy) + teste Vitest.
+      (Rescrise din descriere — repo-ul părinte „atestat-portofoliu" nu e accesibil aici.)
+- [x] Auth cu JWT + bcrypt. (OAuth Google/Apple rămâne de adăugat.)
 
 ## Etapa 1 — MVP (portofoliu personal + grup)
-- [ ] Înregistrare/login.
-- [ ] Portofoliu personal: listă instrumente, cumpărare/vânzare, P&L, grafic.
-- [ ] Creare/intrare în grup prin cod de invitație (model Group, Membership).
-- [ ] Clasament de grup după ROI.
+- [x] Înregistrare/login.
+- [x] Portofoliu personal: listă instrumente, cumpărare/vânzare, P&L. (grafic: pe mobil rămâne)
+- [x] Creare/intrare în grup prin cod de invitație (model Group, Membership).
+- [x] Clasament de grup după ROI.
 
 ## Etapa 2 — Strat social
-- [ ] Feed de activitate (cine a cumpărat/vândut ce) — model ActivityEvent.
-- [ ] Reacții și comentarii la evenimente.
-- [ ] Profil public minimal în cadrul grupului (cu intimitate: email mascat).
+- [x] Feed de activitate (cine a cumpărat/vândut ce) — model ActivityEvent.
+- [x] Reacții și comentarii la evenimente.
+- [x] Profil public minimal în cadrul grupului (cu intimitate: email mascat).
 
 ## Etapa 3 — Timp real
-- [ ] WebSockets pentru actualizarea prețurilor și a feed-ului.
-- [ ] Notificări push (Expo Notifications): „te-a depășit X", „o acțiune a sărit".
+- [x] WebSockets pentru actualizarea prețurilor și a feed-ului (backend).
+- [x] Notificări push (Expo): „te-a depășit X", „o acțiune a sărit" (backend, best-effort).
 
 ## Etapa 4 — Provocări & gamificare
-- [ ] Turnee pe perioadă fixă (ex. lunar), clasament dedicat.
-- [ ] Reguli educative: limită de tranzacții/zi (anti-overtrading), clasament pe
-      randament ajustat la risc (Sharpe), nu doar brut.
-- [ ] Insigne și obiective.
+- [x] Turnee pe perioadă fixă, clasament dedicat (ROI în fereastră).
+- [x] Reguli educative: limită de tranzacții/zi (anti-overtrading), clasament pe
+      randament ajustat la risc (Sharpe).
+- [x] Insigne (badges) acordate automat.
 
 ## Etapa 5 — Educativ (din atestat)
-- [ ] „Academie cu misiuni" adaptată la mobil.
-- [ ] Quiz-uri contextuale și tooltips.
-- [ ] Calculator de dobândă compusă, risk score.
+- [x] „Academie cu misiuni" (backend + ecran mobil).
+- [x] Quiz-uri contextuale cu explicații.
+- [x] Calculator de dobândă compusă, scor de risc.
 
 ## Idei viitoare (backlog)
 - Indice de piață sintetic + „alpha" (ai bătut piața?).
