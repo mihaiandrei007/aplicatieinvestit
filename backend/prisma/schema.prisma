@@ -1,0 +1,119 @@
+// Schema de date InvestPals.
+// Pleacă de la User / Instrument / Transaction (din „Portofoliu Virtual")
+// și adaugă stratul social: Group, Membership, ActivityEvent.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionSide {
+  BUY
+  SELL
+}
+
+enum MemberRole {
+  OWNER
+  MEMBER
+}
+
+/// Utilizator cu un singur portofoliu personal (bani virtuali).
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  /// Numerar virtual disponibil (necheltuit pe instrumente).
+  cash         Float    @default(100000)
+  /// Capitalul de start, păstrat pentru calculul ROI.
+  startingCash Float    @default(100000)
+  createdAt    DateTime @default(now())
+
+  transactions Transaction[]
+  memberships  Membership[]
+  ownedGroups  Group[]        @relation("GroupOwner")
+  activity     ActivityEvent[]
+}
+
+/// Instrument tranzacționabil (acțiune simulată).
+model Instrument {
+  id           String   @id @default(cuid())
+  symbol       String   @unique
+  name         String
+  /// Parametri pentru simulatorul determinist de preț (lib/priceSim).
+  basePrice    Float
+  currentPrice Float
+  volatility   Float    @default(0.2)
+  drift        Float    @default(0.05)
+  beta         Float    @default(1.0)
+  currency     String   @default("USD")
+  createdAt    DateTime @default(now())
+
+  transactions Transaction[]
+}
+
+/// O cumpărare sau vânzare. Holdings & P&L se derivă din istoricul tranzacțiilor.
+model Transaction {
+  id           String          @id @default(cuid())
+  userId       String
+  instrumentId String
+  side         TransactionSide
+  quantity     Float
+  /// Prețul de execuție per unitate.
+  price        Float
+  createdAt    DateTime        @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instrument Instrument @relation(fields: [instrumentId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([instrumentId])
+}
+
+/// Grup de prieteni; se intră cu un cod de invitație.
+model Group {
+  id           String   @id @default(cuid())
+  name         String
+  inviteCode   String   @unique
+  ownerId      String
+  startingCash Float    @default(100000)
+  createdAt    DateTime @default(now())
+
+  owner       User            @relation("GroupOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  memberships Membership[]
+  activity    ActivityEvent[]
+}
+
+/// Apartenența unui utilizator la un grup (many-to-many cu metadate).
+model Membership {
+  id       String     @id @default(cuid())
+  groupId  String
+  userId   String
+  role     MemberRole @default(MEMBER)
+  joinedAt DateTime   @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+}
+
+/// Eveniment din feed-ul social (Etapa 2). Definit din timp ca să nu re-migrăm.
+model ActivityEvent {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([groupId, createdAt])
+}
