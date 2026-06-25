@@ -43,6 +43,8 @@ model User {
   badges       Badge[]
   tournamentEntries TournamentEntry[]
   equitySnapshots   EquitySnapshot[]
+  academyProgress   AcademyProgress[]
+  quizAttempts      QuizAttempt[]
 }
 
 /// Token de notificare push (Expo) per dispozitiv.
@@ -221,4 +223,30 @@ model EquitySnapshot {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+/// Progresul unui utilizator în academie (o misiune finalizată o singură dată).
+model AcademyProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  missionId   String
+  completedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, missionId])
+}
+
+/// Rezultatul unei încercări de quiz.
+model QuizAttempt {
+  id        String   @id @default(cuid())
+  userId    String
+  quizId    String
+  score     Int
+  total     Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { returnsFromSeries, mean, stdDev, sharpeRatio, rankBySharpe, type SharpeParticipant } from './risk.js';
+import {
+  returnsFromSeries,
+  mean,
+  stdDev,
+  sharpeRatio,
+  rankBySharpe,
+  herfindahl,
+  portfolioRiskScore,
+  type SharpeParticipant,
+} from './risk.js';
 
 describe('returnsFromSeries', () => {
   it('calculează randamente simple', () => {
@@ -55,5 +64,28 @@ describe('rankBySharpe', () => {
 
   it('listă goală => []', () => {
     expect(rankBySharpe([])).toEqual([]);
+  });
+});
+
+describe('scor de risc', () => {
+  it('herfindahl: diversificat < concentrat', () => {
+    expect(herfindahl([0.5, 0.5])).toBeCloseTo(0.5);
+    expect(herfindahl([1])).toBeCloseTo(1);
+    expect(herfindahl([0.25, 0.25, 0.25, 0.25])).toBeCloseTo(0.25);
+  });
+
+  it('portofoliu gol => 0', () => {
+    expect(portfolioRiskScore([])).toBe(0);
+  });
+
+  it('un singur instrument volatil e mai riscant decât unul diversificat și calm', () => {
+    const risky = portfolioRiskScore([{ weight: 1, volatility: 0.6 }]);
+    const calm = portfolioRiskScore([
+      { weight: 0.5, volatility: 0.15 },
+      { weight: 0.5, volatility: 0.15 },
+    ]);
+    expect(risky).toBeGreaterThan(calm);
+    expect(risky).toBeLessThanOrEqual(100);
+    expect(calm).toBeGreaterThanOrEqual(0);
   });
 });

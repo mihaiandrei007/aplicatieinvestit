@@ -9,6 +9,7 @@ import { pushRouter } from './routes/push.js';
 import { marketRouter } from './routes/market.js';
 import { tournamentsRouter } from './routes/tournaments.js';
 import { badgesRouter } from './routes/badges.js';
+import { academyRouter } from './routes/academy.js';
 import { errorHandler } from './http/errors.js';
 
 /** Construiește aplicația Express (separat de pornirea serverului, pt. teste). */
@@ -27,6 +28,7 @@ export function createApp() {
   app.use('/api/market', marketRouter);
   app.use('/api', tournamentsRouter);
   app.use('/api', badgesRouter);
+  app.use('/api', academyRouter);
   app.use('/api', feedRouter);
 
   app.use(errorHandler);

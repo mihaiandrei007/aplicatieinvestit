@@ -59,6 +59,33 @@ export interface SharpeRankEntry {
   rank: number;
 }
 
+/** O poziție din portofoliu, pentru scorul de risc. */
+export interface RiskPosition {
+  /** Ponderea poziției în portofoliu (0..1). */
+  weight: number;
+  /** Volatilitatea instrumentului (ex. 0.3). */
+  volatility: number;
+}
+
+/** Indicele Herfindahl-Hirschman al concentrării (0 = diversificat, 1 = totul într-unul). */
+export function herfindahl(weights: readonly number[]): number {
+  return weights.reduce((s, w) => s + w * w, 0);
+}
+
+/**
+ * Scor de risc educativ 0–100: combină volatilitatea ponderată a portofoliului
+ * cu concentrarea (Herfindahl). Mai mare = mai riscant. Util pentru tooltips/educație.
+ */
+export function portfolioRiskScore(positions: readonly RiskPosition[]): number {
+  if (positions.length === 0) return 0;
+  const weightedVol = positions.reduce((s, p) => s + p.weight * p.volatility, 0);
+  const concentration = herfindahl(positions.map((p) => p.weight));
+  // 70% volatilitate (normalizată la ~0.6 vol = max), 30% concentrare.
+  const volComponent = Math.min(1, weightedVol / 0.6);
+  const raw = 0.7 * volComponent + 0.3 * concentration;
+  return Math.round(Math.min(100, raw * 100));
+}
+
 /** Clasament pe Sharpe (descrescător), cu ranguri egale la egalitate. */
 export function rankBySharpe(participants: readonly SharpeParticipant[]): SharpeRankEntry[] {
   const scored = participants.map((p) => ({
