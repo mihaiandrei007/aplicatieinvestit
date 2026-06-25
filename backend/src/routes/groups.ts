@@ -8,6 +8,7 @@ import { requireAuth, type AuthedRequest } from '../http/requireAuth.js';
 import { generateInviteCode, normalizeInviteCode, isValidInviteCode } from '../lib/invite.js';
 import { makeRng } from '../lib/priceSim.js';
 import { rankByRoi, type Participant } from '../lib/leaderboard.js';
+import { rankBySharpe, type SharpeParticipant } from '../lib/risk.js';
 import { maskEmail } from '../lib/social.js';
 import { computeEquity } from '../services/portfolioService.js';
 import { emitToGroup } from '../services/activityService.js';
@@ -155,6 +156,46 @@ groupsRouter.get(
         displayName: e.displayName,
         roi: e.roi,
         equity: e.equity,
+        isMe: e.userId === req.userId,
+      })),
+    });
+  }),
+);
+
+/** Clasament ajustat la risc (Sharpe), din instantaneele de capital. */
+groupsRouter.get(
+  '/:id/leaderboard/sharpe',
+  requireAuth,
+  asyncHandler(async (req: AuthedRequest, res) => {
+    const groupId = req.params.id!;
+    const membership = await prisma.membership.findUnique({
+      where: { groupId_userId: { groupId, userId: req.userId! } },
+      include: { group: { include: { memberships: { include: { user: true } } } } },
+    });
+    if (!membership) throw notFound('Grup inexistent sau nu ești membru.');
+
+    const participants: SharpeParticipant[] = await Promise.all(
+      membership.group.memberships.map(async (m) => {
+        const snapshots = await prisma.equitySnapshot.findMany({
+          where: { userId: m.userId },
+          orderBy: { createdAt: 'asc' },
+          select: { equity: true },
+        });
+        return {
+          userId: m.userId,
+          displayName: m.user.displayName,
+          equitySeries: snapshots.map((s) => s.equity),
+        };
+      }),
+    );
+
+    res.json({
+      group: { id: membership.group.id, name: membership.group.name },
+      leaderboard: rankBySharpe(participants).map((e) => ({
+        rank: e.rank,
+        userId: e.userId,
+        displayName: e.displayName,
+        sharpe: e.sharpe,
         isMe: e.userId === req.userId,
       })),
     });

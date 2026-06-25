@@ -61,10 +61,16 @@ async function recheckOvertakes(): Promise<void> {
     include: { memberships: { include: { user: { select: { id: true, displayName: true } } } } },
   });
 
+  const snapshotted = new Set<string>();
   for (const group of groups) {
     const participants: Participant[] = await Promise.all(
       group.memberships.map(async (m) => {
         const { equity, startingCash } = await computeEquity(m.userId);
+        // Înregistrează un instantaneu de capital o singură dată per utilizator/tick.
+        if (!snapshotted.has(m.userId)) {
+          snapshotted.add(m.userId);
+          await prisma.equitySnapshot.create({ data: { userId: m.userId, equity } });
+        }
         return { userId: m.userId, displayName: m.user.displayName, startingCash, equity };
       }),
     );

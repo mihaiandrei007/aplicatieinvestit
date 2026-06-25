@@ -5,8 +5,11 @@ import { asyncHandler, badRequest, notFound } from '../http/errors.js';
 import { requireAuth, type AuthedRequest } from '../http/requireAuth.js';
 import { executeTrade } from '../lib/trading.js';
 import { paginate } from '../lib/paginate.js';
+import { wouldExceedDailyLimit } from '../lib/gamification.js';
+import { config } from '../config.js';
 import { buildSnapshot, loadTrades } from '../services/portfolioService.js';
 import { emitToUserGroups } from '../services/activityService.js';
+import { awardBadges } from '../services/gamificationService.js';
 
 export const portfolioRouter = Router();
 
@@ -65,6 +68,18 @@ portfolioRouter.post(
     const instrument = await prisma.instrument.findUnique({ where: { symbol } });
     if (!instrument) throw notFound(`Instrumentul ${symbol} nu există.`);
 
+    // Anti-overtrading: limită de tranzacții pe zi (regulă educativă, Etapa 4).
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const tradesToday = await prisma.transaction.count({
+      where: { userId: req.userId, createdAt: { gte: startOfToday } },
+    });
+    if (wouldExceedDailyLimit(tradesToday, config.dailyTradeLimit)) {
+      throw badRequest(
+        `Ai atins limita de ${config.dailyTradeLimit} tranzacții pe zi (anti-overtrading). Revino mâine.`,
+      );
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.user.findUniqueOrThrow({ where: { id: req.userId } });
       const history = await loadTrades(req.userId!);
@@ -98,6 +113,9 @@ portfolioRouter.post(
       return { created, cashAfter, notional };
     });
 
+    // După trade: evaluează insignele nou câștigate (idempotent).
+    const newBadges = await awardBadges(req.userId!);
+
     res.status(201).json({
       transaction: {
         id: result.created.id,
@@ -108,6 +126,7 @@ portfolioRouter.post(
         notional: result.notional,
       },
       cash: result.cashAfter,
+      newBadges,
     });
   }),
 );
