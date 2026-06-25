@@ -37,6 +37,8 @@ model User {
   memberships  Membership[]
   ownedGroups  Group[]        @relation("GroupOwner")
   activity     ActivityEvent[]
+  reactions    Reaction[]
+  comments     Comment[]
 }
 
 /// Instrument tranzacționabil (acțiune simulată).
@@ -103,7 +105,7 @@ model Membership {
   @@index([userId])
 }
 
-/// Eveniment din feed-ul social (Etapa 2). Definit din timp ca să nu re-migrăm.
+/// Eveniment din feed-ul social. Emis la tranzacții, alăturări, insigne.
 model ActivityEvent {
   id        String   @id @default(cuid())
   groupId   String
@@ -112,8 +114,39 @@ model ActivityEvent {
   payload   Json
   createdAt DateTime @default(now())
 
-  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group     Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
+  comments  Comment[]
 
   @@index([groupId, createdAt])
+}
+
+/// Reacție (emoji) la un eveniment din feed. Un utilizator = o reacție per emoji.
+model Reaction {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  event ActivityEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId, emoji])
+  @@index([eventId])
+}
+
+/// Comentariu la un eveniment din feed.
+model Comment {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  body      String
+  createdAt DateTime @default(now())
+
+  event ActivityEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, createdAt])
 }

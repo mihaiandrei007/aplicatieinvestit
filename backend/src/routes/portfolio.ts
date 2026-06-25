@@ -6,6 +6,7 @@ import { requireAuth, type AuthedRequest } from '../http/requireAuth.js';
 import { executeTrade } from '../lib/trading.js';
 import { paginate } from '../lib/paginate.js';
 import { buildSnapshot, loadTrades } from '../services/portfolioService.js';
+import { emitToUserGroups } from '../services/activityService.js';
 
 export const portfolioRouter = Router();
 
@@ -86,6 +87,14 @@ portfolioRouter.post(
           price: trade.price,
         },
       });
+
+      // Stratul social: anunță grupurile despre tranzacție (atomic cu trade-ul).
+      await emitToUserGroups(
+        user.id,
+        'TRADE',
+        { symbol, side: trade.side, quantity: trade.quantity, price: trade.price },
+        tx,
+      );
       return { created, cashAfter, notional };
     });
 

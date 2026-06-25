@@ -8,7 +8,9 @@ import { requireAuth, type AuthedRequest } from '../http/requireAuth.js';
 import { generateInviteCode, normalizeInviteCode, isValidInviteCode } from '../lib/invite.js';
 import { makeRng } from '../lib/priceSim.js';
 import { rankByRoi, type Participant } from '../lib/leaderboard.js';
+import { maskEmail } from '../lib/social.js';
 import { computeEquity } from '../services/portfolioService.js';
+import { emitToGroup } from '../services/activityService.js';
 
 export const groupsRouter = Router();
 
@@ -68,6 +70,7 @@ groupsRouter.post(
     if (existing) throw conflict('Ești deja membru al acestui grup.');
 
     await prisma.membership.create({ data: { groupId: group.id, userId: req.userId!, role: 'MEMBER' } });
+    await emitToGroup(group.id, req.userId!, 'JOINED_GROUP', {});
     res.status(201).json({ group: { id: group.id, name: group.name } });
   }),
 );
@@ -89,6 +92,36 @@ groupsRouter.get(
         inviteCode: m.group.inviteCode,
         role: m.role,
         memberCount: m.group._count.memberships,
+      })),
+    });
+  }),
+);
+
+/** Membrii grupului cu profil public minimal (email mascat pentru intimitate). */
+groupsRouter.get(
+  '/:id/members',
+  requireAuth,
+  asyncHandler(async (req: AuthedRequest, res) => {
+    const groupId = req.params.id!;
+    const me = await prisma.membership.findUnique({
+      where: { groupId_userId: { groupId, userId: req.userId! } },
+    });
+    if (!me) throw notFound('Grup inexistent sau nu ești membru.');
+
+    const members = await prisma.membership.findMany({
+      where: { groupId },
+      include: { user: { select: { id: true, displayName: true, email: true, createdAt: true } } },
+      orderBy: { joinedAt: 'asc' },
+    });
+    res.json({
+      members: members.map((m) => ({
+        userId: m.user.id,
+        displayName: m.user.displayName,
+        email: maskEmail(m.user.email),
+        role: m.role,
+        joinedAt: m.joinedAt,
+        memberSince: m.user.createdAt,
+        isMe: m.user.id === req.userId,
       })),
     });
   }),
