@@ -39,6 +39,20 @@ model User {
   activity     ActivityEvent[]
   reactions    Reaction[]
   comments     Comment[]
+  pushTokens   PushToken[]
+}
+
+/// Token de notificare push (Expo) per dispozitiv.
+model PushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  platform  String   @default("expo")
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 /// Instrument tranzacționabil (acțiune simulată).

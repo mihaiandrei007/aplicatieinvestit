@@ -5,6 +5,8 @@ import { instrumentsRouter } from './routes/instruments.js';
 import { portfolioRouter } from './routes/portfolio.js';
 import { groupsRouter } from './routes/groups.js';
 import { feedRouter } from './routes/feed.js';
+import { pushRouter } from './routes/push.js';
+import { marketRouter } from './routes/market.js';
 import { errorHandler } from './http/errors.js';
 
 /** Construiește aplicația Express (separat de pornirea serverului, pt. teste). */
@@ -19,6 +21,8 @@ export function createApp() {
   app.use('/api/instruments', instrumentsRouter);
   app.use('/api/portfolio', portfolioRouter);
   app.use('/api/groups', groupsRouter);
+  app.use('/api/push', pushRouter);
+  app.use('/api/market', marketRouter);
   app.use('/api', feedRouter);
 
   app.use(errorHandler);

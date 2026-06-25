@@ -5,6 +5,7 @@
 
 import type { Prisma, PrismaClient } from '@prisma/client';
 import { prisma } from '../db.js';
+import { hub } from '../realtime/hub.js';
 
 type Db = PrismaClient | Prisma.TransactionClient;
 
@@ -23,6 +24,9 @@ export async function emitToUserGroups(
   await db.activityEvent.createMany({
     data: memberships.map((m) => ({ groupId: m.groupId, userId, type, payload })),
   });
+  for (const m of memberships) {
+    hub.broadcastToGroup(m.groupId, { type: 'NEW_ACTIVITY', payload: { groupId: m.groupId, kind: type } });
+  }
 }
 
 /** Emite un eveniment într-un singur grup (ex. la alăturare). */
@@ -34,4 +38,5 @@ export async function emitToGroup(
   db: Db = prisma,
 ): Promise<void> {
   await db.activityEvent.create({ data: { groupId, userId, type, payload } });
+  hub.broadcastToGroup(groupId, { type: 'NEW_ACTIVITY', payload: { groupId, kind: type } });
 }
