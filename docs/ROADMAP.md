@@ -2,9 +2,11 @@
 
 Plan de dezvoltare pe etape. Fiecare etapă livrează ceva demonstrabil.
 
-> Stare: Etapele 1–5 sunt implementate în backend (105 teste pure verzi) și validate
-> end-to-end pe PostgreSQL. Aplicația mobilă (Expo) acoperă Etapele 1–2 + academia.
-> Rămâne: OAuth Google/Apple, WebSocket/push pe client, ecrane de turnee/quiz pe mobil.
+> Stare: Etapele 1–5 implementate în backend (113 teste pure verzi) + OAuth Google/Apple,
+> validate end-to-end pe PostgreSQL. Aplicația mobilă (Expo) acoperă toate etapele:
+> portofoliu cu grafic, piață cu prețuri live (WebSocket), grupuri cu feed live + turnee,
+> academie cu quiz-uri, notificări push. Rămâne doar conectarea efectivă a SDK-urilor
+> Google/Apple pe client (backend-ul OAuth e gata) — vezi mobile/README.md.
 
 ## Etapa 0 — Fundație
 - [x] Alegere stack mobil (React Native + Expo).
@@ -12,7 +14,7 @@ Plan de dezvoltare pe etape. Fiecare etapă livrează ceva demonstrabil.
 - [x] Module pure (lib/portfolio, priceSim, leaderboard, paginate, trading, invite,
       social, notifications, risk, gamification, finance, academy) + teste Vitest.
       (Rescrise din descriere — repo-ul părinte „atestat-portofoliu" nu e accesibil aici.)
-- [x] Auth cu JWT + bcrypt. (OAuth Google/Apple rămâne de adăugat.)
+- [x] Auth cu JWT + bcrypt + OAuth Google/Apple (verificare ID token prin JWKS).
 
 ## Etapa 1 — MVP (portofoliu personal + grup)
 - [x] Înregistrare/login.
