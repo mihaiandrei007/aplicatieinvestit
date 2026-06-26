@@ -2,19 +2,23 @@ import React, { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Screen, Title, Subtitle, Card, Button, Loading } from '../../src/components/ui';
-import { endpoints, type PortfolioSnapshot } from '../../src/api/client';
+import { endpoints, type PortfolioSnapshot, type EquityPoint } from '../../src/api/client';
 import { useAuth } from '../../src/auth/AuthContext';
+import { EquityChart } from '../../src/components/EquityChart';
 import { theme, formatMoney, formatPct } from '../../src/theme';
 
 export default function PortfolioScreen() {
   const { user, signOut } = useAuth();
   const [data, setData] = useState<PortfolioSnapshot | null>(null);
+  const [history, setHistory] = useState<EquityPoint[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setRefreshing(true);
     try {
-      setData(await endpoints.portfolio());
+      const [snapshot, hist] = await Promise.all([endpoints.portfolio(), endpoints.history()]);
+      setData(snapshot);
+      setHistory(hist.history);
     } finally {
       setRefreshing(false);
     }
@@ -45,6 +49,11 @@ export default function PortfolioScreen() {
           <Subtitle>Capital total (equity)</Subtitle>
           <Text style={{ color: theme.colors.text, fontSize: 34, fontWeight: '800' }}>{formatMoney(data.equity)}</Text>
           <Text style={{ color: roiColor, fontSize: 16, fontWeight: '700' }}>{formatPct(roi)} randament</Text>
+          {history.length >= 2 && (
+            <View style={{ marginTop: 8 }}>
+              <EquityChart values={history.map((h) => h.equity)} baseline={data.startingCash} />
+            </View>
+          )}
           <View style={{ flexDirection: 'row', gap: theme.spacing(2), marginTop: 8 }}>
             <Stat label="Numerar" value={formatMoney(data.cash)} />
             <Stat label="P&L nerealizat" value={formatMoney(data.unrealizedPnL)} />

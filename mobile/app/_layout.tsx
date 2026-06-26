@@ -28,6 +28,7 @@ function AuthGate() {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="group/[id]" options={{ headerShown: true, title: 'Grup', headerStyle: { backgroundColor: '#16203A' }, headerTintColor: '#E8EDF6' }} />
+      <Stack.Screen name="academy/quiz/[id]" options={{ headerShown: true, title: 'Quiz', headerStyle: { backgroundColor: '#16203A' }, headerTintColor: '#E8EDF6' }} />
     </Stack>
   );
 }

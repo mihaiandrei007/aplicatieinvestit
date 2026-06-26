@@ -3,6 +3,7 @@ import { Alert, Pressable, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Screen, Title, Subtitle, Card, Field, Button, Loading } from '../../src/components/ui';
 import { endpoints, ApiError, type Instrument } from '../../src/api/client';
+import { useRealtime } from '../../src/realtime/useRealtime';
 import { theme, formatMoney } from '../../src/theme';
 
 export default function MarketScreen() {
@@ -15,6 +16,18 @@ export default function MarketScreen() {
     const { instruments } = await endpoints.instruments();
     setInstruments(instruments);
   }, []);
+
+  // Prețuri live: actualizează în loc la fiecare PRICE_UPDATE de la server.
+  useRealtime({
+    onMessage: (msg) => {
+      if (msg.type !== 'PRICE_UPDATE') return;
+      const changes = msg.payload as Array<{ symbol: string; next: number }>;
+      const map = new Map(changes.map((c) => [c.symbol, c.next]));
+      setInstruments((prev) =>
+        prev ? prev.map((i) => (map.has(i.symbol) ? { ...i, currentPrice: map.get(i.symbol)! } : i)) : prev,
+      );
+    },
+  });
 
   useFocusEffect(
     useCallback(() => {

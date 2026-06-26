@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { endpoints, setAuthToken, type PublicUser } from '../api/client';
+import { registerForPush } from '../push/registerPush';
 
 const TOKEN_KEY = 'investpals_token';
 
@@ -9,6 +10,7 @@ interface AuthState {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  signInWithOAuth: (provider: 'google' | 'apple', idToken: string) => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -38,6 +40,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
+  /** Înregistrează push-ul când există o sesiune (best-effort, doar pe device fizic). */
+  useEffect(() => {
+    if (user) registerForPush().catch(() => {});
+  }, [user]);
+
   async function persist(token: string, user: PublicUser): Promise<void> {
     await SecureStore.setItemAsync(TOKEN_KEY, token);
     setAuthToken(token);
@@ -53,6 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     signUp: async (email, password, displayName) => {
       const res = await endpoints.register(email, password, displayName);
+      await persist(res.token, res.user);
+    },
+    signInWithOAuth: async (provider, idToken) => {
+      const res = await endpoints.oauth(provider, idToken);
       await persist(res.token, res.user);
     },
     signOut: async () => {

@@ -1,9 +1,12 @@
 import React, { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen, Title, Subtitle, Card, Button, Loading } from '../../src/components/ui';
 import { endpoints, type BadgeView } from '../../src/api/client';
 import { theme } from '../../src/theme';
+
+/** Misiunile care au un quiz asociat (convenție: quiz-<missionId>). */
+const MISSIONS_WITH_QUIZ = new Set(['basics', 'diversify']);
 
 interface MissionView {
   id: string;
@@ -13,6 +16,7 @@ interface MissionView {
 }
 
 export default function AcademyScreen() {
+  const router = useRouter();
   const [missions, setMissions] = useState<MissionView[] | null>(null);
   const [progress, setProgress] = useState(0);
   const [badges, setBadges] = useState<BadgeView[]>([]);
@@ -57,6 +61,9 @@ export default function AcademyScreen() {
             </Text>
           </View>
           <Text style={{ color: theme.colors.muted }}>{m.description}</Text>
+          {MISSIONS_WITH_QUIZ.has(m.id) && (
+            <Button title="Dă quiz-ul" variant="ghost" onPress={() => router.push(`/academy/quiz/quiz-${m.id}`)} />
+          )}
           {!m.completed && <Button title="Marchează finalizată" onPress={() => complete(m.id)} loading={busy} />}
         </Card>
       ))}

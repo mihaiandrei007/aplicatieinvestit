@@ -38,14 +38,21 @@ npx expo start
 
 Apoi scanează codul QR cu **Expo Go** (Android/iOS) sau apasă `a`/`i` pentru emulator.
 
-## Ce e implementat (Etapele 1–2 pe mobil)
+## Ce e implementat
 - Autentificare (înregistrare/login) cu token păstrat securizat.
-- Portofoliu: equity, randament, dețineri, P&L (pull-to-refresh).
-- Piață: listă instrumente, cumpărare/vânzare, notificare de insigne noi.
-- Grupuri: creare, intrare cu cod, clasament de grup, feed social cu reacții.
-- Academie: misiuni cu progres + galerie de insigne.
+- Portofoliu: equity, randament, **grafic de evoluție** (SVG), dețineri, P&L.
+- Piață: instrumente cu **prețuri live (WebSocket)**, cumpărare/vânzare, insigne noi.
+- Grupuri: creare/intrare cu cod, clasament, **feed social live**, **turnee** (creare/înscriere).
+- Academie: misiuni cu progres, **quiz-uri interactive** cu explicații, galerie de insigne.
+- **Notificări push** (`expo-notifications`) înregistrate automat la login (device fizic).
+- Timp real: `src/realtime/useRealtime.ts` (reconectare automată) consumă `WS_URL`.
 
-## Următorii pași (mobil)
-- WebSocket live (prețuri + feed) folosind `src/config.ts → WS_URL`.
-- Notificări push cu `expo-notifications` (înregistrare token la `/api/push/register`).
-- Ecrane de turnee și quiz-uri.
+## OAuth Google/Apple
+Backend-ul expune `POST /api/auth/oauth` (verifică ID token-ul prin JWKS) și
+`AuthContext.signInWithOAuth(provider, idToken)` e gata. Pentru a-l activa pe client:
+
+1. Setează `GOOGLE_CLIENT_ID` / `APPLE_CLIENT_ID` în backend (`.env`).
+2. Adaugă pe mobil `expo-auth-session` (Google) și `expo-apple-authentication` (Apple).
+3. Obține `idToken`-ul de la provider și apelează `signInWithOAuth('google', idToken)`.
+
+Butoanele „Continuă cu Google/Apple" din ecranul de login sunt pregătite pentru pasul 3.
