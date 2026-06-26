@@ -50,6 +50,21 @@ portfolioRouter.get(
   }),
 );
 
+/** Istoricul de capital (equity) pentru grafic — instantanee cronologice. */
+portfolioRouter.get(
+  '/history',
+  requireAuth,
+  asyncHandler(async (req: AuthedRequest, res) => {
+    const snapshots = await prisma.equitySnapshot.findMany({
+      where: { userId: req.userId },
+      orderBy: { createdAt: 'asc' },
+      take: 200,
+      select: { equity: true, createdAt: true },
+    });
+    res.json({ history: snapshots });
+  }),
+);
+
 const tradeSchema = z.object({
   symbol: z.string().min(1),
   side: z.enum(['BUY', 'SELL']),
@@ -112,6 +127,10 @@ portfolioRouter.post(
       );
       return { created, cashAfter, notional };
     });
+
+    // Înregistrează un instantaneu de capital pentru grafic/Sharpe.
+    const snapshot = await buildSnapshot(req.userId!);
+    await prisma.equitySnapshot.create({ data: { userId: req.userId!, equity: snapshot.equity } });
 
     // După trade: evaluează insignele nou câștigate (idempotent).
     const newBadges = await awardBadges(req.userId!);

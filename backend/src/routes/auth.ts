@@ -5,6 +5,8 @@ import { config } from '../config.js';
 import { hashPassword, signToken, verifyPassword } from '../auth/auth.js';
 import { asyncHandler, badRequest, conflict, unauthorized } from '../http/errors.js';
 import { requireAuth, type AuthedRequest } from '../http/requireAuth.js';
+import { verifyOAuthToken } from '../services/oauthService.js';
+import { OAuthError } from '../lib/oauth.js';
 
 export const authRouter = Router();
 
@@ -56,8 +58,64 @@ authRouter.post(
     const { email, password } = parsed.data;
 
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || !(await verifyPassword(password, user.passwordHash))) {
+    if (!user || !user.passwordHash) {
+      // Cont inexistent sau creat prin OAuth (fără parolă).
       throw unauthorized('Email sau parolă greșite.');
+    }
+    if (!(await verifyPassword(password, user.passwordHash))) {
+      throw unauthorized('Email sau parolă greșite.');
+    }
+
+    res.json({ token: signToken(user.id), user: publicUser(user) });
+  }),
+);
+
+const oauthSchema = z.object({
+  provider: z.enum(['google', 'apple']),
+  idToken: z.string().min(1),
+});
+
+/**
+ * Login/înregistrare prin OAuth. Clientul trimite ID token-ul de la Google/Apple;
+ * serverul îl verifică (semnătură + claim-uri) și întoarce JWT-ul propriu.
+ */
+authRouter.post(
+  '/oauth',
+  asyncHandler(async (req, res) => {
+    const parsed = oauthSchema.safeParse(req.body);
+    if (!parsed.success) throw badRequest('provider și idToken sunt obligatorii.');
+
+    let profile;
+    try {
+      profile = await verifyOAuthToken(parsed.data.provider, parsed.data.idToken);
+    } catch (err) {
+      if (err instanceof OAuthError) throw unauthorized(err.message);
+      throw err;
+    }
+
+    // Caută după identitatea OAuth; apoi după email (leagă conturile existente).
+    let user =
+      (await prisma.user.findFirst({
+        where: { oauthProvider: profile.provider, oauthSub: profile.providerSub },
+      })) ?? (await prisma.user.findUnique({ where: { email: profile.email } }));
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email: profile.email,
+          displayName: profile.displayName,
+          oauthProvider: profile.provider,
+          oauthSub: profile.providerSub,
+          cash: config.startingCash,
+          startingCash: config.startingCash,
+        },
+      });
+    } else if (!user.oauthProvider) {
+      // Leagă identitatea OAuth de contul existent (cu email).
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { oauthProvider: profile.provider, oauthSub: profile.providerSub },
+      });
     }
 
     res.json({ token: signToken(user.id), user: publicUser(user) });

@@ -25,7 +25,11 @@ enum MemberRole {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
-  passwordHash String
+  /// Null pentru conturile create prin OAuth (Google/Apple).
+  passwordHash String?
+  /// Identitate OAuth, dacă există (provider + subiect unic la provider).
+  oauthProvider String?
+  oauthSub      String?
   displayName  String
   /// Numerar virtual disponibil (necheltuit pe instrumente).
   cash         Float    @default(100000)
@@ -45,6 +49,8 @@ model User {
   equitySnapshots   EquitySnapshot[]
   academyProgress   AcademyProgress[]
   quizAttempts      QuizAttempt[]
+
+  @@unique([oauthProvider, oauthSub])
 }
 
 /// Token de notificare push (Expo) per dispozitiv.
