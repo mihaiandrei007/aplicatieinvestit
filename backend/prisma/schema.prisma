@@ -99,10 +99,25 @@ model Instrument {
   volatility   Float    @default(0.2)
   drift        Float    @default(0.05)
   beta         Float    @default(1.0)
+  /// Cât capital net mișcă prețul (cerere/ofertă). Mai mare = mai greu de mișcat.
+  liquidity    Float    @default(500000)
   currency     String   @default("USD")
   createdAt    DateTime @default(now())
 
   transactions Transaction[]
+}
+
+/// Știre FALSĂ (simulată) care a mișcat un instrument.
+model News {
+  id        String   @id @default(cuid())
+  symbol    String?
+  headline  String
+  /// Impact semnat aplicat la preț (ex. +0.07 = +7%).
+  impact    Float
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([symbol, createdAt])
 }
 
 /// O cumpărare sau vânzare. Holdings & P&L se derivă din istoricul tranzacțiilor.

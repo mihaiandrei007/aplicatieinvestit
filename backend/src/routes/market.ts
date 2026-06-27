@@ -30,3 +30,20 @@ marketRouter.get(
     res.json({ prices: instruments.map((i) => ({ symbol: i.symbol, price: i.currentPrice })) });
   }),
 );
+
+/** Fluxul de știri (cele mai recente). Opțional filtrabil pe simbol. */
+marketRouter.get(
+  '/news',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const symbol = typeof req.query.symbol === 'string' ? req.query.symbol : undefined;
+    const news = await prisma.news.findMany({
+      where: symbol ? { symbol } : undefined,
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+    });
+    res.json({
+      news: news.map((n) => ({ id: n.id, symbol: n.symbol, headline: n.headline, impact: n.impact, createdAt: n.createdAt })),
+    });
+  }),
+);

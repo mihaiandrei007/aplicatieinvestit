@@ -5,31 +5,63 @@
  */
 
 import { prisma } from '../db.js';
-import { nextPrice } from '../lib/priceSim.js';
+import { nextPrice, makeRng } from '../lib/priceSim.js';
 import { isPriceJump, priceJumpPush, detectOvertakes, overtakePush, type RankSnapshot } from '../lib/notifications.js';
 import { rankByRoi, type Participant } from '../lib/leaderboard.js';
+import { netNotionalBySymbol, priceImpact, applyMove, type Flow } from '../lib/priceImpact.js';
+import { maybeGenerateNews } from '../lib/news.js';
 import { hub } from '../realtime/hub.js';
 import { computeEquity } from './portfolioService.js';
 import { sendToUser } from './pushService.js';
 
 /** Ultimul clasament cunoscut per grup, pentru a detecta depășiri. */
 const lastRankings = new Map<string, RankSnapshot[]>();
+/** Momentul ultimului tick — pentru a aduna fluxul de tranzacții din interval. */
+let lastTickAt: Date | null = null;
 
 /**
- * Avansează toate prețurile cu un pas. `seed` face avansul reproductibil
- * (în producție poate fi un contor de tick). Întoarce variațiile aplicate.
+ * Avansează toate prețurile cu un pas. Prețul nou combină:
+ *  1. mișcarea de piață deterministă (lib/priceSim),
+ *  2. cererea/oferta din tranzacțiile reale din interval (lib/priceImpact),
+ *  3. eventuala știre falsă a tick-ului (lib/news).
+ * Totul e global — toți utilizatorii văd aceleași prețuri.
  */
 export async function tickMarket(seed: number): Promise<Array<{ symbol: string; prev: number; next: number }>> {
   const instruments = await prisma.instrument.findMany();
-  const changes: Array<{ symbol: string; prev: number; next: number }> = [];
+  const since = lastTickAt;
+  const now = new Date();
 
+  // 1. Flux net de tranzacții din interval (cerere/ofertă).
+  const recentTx = since
+    ? await prisma.transaction.findMany({
+        where: { createdAt: { gte: since } },
+        include: { instrument: { select: { symbol: true } } },
+      })
+    : [];
+  const flows: Flow[] = recentTx.map((t) => ({ symbol: t.instrument.symbol, side: t.side, quantity: t.quantity, price: t.price }));
+  const netBySymbol = netNotionalBySymbol(flows);
+
+  // 2. Eventuală știre falsă a acestui tick (deterministă din seed).
+  const news = maybeGenerateNews(
+    makeRng(seed * 7 + 13),
+    instruments.map((i) => ({ symbol: i.symbol, name: i.name })),
+    0.5,
+  );
+  if (news) {
+    await prisma.news.create({ data: { symbol: news.symbol, headline: news.headline, impact: news.impact } });
+    hub.broadcastAll({ type: 'NEWS', payload: { symbol: news.symbol, headline: news.headline, impact: news.impact } });
+  }
+
+  const changes: Array<{ symbol: string; prev: number; next: number }> = [];
   for (let i = 0; i < instruments.length; i++) {
     const inst = instruments[i]!;
-    const next = nextPrice(
-      inst.currentPrice,
-      { volatility: inst.volatility, drift: inst.drift },
-      seed * 1000 + i,
-    );
+    // Mișcarea de bază a pieței.
+    const base = nextPrice(inst.currentPrice, { volatility: inst.volatility, drift: inst.drift }, seed * 1000 + i);
+    // Impactul cererii/ofertei + al știrii.
+    const demand = priceImpact(netBySymbol[inst.symbol] ?? 0, inst.liquidity);
+    const newsImpact = news?.symbol === inst.symbol ? news.impact : 0;
+    const next = applyMove(base, demand + newsImpact);
+
     await prisma.instrument.update({ where: { id: inst.id }, data: { currentPrice: next } });
     changes.push({ symbol: inst.symbol, prev: inst.currentPrice, next });
 
@@ -39,6 +71,7 @@ export async function tickMarket(seed: number): Promise<Array<{ symbol: string; 
     }
   }
 
+  lastTickAt = now;
   hub.broadcastAll({ type: 'PRICE_UPDATE', payload: changes });
   await recheckOvertakes();
   return changes;
