@@ -14,7 +14,7 @@ async function main() {
     const currentPrice = initialPrice(s, i);
     await prisma.instrument.upsert({
       where: { symbol: s.symbol },
-      update: { currentPrice, liquidity: s.liquidity },
+      update: { currentPrice, liquidity: s.liquidity, sector: s.sector, correlation: s.correlation },
       create: { ...s, currentPrice },
     });
     console.log(`  ${s.symbol.padEnd(5)} ${currentPrice}`);

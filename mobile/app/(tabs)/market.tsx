@@ -125,7 +125,7 @@ export default function MarketScreen() {
                     <SymbolTile symbol={i.symbol} accent={sel} />
                     <View style={{ flex: 1 }}>
                       <Text style={{ color: c.text, fontSize: 14, fontWeight: '600' }}>{i.name}</Text>
-                      <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{i.currency}</Mono>
+                      <Text style={{ color: c.muted, fontSize: 11, marginTop: 2, letterSpacing: 0.5 }}>{i.sector ?? i.currency}</Text>
                     </View>
                     <Mono style={{ width: 78, textAlign: 'right', fontSize: 14, fontWeight: '600' }}>{formatMoney(i.currentPrice)}</Mono>
                     <View style={{ width: 76, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 4 }}>

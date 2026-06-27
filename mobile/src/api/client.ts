@@ -123,6 +123,7 @@ export interface Instrument {
   name: string;
   currentPrice: number;
   currency: string;
+  sector: string | null;
 }
 
 export interface GroupSummary {

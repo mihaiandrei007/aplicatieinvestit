@@ -18,6 +18,7 @@ instrumentsRouter.get(
         name: i.name,
         currentPrice: i.currentPrice,
         currency: i.currency,
+        sector: i.sector,
       })),
     });
   }),

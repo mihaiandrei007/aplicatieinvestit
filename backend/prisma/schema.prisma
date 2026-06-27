@@ -101,6 +101,10 @@ model Instrument {
   beta         Float    @default(1.0)
   /// Cât capital net mișcă prețul (cerere/ofertă). Mai mare = mai greu de mișcat.
   liquidity    Float    @default(500000)
+  /// Sectorul/tema (pentru co-mișcare între stocuri).
+  sector       String?
+  /// Cât de mult urmează liderul sectorului (0 = lider/independent).
+  correlation  Float    @default(0)
   currency     String   @default("USD")
   createdAt    DateTime @default(now())
 

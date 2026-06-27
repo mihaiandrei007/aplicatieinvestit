@@ -9,7 +9,9 @@ import { nextPrice, makeRng } from '../lib/priceSim.js';
 import { isPriceJump, priceJumpPush, detectOvertakes, overtakePush, type RankSnapshot } from '../lib/notifications.js';
 import { rankByRoi, type Participant } from '../lib/leaderboard.js';
 import { netNotionalBySymbol, priceImpact, applyMove, type Flow } from '../lib/priceImpact.js';
+import { applySectorCorrelation } from '../lib/correlation.js';
 import { maybeGenerateNews } from '../lib/news.js';
+import { SECTOR_LEADERS } from '../data/instruments.js';
 import { hub } from '../realtime/hub.js';
 import { computeEquity } from './portfolioService.js';
 import { sendToUser } from './pushService.js';
@@ -55,16 +57,27 @@ export async function tickMarket(seed: number): Promise<Array<{ symbol: string; 
     hub.broadcastAll({ type: 'NEWS', payload: { symbol: news.symbol, headline: news.headline, body: news.body, source: news.source } });
   }
 
-  const changes: Array<{ symbol: string; prev: number; next: number }> = [];
+  // 3. Randamentul PROPRIU al fiecărui instrument (bază + cerere/ofertă + știre).
+  const ownReturn: Record<string, number> = {};
   for (let i = 0; i < instruments.length; i++) {
     const inst = instruments[i]!;
-    // Mișcarea de bază a pieței.
     const base = nextPrice(inst.currentPrice, { volatility: inst.volatility, drift: inst.drift }, seed * 1000 + i);
-    // Impactul cererii/ofertei + al știrii.
+    const baseReturn = inst.currentPrice > 0 ? (base - inst.currentPrice) / inst.currentPrice : 0;
     const demand = priceImpact(netBySymbol[inst.symbol] ?? 0, inst.liquidity);
     const newsImpact = news?.symbol === inst.symbol ? news.impact : 0;
-    const next = applyMove(base, demand + newsImpact);
+    ownReturn[inst.symbol] = baseReturn + demand + newsImpact;
+  }
 
+  // 4. Overlay de corelație: urmăritorii preiau o parte din mișcarea liderului de sector.
+  const finalReturn = applySectorCorrelation({
+    members: instruments.map((i) => ({ symbol: i.symbol, sector: i.sector, correlation: i.correlation })),
+    ownReturn,
+    leaders: SECTOR_LEADERS,
+  });
+
+  const changes: Array<{ symbol: string; prev: number; next: number }> = [];
+  for (const inst of instruments) {
+    const next = applyMove(inst.currentPrice, finalReturn[inst.symbol] ?? 0);
     await prisma.instrument.update({ where: { id: inst.id }, data: { currentPrice: next } });
     changes.push({ symbol: inst.symbol, prev: inst.currentPrice, next });
 
