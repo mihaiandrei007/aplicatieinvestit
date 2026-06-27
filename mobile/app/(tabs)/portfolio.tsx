@@ -1,11 +1,13 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Alert, Dimensions, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { Screen, Title, Subtitle, Card, Button, Loading } from '../../src/components/ui';
+import { Screen, Label, Mono, Hairline, SymbolTile, Loading } from '../../src/components/ui';
+import { Caret, EquitySparkline } from '../../src/components/icons';
 import { endpoints, type PortfolioSnapshot, type EquityPoint, type StreakState } from '../../src/api/client';
 import { useAuth } from '../../src/auth/AuthContext';
-import { EquityChart } from '../../src/components/EquityChart';
-import { theme, formatMoney, formatPct } from '../../src/theme';
+import { theme, formatMoney, formatPct, gainColor, initials } from '../../src/theme';
+
+const W = Dimensions.get('window').width;
 
 export default function PortfolioScreen() {
   const { user, signOut } = useAuth();
@@ -18,12 +20,8 @@ export default function PortfolioScreen() {
   const load = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [snapshot, hist, st] = await Promise.all([
-        endpoints.portfolio(),
-        endpoints.history(),
-        endpoints.streak(),
-      ]);
-      setData(snapshot);
+      const [snap, hist, st] = await Promise.all([endpoints.portfolio(), endpoints.history(), endpoints.streak()]);
+      setData(snap);
       setHistory(hist.history);
       setStreak(st);
     } finally {
@@ -31,118 +29,134 @@ export default function PortfolioScreen() {
     }
   }, []);
 
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
   async function checkIn() {
     setCheckingIn(true);
     try {
       const r = await endpoints.checkIn();
-      if (r.alreadyCheckedIn) {
-        Alert.alert('Deja făcut', 'Ai făcut deja check-in azi. Revino mâine!');
-      } else {
-        const extra = r.earnedFreeze ? '\n❄️ Ai câștigat un streak freeze!' : '';
-        Alert.alert('Check-in reușit 🔥', `Streak: ${r.currentStreak} zile\n+${r.creditsGranted} credite de tranzacționare${extra}`);
-      }
+      Alert.alert(
+        r.alreadyCheckedIn ? 'Deja făcut' : 'Check-in reușit',
+        r.alreadyCheckedIn ? 'Revino mâine.' : `Streak ${r.currentStreak} zile · +${r.creditsGranted} credite`,
+      );
       await load();
     } finally {
       setCheckingIn(false);
     }
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load]),
-  );
-
   if (!data) return <Loading />;
 
   const roi = (data.equity - data.startingCash) / data.startingCash;
-  const roiColor = roi >= 0 ? theme.colors.green : theme.colors.red;
+  const pnl = data.equity - data.startingCash;
+  const c = theme.colors;
+  const series = history.length >= 2 ? history.map((h) => h.equity) : [data.startingCash, data.equity];
 
   return (
     <Screen scroll={false}>
       <ScrollView
-        contentContainerStyle={{ gap: theme.spacing(2) }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} tintColor={theme.colors.primary} />}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} tintColor={c.lime} />}
       >
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title>Salut, {user?.displayName} 👋</Title>
+        {/* top bar */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 6 }}>
+          <View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+              <View style={{ width: 5, height: 5, backgroundColor: c.lime, borderRadius: 1 }} />
+              <Text style={{ color: c.muted2, fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase' }}>Bursa noastră</Text>
+            </View>
+            <Text style={{ color: c.faint, fontSize: 11, marginTop: 6 }}>Portofoliu virtual · {user?.displayName}</Text>
+          </View>
+          <View style={{ width: 30, height: 30, borderWidth: 1, borderColor: c.borderHi, borderRadius: 4, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: c.lime, fontSize: 11, fontWeight: '700' }}>{initials(user?.displayName ?? '')}</Text>
+          </View>
         </View>
 
-        {streak && (
-          <Card>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View>
-                <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700' }}>
-                  🔥 Streak: {streak.currentStreak} {streak.currentStreak === 1 ? 'zi' : 'zile'}
-                </Text>
-                <Text style={{ color: theme.colors.muted, fontSize: 13 }}>
-                  🎟️ {streak.tradeCredits} credite · ❄️ {streak.freezes} freeze
-                </Text>
-              </View>
-              <View style={{ width: 130 }}>
-                <Button
-                  title={streak.checkedInToday ? 'Revino mâine' : 'Check-in zilnic'}
-                  onPress={checkIn}
-                  loading={checkingIn}
-                  disabled={streak.checkedInToday}
-                  variant={streak.checkedInToday ? 'ghost' : 'primary'}
-                />
-              </View>
+        {/* equity */}
+        <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
+          <Label>Valoare portofoliu</Label>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 9 }}>
+            <Mono style={{ fontSize: 42, fontWeight: '600', letterSpacing: -1.5, lineHeight: 44 }}>
+              {formatMoney(data.equity).split(',')[0]}
+              <Text style={{ color: c.muted }}>,{formatMoney(data.equity).split(',')[1]}</Text>
+            </Mono>
+            <Text style={{ color: c.muted, fontSize: 16, marginLeft: 6, marginBottom: 5 }}>RON</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 13 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <Caret up={pnl >= 0} color={gainColor(pnl)} />
+              <Mono style={{ color: gainColor(pnl), fontSize: 13, fontWeight: '600' }}>{formatMoney(pnl)}</Mono>
             </View>
-          </Card>
+            <View style={{ width: 1, height: 13, backgroundColor: c.hair }} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Mono style={{ color: gainColor(roi), fontSize: 13, fontWeight: '600' }}>{formatPct(roi)}</Mono>
+              <Label>ROI</Label>
+            </View>
+          </View>
+        </View>
+
+        {/* chart */}
+        <View style={{ marginTop: 14 }}>
+          <EquitySparkline values={series} width={W} height={140} color={c.lime} />
+        </View>
+
+        {/* streak / credits strip */}
+        {streak && (
+          <Pressable onPress={checkIn} disabled={checkingIn}>
+            <Hairline inset={20} />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 13 }}>
+              <View style={{ flexDirection: 'row', gap: 20 }}>
+                <View><Label>Streak</Label><Mono style={{ fontSize: 15, fontWeight: '600', marginTop: 3 }}>{streak.currentStreak} zile</Mono></View>
+                <View><Label>Credite</Label><Mono style={{ fontSize: 15, fontWeight: '600', marginTop: 3 }}>{streak.tradeCredits}</Mono></View>
+              </View>
+              <Text style={{ color: streak.checkedInToday ? c.faint : c.lime, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' }}>
+                {streak.checkedInToday ? 'Revino mâine' : 'Check-in ▸'}
+              </Text>
+            </View>
+          </Pressable>
         )}
 
-        <Card>
-          <Subtitle>Capital total (equity)</Subtitle>
-          <Text style={{ color: theme.colors.text, fontSize: 34, fontWeight: '800' }}>{formatMoney(data.equity)}</Text>
-          <Text style={{ color: roiColor, fontSize: 16, fontWeight: '700' }}>{formatPct(roi)} randament</Text>
-          {history.length >= 2 && (
-            <View style={{ marginTop: 8 }}>
-              <EquityChart values={history.map((h) => h.equity)} baseline={data.startingCash} />
-            </View>
-          )}
-          <View style={{ flexDirection: 'row', gap: theme.spacing(2), marginTop: 8 }}>
-            <Stat label="Numerar" value={formatMoney(data.cash)} />
-            <Stat label="P&L nerealizat" value={formatMoney(data.unrealizedPnL)} />
-          </View>
-        </Card>
+        {/* holdings */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 9 }}>
+          <Label>Dețineri · {data.holdings.length} poziții</Label>
+          <Label>Valoare / P&L</Label>
+        </View>
+        <Hairline inset={20} />
 
-        <Subtitle>Dețineri</Subtitle>
         {data.holdings.length === 0 ? (
-          <Card>
-            <Text style={{ color: theme.colors.muted }}>Nu deții încă nimic. Mergi la „Piață" ca să cumperi.</Text>
-          </Card>
+          <Text style={{ color: c.muted, paddingHorizontal: 20, paddingVertical: 18 }}>Nicio deținere. Mergi la „Piață".</Text>
         ) : (
           data.holdings.map((h) => {
-            const pnlColor = h.unrealizedPnL >= 0 ? theme.colors.green : theme.colors.red;
+            const pl = h.unrealizedPnL / (h.avgCost * h.quantity || 1);
             return (
-              <Card key={h.symbol}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '700' }}>{h.symbol}</Text>
-                  <Text style={{ color: theme.colors.text, fontSize: 16 }}>{formatMoney(h.marketValue)}</Text>
+              <View key={h.symbol}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 11, gap: 10 }}>
+                  <SymbolTile symbol={h.symbol} accent={h.unrealizedPnL >= 0} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: c.text, fontSize: 14, fontWeight: '600' }}>{h.symbol}</Text>
+                    <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{h.quantity} buc · {formatMoney(h.avgCost)}</Mono>
+                  </View>
+                  <Mono style={{ fontSize: 14, fontWeight: '600' }}>{formatMoney(h.marketValue)}</Mono>
+                  <Mono style={{ color: gainColor(h.unrealizedPnL), fontSize: 12, fontWeight: '600', minWidth: 60, textAlign: 'right' }}>
+                    {formatPct(pl)}
+                  </Mono>
                 </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ color: theme.colors.muted }}>
-                    {h.quantity} buc · cost mediu {formatMoney(h.avgCost)}
-                  </Text>
-                  <Text style={{ color: pnlColor }}>{formatMoney(h.unrealizedPnL)}</Text>
-                </View>
-              </Card>
+                <Hairline inset={20} />
+              </View>
             );
           })
         )}
 
-        <Button title="Ieși din cont" variant="ghost" onPress={signOut} />
+        {/* cash */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 13 }}>
+          <Label>Numerar disponibil</Label>
+          <Mono style={{ color: c.muted2, fontSize: 14, fontWeight: '600' }}>{formatMoney(data.cash)}</Mono>
+        </View>
+
+        <Pressable onPress={signOut} style={{ padding: 20, alignItems: 'center' }}>
+          <Text style={{ color: c.faint, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', fontWeight: '700' }}>Ieși din cont</Text>
+        </Pressable>
       </ScrollView>
     </Screen>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={{ flex: 1 }}>
-      <Text style={{ color: theme.colors.muted, fontSize: 12 }}>{label}</Text>
-      <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '600' }}>{value}</Text>
-    </View>
   );
 }

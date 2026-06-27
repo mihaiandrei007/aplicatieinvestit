@@ -16,26 +16,32 @@ export function Screen({ children, scroll = true }: { children: ReactNode; scrol
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       {scroll ? (
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {children}
         </ScrollView>
       ) : (
-        <View style={styles.scrollContent}>{children}</View>
+        <View style={{ flex: 1 }}>{children}</View>
       )}
     </SafeAreaView>
   );
 }
 
-export function Title({ children }: { children: ReactNode }) {
-  return <Text style={styles.title}>{children}</Text>;
+/** Etichetă mică, uppercase, tracked. */
+export function Label({ children, style }: { children: ReactNode; style?: object }) {
+  return <Text style={[styles.label, style]}>{children}</Text>;
 }
 
-export function Subtitle({ children }: { children: ReactNode }) {
-  return <Text style={styles.subtitle}>{children}</Text>;
+export function H1({ children }: { children: ReactNode }) {
+  return <Text style={styles.h1}>{children}</Text>;
 }
 
-export function Card({ children, accent }: { children: ReactNode; accent?: boolean }) {
-  return <View style={[styles.card, accent && styles.cardAccent]}>{children}</View>;
+export function Mono({ children, style }: { children: ReactNode; style?: object }) {
+  return <Text style={[styles.mono, style]}>{children}</Text>;
+}
+
+/** Linie subțire de separare. */
+export function Hairline({ inset = 0 }: { inset?: number }) {
+  return <View style={[styles.hair, { marginHorizontal: inset }]} />;
 }
 
 export function Button({
@@ -51,21 +57,30 @@ export function Button({
   variant?: 'primary' | 'ghost' | 'danger';
   disabled?: boolean;
 }) {
-  const bg =
-    variant === 'primary' ? theme.colors.primary : variant === 'danger' ? theme.colors.red : 'transparent';
+  const isPrimary = variant === 'primary';
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled || loading}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: bg, opacity: pressed || disabled ? 0.7 : 1, borderWidth: variant === 'ghost' ? 1 : 0 },
+        isPrimary
+          ? { backgroundColor: theme.colors.lime }
+          : { backgroundColor: 'transparent', borderWidth: 1, borderColor: variant === 'danger' ? theme.colors.red : theme.colors.borderHi },
+        { opacity: pressed || disabled ? 0.65 : 1 },
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'ghost' ? theme.colors.primary : '#0B1020'} />
+        <ActivityIndicator color={isPrimary ? theme.colors.limeInk : theme.colors.text} />
       ) : (
-        <Text style={[styles.buttonText, { color: variant === 'ghost' ? theme.colors.text : '#0B1020' }]}>{title}</Text>
+        <Text
+          style={[
+            styles.buttonText,
+            { color: isPrimary ? theme.colors.limeInk : variant === 'danger' ? theme.colors.red : theme.colors.text },
+          ]}
+        >
+          {title}
+        </Text>
       )}
     </Pressable>
   );
@@ -75,48 +90,54 @@ export function Field(props: TextInputProps & { label: string }) {
   const { label, ...rest } = props;
   return (
     <View style={{ gap: 6 }}>
-      <Text style={styles.label}>{label}</Text>
+      <Label>{label}</Label>
       <TextInput placeholderTextColor={theme.colors.muted} style={styles.input} autoCapitalize="none" {...rest} />
     </View>
   );
 }
 
-/** Avatar circular cu inițiale, colorat pe baza numelui. */
-export function Avatar({ name, size = 40 }: { name: string; size?: number }) {
-  const palette = [theme.colors.primary, theme.colors.primaryAlt, theme.colors.green, theme.colors.gold];
-  const color = palette[name.length % palette.length]!;
+/** Pătrat cu simbolul instrumentului (bordură subțire). */
+export function SymbolTile({ symbol, accent, size = 36 }: { symbol: string; accent?: boolean; size?: number }) {
   return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: color + '33',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: color,
-      }}
-    >
-      <Text style={{ color, fontWeight: '800', fontSize: size * 0.4 }}>{initials(name)}</Text>
+    <View style={[styles.symbol, { width: size, height: size }]}>
+      <Text style={{ color: accent ? theme.colors.lime : theme.colors.text, fontSize: 9, fontWeight: '700', letterSpacing: 0.3 }}>
+        {symbol}
+      </Text>
     </View>
   );
 }
 
-/** Mic „chip" colorat pentru etichete. */
-export function Chip({ label, color = theme.colors.primary }: { label: string; color?: string }) {
+/** Monogramă pătrată cu inițiale. */
+export function Monogram({ name, size = 34 }: { name: string; size?: number }) {
   return (
-    <View style={{ backgroundColor: color + '22', borderColor: color + '55', borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
-      <Text style={{ color, fontSize: 12, fontWeight: '700' }}>{label}</Text>
+    <View style={[styles.symbol, { width: size, height: size }]}>
+      <Text style={{ color: theme.colors.lime, fontSize: size * 0.32, fontWeight: '700' }}>{initials(name)}</Text>
     </View>
   );
 }
 
-/** Bară de progres orizontală (0–100). */
-export function ProgressBar({ pct, color = theme.colors.primary }: { pct: number; color?: string }) {
+/** Control segmentat (ex. Clasament / Feed, Bullish / Bearish). */
+export function Segmented({
+  options,
+  value,
+  onChange,
+}: {
+  options: { key: string; label: string }[];
+  value: string;
+  onChange: (key: string) => void;
+}) {
   return (
-    <View style={{ height: 10, borderRadius: 999, backgroundColor: theme.colors.cardAlt, overflow: 'hidden' }}>
-      <View style={{ width: `${Math.max(0, Math.min(100, pct))}%`, height: 10, backgroundColor: color, borderRadius: 999 }} />
+    <View style={styles.segmented}>
+      {options.map((o) => {
+        const on = o.key === value;
+        return (
+          <Pressable key={o.key} onPress={() => onChange(o.key)} style={[styles.segItem, on && { backgroundColor: theme.colors.lime }]}>
+            <Text style={{ color: on ? theme.colors.limeInk : theme.colors.muted, fontSize: 11, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase' }}>
+              {o.label}
+            </Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -129,47 +150,39 @@ export function ErrorText({ children }: { children: ReactNode }) {
 export function Loading() {
   return (
     <View style={styles.center}>
-      <ActivityIndicator color={theme.colors.primary} size="large" />
+      <ActivityIndicator color={theme.colors.lime} size="large" />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.colors.bg },
-  scrollContent: { padding: theme.spacing(2), gap: theme.spacing(1.5) },
+  scrollContent: { paddingBottom: theme.spacing(2) },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.bg },
-  title: { color: theme.colors.text, fontSize: 28, fontWeight: '800', letterSpacing: 0.2 },
-  subtitle: { color: theme.colors.muted, fontSize: 15 },
-  card: {
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.radius,
-    padding: theme.spacing(2),
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    gap: theme.spacing(1),
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
-  },
-  cardAccent: { borderColor: theme.colors.primary + '66' },
-  button: {
-    borderRadius: theme.radius,
-    paddingVertical: 15,
-    alignItems: 'center',
-    borderColor: theme.colors.border,
-  },
-  buttonText: { fontSize: 16, fontWeight: '700' },
-  label: { color: theme.colors.muted, fontSize: 13 },
+  label: { fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: theme.colors.muted, fontWeight: '700' },
+  h1: { color: theme.colors.text, fontSize: 24, fontWeight: '700', letterSpacing: -0.5 },
+  mono: { color: theme.colors.text, fontVariant: ['tabular-nums'] },
+  hair: { height: 1, backgroundColor: theme.colors.hair },
+  button: { borderRadius: theme.radius, height: 48, alignItems: 'center', justifyContent: 'center' },
+  buttonText: { fontSize: 14, fontWeight: '700', letterSpacing: 0.5 },
   input: {
-    backgroundColor: theme.colors.cardAlt,
-    borderRadius: theme.radiusSm,
-    padding: 14,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius,
+    paddingHorizontal: 14,
+    height: 48,
     color: theme.colors.text,
     fontSize: 16,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
+  symbol: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radiusSm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmented: { flexDirection: 'row', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius, overflow: 'hidden' },
+  segItem: { flex: 1, paddingVertical: 9, alignItems: 'center' },
   error: { color: theme.colors.red, fontSize: 14 },
 });

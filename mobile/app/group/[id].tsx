@@ -1,223 +1,111 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { Screen, Subtitle, Card, Field, Button, Loading, Avatar } from '../../src/components/ui';
-import {
-  endpoints,
-  ApiError,
-  type LeaderboardEntry,
-  type FeedEvent,
-  type TournamentSummary,
-  type GroupSentiment,
-} from '../../src/api/client';
+import { Screen, Label, Mono, Hairline, Monogram, Segmented, Loading } from '../../src/components/ui';
+import { endpoints, type LeaderboardEntry, type FeedEvent, type GroupSentiment } from '../../src/api/client';
 import { useRealtime } from '../../src/realtime/useRealtime';
-import { theme, formatMoney, formatPct } from '../../src/theme';
+import { theme, formatMoney, formatPct, gainColor } from '../../src/theme';
 
-type Tab = 'leaderboard' | 'feed' | 'tournaments' | 'sentiment';
+type Tab = 'leaderboard' | 'feed' | 'sentiment';
 
 export default function GroupDetail() {
+  const c = theme.colors;
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const [tab, setTab] = useState<Tab>('leaderboard');
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[] | null>(null);
   const [feed, setFeed] = useState<FeedEvent[] | null>(null);
-  const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
   const [sentiment, setSentiment] = useState<GroupSentiment[]>([]);
-  const [groupName, setGroupName] = useState('Grup');
-  const [tname, setTname] = useState('');
+  const [name, setName] = useState('Grup');
 
   const load = useCallback(async () => {
     if (!id) return;
-    const [lb, fd, tr, sn] = await Promise.all([
-      endpoints.leaderboard(id),
-      endpoints.feed(id),
-      endpoints.tournaments(id),
-      endpoints.groupSentiment(id),
-    ]);
+    const [lb, fd, sn] = await Promise.all([endpoints.leaderboard(id), endpoints.feed(id), endpoints.groupSentiment(id)]);
     setLeaderboard(lb.leaderboard);
-    setGroupName(lb.group.name);
+    setName(lb.group.name);
     setFeed(fd.events);
-    setTournaments(tr.tournaments);
     setSentiment(sn.sentiment);
   }, [id]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => { navigation.setOptions({ title: name }); }, [navigation, name]);
+  useRealtime({ groupId: id, onMessage: (m) => { if (m.type === 'NEW_ACTIVITY') load(); } });
 
-  useEffect(() => {
-    navigation.setOptions({ title: groupName });
-  }, [navigation, groupName]);
-
-  // Feed + clasament live: reîncarcă la orice activitate nouă din grup.
-  useRealtime({
-    groupId: id,
-    onMessage: (msg) => {
-      if (msg.type === 'NEW_ACTIVITY') load();
-    },
-  });
-
-  async function react(eventId: string, emoji: string) {
-    await endpoints.react(eventId, emoji);
-    load();
-  }
-
-  async function createTournament() {
-    if (tname.trim().length < 2 || !id) return;
-    const now = new Date();
-    const end = new Date(now.getTime() + 30 * 24 * 3600 * 1000);
-    try {
-      await endpoints.createTournament(id, tname.trim(), now.toISOString(), end.toISOString());
-      setTname('');
-      load();
-    } catch (e) {
-      Alert.alert('Eroare', e instanceof ApiError ? e.message : 'Creare eșuată.');
-    }
-  }
-
-  async function joinTournament(tid: string) {
-    try {
-      await endpoints.joinTournament(tid);
-      Alert.alert('Înscris', 'Te-ai înscris în turneu.');
-      load();
-    } catch (e) {
-      Alert.alert('Eroare', e instanceof ApiError ? e.message : 'Înscriere eșuată.');
-    }
-  }
+  async function react(eventId: string) { await endpoints.react(eventId, '🔥').catch(() => {}); load(); }
 
   if (!leaderboard || !feed) return <Loading />;
 
   return (
     <Screen scroll={false}>
-      <View style={{ flexDirection: 'row', gap: theme.spacing(1), marginBottom: theme.spacing(1) }}>
-        <TabButton label="Clasament" active={tab === 'leaderboard'} onPress={() => setTab('leaderboard')} />
-        <TabButton label="Feed" active={tab === 'feed'} onPress={() => setTab('feed')} />
-        <TabButton label="Turnee" active={tab === 'tournaments'} onPress={() => setTab('tournaments')} />
-        <TabButton label="Sentiment" active={tab === 'sentiment'} onPress={() => setTab('sentiment')} />
+      <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 }}>
+        <Segmented
+          options={[{ key: 'leaderboard', label: 'Clasament' }, { key: 'feed', label: 'Feed' }, { key: 'sentiment', label: 'Sentiment' }]}
+          value={tab}
+          onChange={(k) => setTab(k as Tab)}
+        />
       </View>
+      <Hairline inset={20} />
 
-      <ScrollView contentContainerStyle={{ gap: theme.spacing(1) }}>
+      <ScrollView showsVerticalScrollIndicator={false}>
         {tab === 'leaderboard' &&
-          leaderboard.map((e) => {
-            const medal = e.rank === 1 ? '🥇' : e.rank === 2 ? '🥈' : e.rank === 3 ? '🥉' : `${e.rank}`;
-            return (
-              <Card key={e.userId} accent={e.isMe}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <Text style={{ width: 28, textAlign: 'center', fontSize: 18, fontWeight: '800', color: theme.colors.gold }}>
-                    {medal}
-                  </Text>
-                  <Avatar name={e.displayName} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700' }}>
-                      {e.displayName} {e.isMe ? '· tu' : ''}
-                    </Text>
-                    <Text style={{ color: theme.colors.muted, fontSize: 12 }}>{formatMoney(e.equity)}</Text>
-                  </View>
-                  <Text style={{ color: e.roi >= 0 ? theme.colors.green : theme.colors.red, fontWeight: '800', fontSize: 16 }}>
-                    {formatPct(e.roi)}
-                  </Text>
+          leaderboard.map((e) => (
+            <View key={e.userId}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 13 }}>
+                <Text style={{ width: 22, textAlign: 'center', color: e.rank <= 3 ? c.lime : c.faint, fontSize: 16, fontWeight: '700', fontVariant: ['tabular-nums'] }}>{e.rank}</Text>
+                <Monogram name={e.displayName} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: c.text, fontSize: 15, fontWeight: '600' }}>{e.displayName}{e.isMe ? '  ·  tu' : ''}</Text>
+                  <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{formatMoney(e.equity)}</Mono>
                 </View>
-              </Card>
-            );
-          })}
+                <Mono style={{ color: gainColor(e.roi), fontSize: 16, fontWeight: '700' }}>{formatPct(e.roi)}</Mono>
+              </View>
+              <Hairline inset={20} />
+            </View>
+          ))}
 
         {tab === 'feed' &&
           (feed.length === 0 ? (
-            <Card>
-              <Text style={{ color: theme.colors.muted }}>Niciun eveniment încă.</Text>
-            </Card>
+            <Text style={{ color: c.muted, padding: 20 }}>Niciun eveniment încă.</Text>
           ) : (
             feed.map((ev) => (
-              <Card key={ev.id}>
-                <Text style={{ color: theme.colors.text }}>{ev.message}</Text>
-                <View style={{ flexDirection: 'row', gap: theme.spacing(1), marginTop: 6 }}>
-                  {['👍', '🔥', '🚀'].map((emoji) => {
-                    const r = ev.reactions.find((x) => x.emoji === emoji);
-                    return (
-                      <Pressable key={emoji} onPress={() => react(ev.id, emoji)}>
-                        <Text style={{ color: r?.reactedByMe ? theme.colors.primary : theme.colors.muted }}>
-                          {emoji} {r?.count ?? 0}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                  <Text style={{ color: theme.colors.muted, marginLeft: 'auto' }}>💬 {ev.commentCount}</Text>
+              <View key={ev.id}>
+                <View style={{ paddingHorizontal: 20, paddingVertical: 14 }}>
+                  <Text style={{ color: c.text, fontSize: 14 }}>{ev.message}</Text>
+                  <View style={{ flexDirection: 'row', gap: 16, marginTop: 8, alignItems: 'center' }}>
+                    <Pressable onPress={() => react(ev.id)}>
+                      <Mono style={{ color: ev.reactions.some((r) => r.reactedByMe) ? c.lime : c.muted, fontSize: 12 }}>
+                        REACȚII {ev.reactions.reduce((s, r) => s + r.count, 0)}
+                      </Mono>
+                    </Pressable>
+                    <Mono style={{ color: c.muted, fontSize: 12 }}>COM {ev.commentCount}</Mono>
+                  </View>
                 </View>
-              </Card>
+                <Hairline inset={20} />
+              </View>
             ))
           ))}
 
-        {tab === 'tournaments' && (
-          <>
-            {tournaments.map((t) => (
-              <Card key={t.id}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: theme.colors.text, fontWeight: '700' }}>{t.name}</Text>
-                    <Text style={{ color: theme.colors.muted, fontSize: 12 }}>{t.participants} participanți</Text>
-                  </View>
-                  <Pressable
-                    onPress={() => joinTournament(t.id)}
-                    style={{ backgroundColor: theme.colors.primary, paddingHorizontal: 14, paddingVertical: 8, borderRadius: theme.radius }}
-                  >
-                    <Text style={{ color: theme.colors.text }}>Înscrie-te</Text>
-                  </Pressable>
-                </View>
-              </Card>
-            ))}
-            <Card>
-              <Subtitle>Creează un turneu (30 de zile)</Subtitle>
-              <Field label="Nume turneu" value={tname} onChangeText={setTname} placeholder="Iunie 2026" />
-              <Button title="Creează" onPress={createTournament} />
-            </Card>
-          </>
-        )}
-
         {tab === 'sentiment' &&
           (sentiment.length === 0 ? (
-            <Card>
-              <Text style={{ color: theme.colors.muted }}>
-                Niciun vot încă. Marchează Bullish/Bearish din „Piață".
-              </Text>
-            </Card>
+            <Text style={{ color: c.muted, padding: 20 }}>Niciun vot. Marchează Bullish/Bearish din „Piață".</Text>
           ) : (
             sentiment.map((s) => (
-              <Card key={s.symbol}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ color: theme.colors.text, fontWeight: '700' }}>
-                    {s.symbol} {s.myValue === 'BULLISH' ? '📈' : s.myValue === 'BEARISH' ? '📉' : ''}
-                  </Text>
-                  <Text style={{ color: theme.colors.muted, fontSize: 12 }}>
-                    {s.bullish}↑ / {s.bearish}↓
-                  </Text>
+              <View key={s.symbol}>
+                <View style={{ paddingHorizontal: 20, paddingVertical: 14 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <Text style={{ color: c.text, fontWeight: '700' }}>{s.symbol}{s.myValue ? `  ·  ${s.myValue === 'BULLISH' ? 'bullish' : 'bearish'}` : ''}</Text>
+                    <Mono style={{ color: c.muted, fontSize: 12 }}>{s.bullish} / {s.bearish}</Mono>
+                  </View>
+                  <View style={{ height: 6, backgroundColor: c.red, borderRadius: 2, overflow: 'hidden' }}>
+                    <View style={{ width: `${s.bullishPct}%`, height: 6, backgroundColor: c.lime }} />
+                  </View>
+                  <Label style={{ marginTop: 6 }}>{s.bullishPct}% bullish</Label>
                 </View>
-                <View style={{ height: 8, borderRadius: 4, backgroundColor: theme.colors.red, overflow: 'hidden' }}>
-                  <View style={{ width: `${s.bullishPct}%`, height: 8, backgroundColor: theme.colors.green }} />
-                </View>
-                <Text style={{ color: theme.colors.muted, fontSize: 12 }}>{s.bullishPct}% bullish</Text>
-              </Card>
+                <Hairline inset={20} />
+              </View>
             ))
           ))}
       </ScrollView>
     </Screen>
-  );
-}
-
-function TabButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        flex: 1,
-        paddingVertical: 10,
-        borderRadius: theme.radius,
-        backgroundColor: active ? theme.colors.primary : theme.colors.card,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: theme.colors.border,
-      }}
-    >
-      <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 13 }}>{label}</Text>
-    </Pressable>
   );
 }

@@ -24,11 +24,10 @@ function AuthGate() {
   if (loading) return <Loading />;
 
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0B1220' } }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0A0B0D' } }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="group/[id]" options={{ headerShown: true, title: 'Grup', headerStyle: { backgroundColor: '#16203A' }, headerTintColor: '#E8EDF6' }} />
-      <Stack.Screen name="academy/quiz/[id]" options={{ headerShown: true, title: 'Quiz', headerStyle: { backgroundColor: '#16203A' }, headerTintColor: '#E8EDF6' }} />
+      <Stack.Screen name="group/[id]" options={{ headerShown: true, title: 'Grup', headerStyle: { backgroundColor: '#0A0B0D' }, headerTintColor: '#E8EAED' }} />
     </Stack>
   );
 }

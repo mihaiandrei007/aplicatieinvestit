@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
+import { Text, View } from 'react-native';
 import { Link } from 'expo-router';
-import { Text } from 'react-native';
-import { Screen, Title, Subtitle, Card, Field, Button, ErrorText } from '../../src/components/ui';
+import { Screen, Label, Field, Button, ErrorText } from '../../src/components/ui';
 import { useAuth } from '../../src/auth/AuthContext';
 import { ApiError } from '../../src/api/client';
 import { theme } from '../../src/theme';
 
 export default function Register() {
+  const c = theme.colors;
   const { signUp } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -15,31 +16,33 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   async function onSubmit() {
-    setError('');
-    setLoading(true);
-    try {
-      await signUp(email.trim(), password, displayName.trim());
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Înregistrare eșuată.');
-    } finally {
-      setLoading(false);
-    }
+    setError(''); setLoading(true);
+    try { await signUp(email.trim(), password, displayName.trim()); }
+    catch (e) { setError(e instanceof ApiError ? e.message : 'Înregistrare eșuată.'); }
+    finally { setLoading(false); }
   }
 
   return (
     <Screen>
-      <Title>Cont nou</Title>
-      <Subtitle>Primești 100.000 (virtuali) de start.</Subtitle>
-      <Card>
-        <Field label="Nume afișat" value={displayName} onChangeText={setDisplayName} placeholder="Ana" autoCapitalize="words" />
+      <View style={{ padding: 20, paddingTop: 60, gap: 8 }}>
+        <Text style={{ color: c.text, fontSize: 28, fontWeight: '800', letterSpacing: -1 }}>Cont nou</Text>
+        <Label>Primești 100.000 virtuali de start</Label>
+
+        <View style={{ height: 24 }} />
+        <Field label="Nume afișat" value={displayName} onChangeText={setDisplayName} autoCapitalize="words" placeholder="Ana" />
+        <View style={{ height: 12 }} />
         <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="email@exemplu.ro" />
-        <Field label="Parolă (min. 8 caractere)" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
+        <View style={{ height: 12 }} />
+        <Field label="Parolă (min. 8)" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
         <ErrorText>{error}</ErrorText>
-        <Button title="Creează cont" onPress={onSubmit} loading={loading} />
-      </Card>
-      <Link href="/(auth)/login" asChild>
-        <Text style={{ color: theme.colors.primary, textAlign: 'center' }}>Ai deja cont? Autentifică-te</Text>
-      </Link>
+        <View style={{ height: 8 }} />
+        <Button title="CREEAZĂ CONT" onPress={onSubmit} loading={loading} />
+
+        <View style={{ height: 20 }} />
+        <Link href="/(auth)/login" style={{ color: c.lime, textAlign: 'center', fontSize: 13, fontWeight: '700' }}>
+          Ai deja cont? Autentifică-te
+        </Link>
+      </View>
     </Screen>
   );
 }

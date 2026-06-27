@@ -1,27 +1,29 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
 import { theme } from '../../src/theme';
-
-/** Emoji-uri simple ca iconițe, ca să evităm dependențe suplimentare. */
-function icon(emoji: string) {
-  return ({ color }: { color: string }) => <Text style={{ fontSize: 20, color }}>{emoji}</Text>;
-}
+import { IconPortfolio, IconMarket, IconGroups, IconTrophy } from '../../src/components/icons';
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.muted,
-        tabBarStyle: { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border },
+        tabBarActiveTintColor: theme.colors.lime,
+        tabBarInactiveTintColor: theme.colors.faint,
+        tabBarStyle: { backgroundColor: theme.colors.bg, borderTopColor: theme.colors.hair, height: 76, paddingTop: 8 },
+        tabBarLabelStyle: { fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', fontWeight: '700' },
       }}
     >
-      <Tabs.Screen name="portfolio" options={{ title: 'Portofoliu', tabBarIcon: icon('💼') }} />
-      <Tabs.Screen name="market" options={{ title: 'Piață', tabBarIcon: icon('📈') }} />
-      <Tabs.Screen name="groups" options={{ title: 'Grupuri', tabBarIcon: icon('👥') }} />
-      <Tabs.Screen name="academy" options={{ title: 'Academie', tabBarIcon: icon('🎓') }} />
+      <Tabs.Screen
+        name="portfolio"
+        options={{ title: 'Portofoliu', tabBarIcon: ({ color }) => <IconPortfolio color={color} /> }}
+      />
+      <Tabs.Screen name="market" options={{ title: 'Piață', tabBarIcon: ({ color }) => <IconMarket color={color} /> }} />
+      <Tabs.Screen name="groups" options={{ title: 'Grupuri', tabBarIcon: ({ color }) => <IconGroups color={color} /> }} />
+      <Tabs.Screen
+        name="provocari"
+        options={{ title: 'Provocări', tabBarIcon: ({ color }) => <IconTrophy color={color} /> }}
+      />
     </Tabs>
   );
 }

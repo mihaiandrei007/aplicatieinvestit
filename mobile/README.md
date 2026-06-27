@@ -38,14 +38,22 @@ npx expo start
 
 Apoi scanează codul QR cu **Expo Go** (Android/iOS) sau apasă `a`/`i` pentru emulator.
 
+## Design
+Stil **„Terminal pro-trader"**: negru profund, accent lime, cifre monospace, linii subțiri,
+iconițe SVG, **fără emoji**. Vezi `../docs/design/`. Tema în `src/theme.ts`, componente în
+`src/components/ui.tsx` + `icons.tsx`.
+
 ## Ce e implementat
 - Autentificare (înregistrare/login) cu token păstrat securizat.
-- Portofoliu: equity, randament, **grafic de evoluție** (SVG), dețineri, P&L.
-- Piață: instrumente cu **prețuri live (WebSocket)**, cumpărare/vânzare, insigne noi.
-- Grupuri: creare/intrare cu cod, clasament, **feed social live**, **turnee** (creare/înscriere).
-- Academie: misiuni cu progres, **quiz-uri interactive** cu explicații, galerie de insigne.
+- Portofoliu: equity, randament, **grafic de evoluție** (SVG), streak + credite, dețineri, P&L.
+- Piață: instrumente cu **prețuri live (WebSocket)**, modul de tranzacționare, sentiment Bullish/Bearish.
+- Grupuri: creare/intrare cu cod, clasament, **feed social live**, sentiment de grup.
+- Provocări: turnee pe sezon (creare/înscriere), per grup.
 - **Notificări push** (`expo-notifications`) înregistrate automat la login (device fizic).
 - Timp real: `src/realtime/useRealtime.ts` (reconectare automată) consumă `WS_URL`.
+
+> Partea educativă (academie/quiz) a fost scoasă din UI; al 4-lea tab e acum **Provocări**.
+> Endpoint-urile de academie rămân în backend, dar nu mai sunt folosite pe mobil.
 
 ## OAuth Google/Apple
 Backend-ul expune `POST /api/auth/oauth` (verifică ID token-ul prin JWKS) și

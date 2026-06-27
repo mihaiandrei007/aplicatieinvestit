@@ -1,25 +1,24 @@
 # Design — InvestPals (mobil)
 
-Direcție vizuală: **dark-first, prietenoasă, modernă** — carduri rotunjite cu umbre,
-un albastru-violet ca accent, verde/roșu pentru câștig/pierdere, avatare cu inițiale,
-emoji ca accente, grafic de capital cu gradient.
+Direcție vizuală: **„Terminal pro-trader"** — negru profund (#0A0B0D), un singur accent
+**lime** (#C8FA4B), cifre **monospace tabulare**, etichete mici UPPERCASE cu tracking,
+linii subțiri (hairlines) în loc de carduri-bule, iconițe SVG line-art. **Fără emoji.**
+Câștigurile se afișează în lime, pierderile în roșu (#E5484D).
 
-Paleta și componentele sunt în `mobile/src/theme.ts` și `mobile/src/components/ui.tsx`.
+Paleta și componentele: `mobile/src/theme.ts`, `mobile/src/components/ui.tsx`,
+`mobile/src/components/icons.tsx` (iconițe + grafic SVG).
 
-## Ecrane (machete)
+## Ecrane
 
 | | Ecran |
 | --- | --- |
-| ![](01-login.png) | **Login** — logo, OAuth Google/Apple |
-| ![](02-portfoliu.png) | **Portofoliu** — card de streak 🔥, hero equity cu grafic, dețineri |
-| ![](03-piata.png) | **Piață** — instrumente live, panou de tranzacționare + sentiment 📈📉 |
-| ![](04-clasament.png) | **Clasament de grup** — medalii 🥇🥈🥉, avatare, rândul „tu" evidențiat |
-| ![](05-feed.png) | **Feed social** — activitate, reacții, comentarii |
-| ![](06-academie.png) | **Academie** — progres, misiuni, quiz-uri, insigne |
+| ![](01-login.png) | **Login** — wordmark, OAuth Google/Apple |
+| ![](02-portofoliu.png) | **Portofoliu** — equity mono, ROI lime, grafic, streak/credite, dețineri |
+| ![](03-piata.png) | **Piață** — instrumente live, modul de tranzacționare + Bullish/Bearish |
+| ![](04-grupuri.png) | **Grupuri** — ligi private cu cod de invitație |
+| ![](05-grup-detaliu.png) | **Detaliu grup** — Clasament / Feed / Sentiment |
+| ![](06-provocari.png) | **Provocări** — turnee pe sezon, per grup |
 
-## Cum se regenerează machetele
-`mockups.gen.mjs` produce fișiere HTML; capturile se fac cu Chromium la viewport 390×844 @2x
-(Playwright cu viewport forțat — altfel chenarul ferestrei taie bara de jos).
-
-> Notă: machetele sunt o reprezentare fidelă a designului implementat în cod (aceeași paletă
-> și aceleași componente). Nu sunt capturi din build-ul Expo rulat pe device.
+> Partea educativă (academie/quiz) a fost **scoasă**; al 4-lea tab e acum **Provocări**.
+> Capturile sunt randate la 390×844 @2x (Playwright cu viewport forțat), reprezentând
+> fidel designul implementat în cod.

@@ -1,36 +1,45 @@
-/** Paletă, spațieri și tipografie — un look modern, prietenos, dark-first. */
+/**
+ * Temă — direcția „Terminal pro-trader": negru profund, accent lime, cifre mono.
+ * Câștigurile se afișează în lime (accentul), pierderile în roșu. Fără emoji.
+ */
 export const theme = {
   colors: {
-    bg: '#0B1020',
-    bgElevated: '#121A2E',
-    card: '#16203A',
-    cardAlt: '#1E2A47',
-    text: '#EAF0FB',
-    muted: '#8A97B1',
-    primary: '#5B8CFF',
-    primaryAlt: '#7C5CFF',
-    green: '#2BD67B',
-    red: '#FF5C6C',
-    gold: '#FFCF5C',
-    border: '#26324F',
+    bg: '#0A0B0D',
+    surface: '#101317',
+    surfaceAlt: '#0D0F12',
+    text: '#E8EAED',
+    muted: '#6B7178',
+    muted2: '#9AA0A6',
+    faint: '#565B62',
+    lime: '#C8FA4B',
+    limeInk: '#0A0B0D',
+    red: '#E5484D',
+    hair: '#1C1F24',
+    border: '#23272D',
+    borderHi: '#2A2E34',
   },
   spacing: (n: number) => n * 8,
-  radius: 18,
-  radiusSm: 12,
+  radius: 6,
+  radiusSm: 4,
 } as const;
 
-/** Formatează o sumă în „bani virtuali". */
+/** Sumă în format ro-RO (ex. 112.340,50). */
 export function formatMoney(value: number): string {
   return value.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-/** Formatează un randament procentual cu semn. */
+/** Randament procentual cu semn, format ro-RO (ex. +12,34%). */
 export function formatPct(value: number): string {
   const sign = value >= 0 ? '+' : '';
-  return `${sign}${(value * 100).toFixed(2)}%`;
+  return `${sign}${(value * 100).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
 }
 
-/** Inițialele pentru avatar (ex. „Ana Popescu" -> „AP"). */
+/** Culoarea pentru o valoare: lime pe plus, roșu pe minus. */
+export function gainColor(value: number): string {
+  return value >= 0 ? theme.colors.lime : theme.colors.red;
+}
+
+/** Inițialele pentru monogramă (ex. „Ana Popescu" -> „AP"). */
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/);
   return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
