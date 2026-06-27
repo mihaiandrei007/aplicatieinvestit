@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Screen, Label, H1, Mono, Hairline, SymbolTile, Button, Segmented, Loading } from '../../src/components/ui';
 import { Caret, IconSearch } from '../../src/components/icons';
-import { endpoints, ApiError, type Instrument, type SentimentValue } from '../../src/api/client';
+import { endpoints, ApiError, type Instrument, type SentimentValue, type NewsItem } from '../../src/api/client';
 import { useRealtime } from '../../src/realtime/useRealtime';
 import { theme, formatMoney, gainColor } from '../../src/theme';
 
@@ -11,6 +11,7 @@ export default function MarketScreen() {
   const c = theme.colors;
   const [instruments, setInstruments] = useState<Instrument[] | null>(null);
   const [prev, setPrev] = useState<Record<string, number>>({});
+  const [news, setNews] = useState<NewsItem[]>([]);
   const [selected, setSelected] = useState<Instrument | null>(null);
   const [qty, setQty] = useState(10);
   const [stance, setStance] = useState<SentimentValue>('BULLISH');
@@ -18,9 +19,10 @@ export default function MarketScreen() {
   const [credits, setCredits] = useState<number | null>(null);
 
   const load = useCallback(async () => {
-    const [{ instruments }, st] = await Promise.all([endpoints.instruments(), endpoints.streak()]);
+    const [{ instruments }, st, nw] = await Promise.all([endpoints.instruments(), endpoints.streak(), endpoints.news()]);
     setInstruments(instruments);
     setCredits(st.tradeCredits);
+    setNews(nw.news);
     setPrev((p) => {
       const next = { ...p };
       for (const i of instruments) if (next[i.symbol] === undefined) next[i.symbol] = i.currentPrice;
@@ -30,6 +32,11 @@ export default function MarketScreen() {
 
   useRealtime({
     onMessage: (msg) => {
+      if (msg.type === 'NEWS') {
+        const n = msg.payload as { symbol: string | null; headline: string; impact: number };
+        setNews((cur) => [{ id: `${Date.now()}`, createdAt: new Date().toISOString(), ...n }, ...cur].slice(0, 30));
+        return;
+      }
       if (msg.type !== 'PRICE_UPDATE') return;
       const changes = msg.payload as Array<{ symbol: string; prev: number; next: number }>;
       const map = new Map(changes.map((x) => [x.symbol, x]));
@@ -77,6 +84,26 @@ export default function MarketScreen() {
           </View>
         </View>
 
+        {/* news strip */}
+        {news.length > 0 && (
+          <>
+            <Hairline inset={20} />
+            <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 4 }}>
+              <Label>Știri de piață</Label>
+            </View>
+            {news.slice(0, 3).map((n) => (
+              <View key={n.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingVertical: 7 }}>
+                {n.symbol ? <SymbolTile symbol={n.symbol} accent={n.impact >= 0} size={30} /> : null}
+                <Text numberOfLines={2} style={{ flex: 1, color: c.muted2, fontSize: 12 }}>{n.headline}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                  <Caret up={n.impact >= 0} color={gainColor(n.impact)} />
+                  <Mono style={{ color: gainColor(n.impact), fontSize: 12, fontWeight: '700' }}>{(n.impact >= 0 ? '+' : '') + (n.impact * 100).toFixed(0)}%</Mono>
+                </View>
+              </View>
+            ))}
+          </>
+        )}
+
         {/* column head */}
         <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 8 }}>
           <Text style={{ flex: 1, color: c.faint, fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase' }}>Simbol</Text>
@@ -85,7 +112,7 @@ export default function MarketScreen() {
         </View>
         <Hairline inset={20} />
 
-        <View style={{ flex: 1 }}>
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           {instruments.map((i) => {
             const base = prev[i.symbol] ?? i.currentPrice;
             const chg = base ? (i.currentPrice - base) / base : 0;
@@ -110,7 +137,7 @@ export default function MarketScreen() {
               </View>
             );
           })}
-        </View>
+        </ScrollView>
 
         {/* trade module */}
         {selected && (

@@ -97,6 +97,14 @@ export interface CheckInResult {
   earnedFreeze?: boolean;
 }
 
+export interface NewsItem {
+  id: string;
+  symbol: string | null;
+  headline: string;
+  impact: number;
+  createdAt: string;
+}
+
 export type SentimentValue = 'BULLISH' | 'BEARISH';
 
 export interface GroupSentiment {
@@ -255,4 +263,6 @@ export const endpoints = {
     api.post<{ symbol: string; myValue: SentimentValue | null }>('/api/sentiment', { symbol, value }),
   groupSentiment: (groupId: string) =>
     api.get<{ sentiment: GroupSentiment[] }>(`/api/groups/${groupId}/sentiment`),
+
+  news: () => api.get<{ news: NewsItem[] }>('/api/market/news'),
 };
