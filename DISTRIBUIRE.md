@@ -62,14 +62,49 @@ Toți văd **aceleași prețuri** (piața e globală, pe server) și se mișcă 
 
 ---
 
-## Limitări de știut
-- **PC-ul tău trebuie să ruleze `expo start`** cât timp testează ei (tunnel-ul servește codul aplicației). Backend-ul, fiind pe Render, e independent.
+## Limitări de știut (tunnel)
+- **PC-ul tău trebuie să ruleze `expo start`** cât timp testează ei. Backend-ul, fiind pe Render, e independent.
 - **Notificările push** sunt limitate în Expo Go pe iOS — restul aplicației merge complet.
-- Vrei un link permanent, fără PC-ul tău pornit? Treci la un **build EAS** (`eas build -p android --profile preview` pentru un `.apk` de trimis). Pot pregăti și asta.
+
+---
+
+# Varianta 2 — APK Android (link permanent, fără PC-ul tău pornit)
+
+Un fișier `.apk` instalabil direct, pe care îl trimiți ca link. Nu necesită Expo Go,
+nu necesită PC-ul tău pornit. **Doar pentru Android.** (config gata în `mobile/eas.json`)
+
+1. Asigură-te că backend-ul e deja deployat (vezi pasul 1 de sus) și ai URL-ul lui.
+2. În `mobile/eas.json`, înlocuiește `https://investpals-backend.onrender.com` cu URL-ul tău real
+   (în profilul `preview`), ca APK-ul să pointeze spre backend-ul tău.
+3. Instalează unealta și fă-ți cont Expo (gratis):
+   ```bash
+   cd mobile
+   npm install -g eas-cli
+   eas login            # creează cont pe expo.dev dacă nu ai
+   eas init             # leagă proiectul (adaugă projectId în app.json)
+   eas build -p android --profile preview
+   ```
+4. Build-ul rulează în cloud-ul Expo (~10–15 min). La final primești un **link de download** către `.apk`.
+5. Trimite linkul prietenilor cu Android → îl deschid, descarcă, instalează
+   (poate cere „permite instalarea din surse necunoscute").
+
+> iPhone: un build instalabil real (`.ipa` / TestFlight) necesită **cont Apple Developer (99$/an)**.
+> Pentru prietenii cu iPhone, rămâi la **Varianta 1 (Expo Go + tunnel)** până atunci.
+
+---
+
+## Ce să folosești, pe scurt
+- **Prieteni Android** → APK (Varianta 2): le trimiți un link, gata, permanent.
+- **Prieteni iPhone** → Expo Go + tunnel (Varianta 1), cu PC-ul tău pornit cât testează.
+- **Backend** → o singură dată pe Render (`render.yaml`), apoi merge pentru toți.
 
 ## Recapitulare comenzi
 ```bash
 # backend (o dată): deploy pe Render via render.yaml
-# mobil (de fiecare dată când vrei să le arăți):
+
+# Android — APK permanent:
+cd mobile && eas build -p android --profile preview
+
+# iPhone — Expo Go + tunnel (PC pornit):
 cd mobile && npx expo start --tunnel
 ```

@@ -9,14 +9,16 @@
     "newArchEnabled": true,
     "splash": {
       "resizeMode": "contain",
-      "backgroundColor": "#0B1220"
+      "backgroundColor": "#0A0B0D"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.investpals.app"
     },
     "android": {
+      "package": "com.investpals.app",
       "adaptiveIcon": {
-        "backgroundColor": "#0B1220"
+        "backgroundColor": "#0A0B0D"
       }
     },
     "web": {
