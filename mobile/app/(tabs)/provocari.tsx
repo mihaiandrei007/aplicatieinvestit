@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen, Label, H1, Mono, Hairline, Button, Loading } from '../../src/components/ui';
 import { endpoints, ApiError, type GroupSummary, type TournamentSummary } from '../../src/api/client';
 import { theme } from '../../src/theme';
@@ -12,6 +12,7 @@ interface GroupTournaments {
 
 export default function ProvocariScreen() {
   const c = theme.colors;
+  const router = useRouter();
   const [data, setData] = useState<GroupTournaments[] | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -70,10 +71,10 @@ export default function ProvocariScreen() {
             tournaments.map((t) => (
               <View key={t.id}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, gap: 12 }}>
-                  <View style={{ flex: 1 }}>
+                  <Pressable style={{ flex: 1 }} onPress={() => router.push(`/tournament/${t.id}`)}>
                     <Text style={{ color: c.text, fontSize: 15, fontWeight: '700' }}>{t.name}</Text>
-                    <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{t.participants} participanți</Mono>
-                  </View>
+                    <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{t.participants} participanți · vezi clasament ›</Mono>
+                  </Pressable>
                   <Pressable onPress={() => join(t.id)} style={{ borderWidth: 1, borderColor: c.lime, borderRadius: 5, paddingHorizontal: 14, paddingVertical: 8 }}>
                     <Text style={{ color: c.lime, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' }}>Înscrie-te</Text>
                   </Pressable>

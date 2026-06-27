@@ -1,33 +1,49 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, Dimensions, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen, Label, Mono, Hairline, SymbolTile, Loading } from '../../src/components/ui';
 import { Caret, EquitySparkline } from '../../src/components/icons';
-import { endpoints, type PortfolioSnapshot, type EquityPoint, type StreakState } from '../../src/api/client';
+import { endpoints, type PortfolioSnapshot, type EquityPoint, type StreakState, type DailyChallenge } from '../../src/api/client';
 import { useAuth } from '../../src/auth/AuthContext';
 import { theme, formatMoney, formatPct, gainColor, initials } from '../../src/theme';
 
 const W = Dimensions.get('window').width;
 
 export default function PortfolioScreen() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState<PortfolioSnapshot | null>(null);
   const [history, setHistory] = useState<EquityPoint[]>([]);
   const [streak, setStreak] = useState<StreakState | null>(null);
+  const [daily, setDaily] = useState<DailyChallenge | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
 
   const load = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [snap, hist, st] = await Promise.all([endpoints.portfolio(), endpoints.history(), endpoints.streak()]);
+      const [snap, hist, st, dc] = await Promise.all([
+        endpoints.portfolio(),
+        endpoints.history(),
+        endpoints.streak(),
+        endpoints.daily(),
+      ]);
       setData(snap);
       setHistory(hist.history);
       setStreak(st);
+      setDaily(dc);
     } finally {
       setRefreshing(false);
     }
   }, []);
+
+  async function voteDaily(direction: 'UP' | 'DOWN') {
+    try {
+      setDaily(await endpoints.voteDaily(direction));
+    } catch (e) {
+      Alert.alert('Provocare', e instanceof Error ? e.message : 'Vot eșuat.');
+    }
+  }
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
@@ -67,10 +83,37 @@ export default function PortfolioScreen() {
             </View>
             <Text style={{ color: c.faint, fontSize: 11, marginTop: 6 }}>Portofoliu virtual · {user?.displayName}</Text>
           </View>
-          <View style={{ width: 30, height: 30, borderWidth: 1, borderColor: c.borderHi, borderRadius: 4, alignItems: 'center', justifyContent: 'center' }}>
+          <Pressable onPress={() => router.push('/profile')} style={{ width: 32, height: 32, borderWidth: 1, borderColor: c.borderHi, borderRadius: 4, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ color: c.lime, fontSize: 11, fontWeight: '700' }}>{initials(user?.displayName ?? '')}</Text>
-          </View>
+          </Pressable>
         </View>
+
+        {/* provocarea zilnică (#13) */}
+        {daily && (
+          <View style={{ marginHorizontal: 20, marginTop: 14, borderWidth: 1, borderColor: c.lime + '55', borderRadius: 8, padding: 14 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Label>Provocarea zilei · +{daily.reward.cash}$ +{daily.reward.credits}cr</Label>
+              <Mono style={{ color: c.muted, fontSize: 11 }}>{daily.votesUp}↑ / {daily.votesDown}↓</Mono>
+            </View>
+            <Text style={{ color: c.text, fontSize: 15, fontWeight: '700', marginTop: 6 }}>
+              {daily.name} ({daily.symbol}) — sus sau jos azi?
+            </Text>
+            {daily.myDirection ? (
+              <Text style={{ color: c.lime, fontSize: 12, marginTop: 8, fontWeight: '700' }}>
+                Ai votat: {daily.myDirection === 'UP' ? 'SUS' : 'JOS'} · revino mâine pentru rezultat
+              </Text>
+            ) : (
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                <Pressable onPress={() => voteDaily('UP')} style={{ flex: 1, height: 40, borderRadius: 6, borderWidth: 1, borderColor: c.lime, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: c.lime, fontWeight: '700' }}>SUS</Text>
+                </Pressable>
+                <Pressable onPress={() => voteDaily('DOWN')} style={{ flex: 1, height: 40, borderRadius: 6, borderWidth: 1, borderColor: c.red, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: c.red, fontWeight: '700' }}>JOS</Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* equity */}
         <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
@@ -153,9 +196,6 @@ export default function PortfolioScreen() {
           <Mono style={{ color: c.muted2, fontSize: 14, fontWeight: '600' }}>{formatMoney(data.cash)}</Mono>
         </View>
 
-        <Pressable onPress={signOut} style={{ padding: 20, alignItems: 'center' }}>
-          <Text style={{ color: c.faint, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', fontWeight: '700' }}>Ieși din cont</Text>
-        </Pressable>
       </ScrollView>
     </Screen>
   );

@@ -27,9 +27,22 @@ function AuthGate() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0A0B0D' } }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="group/[id]" options={{ headerShown: true, title: 'Grup', headerStyle: { backgroundColor: '#0A0B0D' }, headerTintColor: '#E8EAED' }} />
+      <Stack.Screen name="group/[id]" options={stackHeader('Grup')} />
+      <Stack.Screen name="profile" options={stackHeader('Profil')} />
+      <Stack.Screen name="news" options={stackHeader('Știri')} />
+      <Stack.Screen name="wrapped" options={stackHeader('Wrapped')} />
+      <Stack.Screen name="tournament/[id]" options={stackHeader('Turneu')} />
     </Stack>
   );
+}
+
+function stackHeader(title: string) {
+  return {
+    headerShown: true,
+    title,
+    headerStyle: { backgroundColor: '#0A0B0D' },
+    headerTintColor: '#E8EAED',
+  } as const;
 }
 
 export default function RootLayout() {

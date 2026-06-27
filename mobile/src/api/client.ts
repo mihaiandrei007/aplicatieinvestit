@@ -106,6 +106,31 @@ export interface NewsItem {
   createdAt: string;
 }
 
+export interface DailyChallenge {
+  date: string;
+  symbol: string;
+  name: string;
+  startPrice: number;
+  currentPrice: number;
+  myDirection: 'UP' | 'DOWN' | null;
+  votesUp: number;
+  votesDown: number;
+  reward: { cash: number; credits: number };
+}
+
+export interface Wrapped {
+  displayName: string;
+  equity: number;
+  roi: number;
+  tradeCount: number;
+  distinctSymbols: number;
+  realizedPnL: number;
+  currentStreak: number;
+  badges: number;
+  bestHolding: { symbol: string; unrealizedPnL: number } | null;
+  predictions: { total: number; won: number; winRate: number };
+}
+
 export type SentimentValue = 'BULLISH' | 'BEARISH';
 
 export interface GroupSentiment {
@@ -244,6 +269,23 @@ export const endpoints = {
     api.get<{ sentiment: GroupSentiment[] }>(`/api/groups/${groupId}/sentiment`),
 
   news: () => api.get<{ news: NewsItem[] }>('/api/market/news'),
+
+  // #11 watchlist
+  watchlist: () => api.get<{ symbols: string[] }>('/api/watchlist'),
+  toggleWatch: (symbol: string) => api.post<{ symbol: string; watching: boolean }>('/api/watchlist', { symbol }),
+
+  // #13 provocare zilnică
+  daily: () => api.get<DailyChallenge>('/api/daily'),
+  voteDaily: (direction: 'UP' | 'DOWN') => api.post<DailyChallenge>('/api/daily', { direction }),
+
+  // #12 wrapped
+  wrapped: () => api.get<Wrapped>('/api/wrapped'),
+
+  // #8 clasament Sharpe
+  sharpeLeaderboard: (groupId: string) =>
+    api.get<{ group: { id: string; name: string }; leaderboard: Array<{ rank: number; userId: string; displayName: string; sharpe: number; isMe: boolean }> }>(
+      `/api/groups/${groupId}/leaderboard/sharpe`,
+    ),
 
   // Predicție rapidă (semi-gambling tematic)
   predictionRules: () => api.get<{ multiplier: number; minStake: number; maxStake: number }>('/api/predictions'),

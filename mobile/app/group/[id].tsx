@@ -6,7 +6,8 @@ import { endpoints, type LeaderboardEntry, type FeedEvent, type GroupSentiment }
 import { useRealtime } from '../../src/realtime/useRealtime';
 import { theme, formatMoney, formatPct, gainColor } from '../../src/theme';
 
-type Tab = 'leaderboard' | 'feed' | 'sentiment';
+type Tab = 'leaderboard' | 'sharpe' | 'feed' | 'sentiment';
+interface SharpeEntry { rank: number; userId: string; displayName: string; sharpe: number; isMe: boolean }
 
 export default function GroupDetail() {
   const c = theme.colors;
@@ -16,15 +17,22 @@ export default function GroupDetail() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[] | null>(null);
   const [feed, setFeed] = useState<FeedEvent[] | null>(null);
   const [sentiment, setSentiment] = useState<GroupSentiment[]>([]);
+  const [sharpe, setSharpe] = useState<SharpeEntry[]>([]);
   const [name, setName] = useState('Grup');
 
   const load = useCallback(async () => {
     if (!id) return;
-    const [lb, fd, sn] = await Promise.all([endpoints.leaderboard(id), endpoints.feed(id), endpoints.groupSentiment(id)]);
+    const [lb, fd, sn, sh] = await Promise.all([
+      endpoints.leaderboard(id),
+      endpoints.feed(id),
+      endpoints.groupSentiment(id),
+      endpoints.sharpeLeaderboard(id),
+    ]);
     setLeaderboard(lb.leaderboard);
     setName(lb.group.name);
     setFeed(fd.events);
     setSentiment(sn.sentiment);
+    setSharpe(sh.leaderboard);
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
@@ -39,7 +47,12 @@ export default function GroupDetail() {
     <Screen scroll={false}>
       <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 }}>
         <Segmented
-          options={[{ key: 'leaderboard', label: 'Clasament' }, { key: 'feed', label: 'Feed' }, { key: 'sentiment', label: 'Sentiment' }]}
+          options={[
+            { key: 'leaderboard', label: 'ROI' },
+            { key: 'sharpe', label: 'Sharpe' },
+            { key: 'feed', label: 'Feed' },
+            { key: 'sentiment', label: 'Sent.' },
+          ]}
           value={tab}
           onChange={(k) => setTab(k as Tab)}
         />
@@ -61,6 +74,26 @@ export default function GroupDetail() {
               </View>
               <Hairline inset={20} />
             </View>
+          ))}
+
+        {tab === 'sharpe' &&
+          (sharpe.length === 0 ? (
+            <Text style={{ color: c.muted, padding: 20 }}>Clasamentul pe risc apare după câteva tick-uri de piață.</Text>
+          ) : (
+            sharpe.map((e) => (
+              <View key={e.userId}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 13 }}>
+                  <Text style={{ width: 22, textAlign: 'center', color: e.rank <= 3 ? c.lime : c.faint, fontSize: 16, fontWeight: '700' }}>{e.rank}</Text>
+                  <Monogram name={e.displayName} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: c.text, fontSize: 15, fontWeight: '600' }}>{e.displayName}{e.isMe ? '  ·  tu' : ''}</Text>
+                    <Label>randament ajustat la risc</Label>
+                  </View>
+                  <Mono style={{ color: gainColor(e.sharpe), fontSize: 16, fontWeight: '700' }}>{e.sharpe.toFixed(2)}</Mono>
+                </View>
+                <Hairline inset={20} />
+              </View>
+            ))
           ))}
 
         {tab === 'feed' &&

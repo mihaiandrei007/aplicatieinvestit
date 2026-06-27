@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen, Label, H1, Mono, Hairline, SymbolTile, Button, Segmented, Loading } from '../../src/components/ui';
 import { Caret, IconSearch } from '../../src/components/icons';
 import { endpoints, ApiError, type Instrument, type SentimentValue, type NewsItem } from '../../src/api/client';
@@ -9,9 +9,12 @@ import { theme, formatMoney, gainColor } from '../../src/theme';
 
 export default function MarketScreen() {
   const c = theme.colors;
+  const router = useRouter();
   const [instruments, setInstruments] = useState<Instrument[] | null>(null);
   const [prev, setPrev] = useState<Record<string, number>>({});
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [watched, setWatched] = useState<Set<string>>(new Set());
+  const [onlyWatched, setOnlyWatched] = useState(false);
   const [selected, setSelected] = useState<Instrument | null>(null);
   const [qty, setQty] = useState(10);
   const [stance, setStance] = useState<SentimentValue>('BULLISH');
@@ -21,16 +24,18 @@ export default function MarketScreen() {
   const [multiplier, setMultiplier] = useState(1.9);
 
   const load = useCallback(async () => {
-    const [{ instruments }, st, nw, rules] = await Promise.all([
+    const [{ instruments }, st, nw, rules, wl] = await Promise.all([
       endpoints.instruments(),
       endpoints.streak(),
       endpoints.news(),
       endpoints.predictionRules(),
+      endpoints.watchlist(),
     ]);
     setInstruments(instruments);
     setCredits(st.tradeCredits);
     setNews(nw.news);
     setMultiplier(rules.multiplier);
+    setWatched(new Set(wl.symbols));
     setPrev((p) => {
       const next = { ...p };
       for (const i of instruments) if (next[i.symbol] === undefined) next[i.symbol] = i.currentPrice;
@@ -68,6 +73,19 @@ export default function MarketScreen() {
   async function setSentiment(value: SentimentValue) {
     setStance(value);
     if (selected) await endpoints.setSentiment(selected.symbol, value).catch(() => {});
+  }
+
+  async function toggleWatch(symbol: string) {
+    try {
+      const r = await endpoints.toggleWatch(symbol);
+      setWatched((prev) => {
+        const n = new Set(prev);
+        if (r.watching) n.add(symbol); else n.delete(symbol);
+        return n;
+      });
+    } catch {
+      // ignoră
+    }
   }
 
   async function predict(direction: 'UP' | 'DOWN') {
@@ -127,9 +145,12 @@ export default function MarketScreen() {
         {news.length > 0 && (
           <>
             <Hairline inset={20} />
-            <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 4 }}>
-              <Label>Știri de piață</Label>
-            </View>
+            <Pressable onPress={() => router.push('/news')}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 4 }}>
+                <Label>Știri de piață</Label>
+                <Text style={{ color: c.lime, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>VEZI TOATE ›</Text>
+              </View>
+            </Pressable>
             {news.slice(0, 3).map((n) => (
               <Pressable key={n.id} onPress={() => Alert.alert(n.headline, `${n.source ? n.source + '\n\n' : ''}${n.body}`)}>
                 <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingVertical: 8 }}>
@@ -144,19 +165,29 @@ export default function MarketScreen() {
           </>
         )}
 
+        {/* filtre */}
+        <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingTop: 10 }}>
+          {[{ k: false, l: 'Toate' }, { k: true, l: 'Urmărite' }].map((f) => (
+            <Pressable key={f.l} onPress={() => setOnlyWatched(f.k)} style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 4, borderWidth: 1, borderColor: onlyWatched === f.k ? c.lime : c.border, backgroundColor: onlyWatched === f.k ? c.lime : 'transparent' }}>
+              <Text style={{ color: onlyWatched === f.k ? c.limeInk : c.muted2, fontSize: 11, fontWeight: '700' }}>{f.l}</Text>
+            </Pressable>
+          ))}
+        </View>
+
         {/* column head */}
-        <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 8 }}>
+        <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 8, gap: 10 }}>
           <Text style={{ flex: 1, color: c.faint, fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase' }}>Simbol</Text>
-          <Text style={{ width: 78, textAlign: 'right', color: c.faint, fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase' }}>Preț</Text>
-          <Text style={{ width: 76, textAlign: 'right', color: c.faint, fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase' }}>Variație</Text>
+          <Text style={{ width: 78, textAlign: 'right', color: c.faint, fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase' }}>Preț · 24h</Text>
+          <View style={{ width: 24 }} />
         </View>
         <Hairline inset={20} />
 
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-          {instruments.map((i) => {
+          {instruments.filter((i) => !onlyWatched || watched.has(i.symbol)).map((i) => {
             const base = prev[i.symbol] ?? i.currentPrice;
             const chg = base ? (i.currentPrice - base) / base : 0;
             const sel = selected?.symbol === i.symbol;
+            const star = watched.has(i.symbol);
             return (
               <View key={i.id}>
                 <Pressable onPress={() => setSelected(i)} style={{ backgroundColor: sel ? c.surface : 'transparent' }}>
@@ -166,11 +197,16 @@ export default function MarketScreen() {
                       <Text style={{ color: c.text, fontSize: 14, fontWeight: '600' }}>{i.name}</Text>
                       <Text style={{ color: c.muted, fontSize: 11, marginTop: 2, letterSpacing: 0.5 }}>{i.sector ?? i.currency}</Text>
                     </View>
-                    <Mono style={{ width: 78, textAlign: 'right', fontSize: 14, fontWeight: '600' }}>{formatMoney(i.currentPrice)}</Mono>
-                    <View style={{ width: 76, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 4 }}>
-                      <Caret up={chg >= 0} color={gainColor(chg)} />
-                      <Mono style={{ color: gainColor(chg), fontSize: 12, fontWeight: '700' }}>{(chg * 100).toFixed(2)}%</Mono>
+                    <View style={{ alignItems: 'flex-end', width: 78 }}>
+                      <Mono style={{ fontSize: 14, fontWeight: '600' }}>{formatMoney(i.currentPrice)}</Mono>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                        <Caret up={chg >= 0} color={gainColor(chg)} />
+                        <Mono style={{ color: gainColor(chg), fontSize: 12, fontWeight: '700' }}>{(chg * 100).toFixed(2)}%</Mono>
+                      </View>
                     </View>
+                    <Pressable onPress={() => toggleWatch(i.symbol)} hitSlop={8} style={{ width: 24, alignItems: 'center' }}>
+                      <Text style={{ color: star ? c.lime : c.faint, fontSize: 18 }}>{star ? '★' : '☆'}</Text>
+                    </Pressable>
                   </View>
                 </Pressable>
                 <Hairline inset={20} />
