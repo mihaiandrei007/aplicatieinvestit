@@ -12,6 +12,8 @@ export interface PortfolioSnapshot {
   equity: number;
   realizedPnL: number;
   unrealizedPnL: number;
+  tradeCredits: number;
+  currentStreak: number;
   holdings: Array<{
     symbol: string;
     quantity: number;
@@ -73,6 +75,8 @@ export async function buildSnapshot(userId: string): Promise<PortfolioSnapshot> 
     equity,
     realizedPnL,
     unrealizedPnL: detailed.reduce((s, d) => s + d.unrealizedPnL, 0),
+    tradeCredits: user.tradeCredits,
+    currentStreak: user.currentStreak,
     holdings: detailed,
   };
 }

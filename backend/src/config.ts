@@ -13,8 +13,12 @@ export const config = {
   jwtSecret: required('JWT_SECRET', 'dev-secret-schimba-ma'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
   startingCash: Number(process.env.STARTING_CASH ?? 100000),
-  /** Limită de tranzacții pe zi per utilizator (anti-overtrading, Etapa 4). */
-  dailyTradeLimit: Number(process.env.DAILY_TRADE_LIMIT ?? 20),
+  /** Buget de tranzacții (anti-overtrading): credite de start + plafon. */
+  tradeCreditsStart: Number(process.env.TRADE_CREDITS_START ?? 20),
+  tradeCreditsMax: Number(process.env.TRADE_CREDITS_MAX ?? 30),
+  /** Recompensă la promovarea unui quiz (cash virtual + credite). */
+  quizRewardCash: Number(process.env.QUIZ_REWARD_CASH ?? 500),
+  quizRewardCredits: Number(process.env.QUIZ_REWARD_CREDITS ?? 2),
   /** Client ID-uri OAuth (audiența așteptată în ID token). */
   googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
   appleClientId: process.env.APPLE_CLIENT_ID ?? '',

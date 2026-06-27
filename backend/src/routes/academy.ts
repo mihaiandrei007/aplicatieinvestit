@@ -6,6 +6,8 @@ import { requireAuth, type AuthedRequest } from '../http/requireAuth.js';
 import { MISSIONS, QUIZZES, gradeQuiz, nextMission, academyProgress } from '../lib/academy.js';
 import { compoundInterest, futureValueWithContributions, ruleOf72 } from '../lib/finance.js';
 import { portfolioRiskScore, type RiskPosition } from '../lib/risk.js';
+import { isQuizPass, quizReward } from '../lib/learnReward.js';
+import { config } from '../config.js';
 import { buildSnapshot } from '../services/portfolioService.js';
 
 export const academyRouter = Router();
@@ -79,10 +81,38 @@ academyRouter.post(
     if (!parsed.success) throw badRequest('Răspunsuri invalide.');
 
     const graded = gradeQuiz(quiz, parsed.data.answers);
+
+    // Recompensă „Learn & Earn": cash virtual + credite, o singură dată per quiz
+    // (la prima promovare). Verificăm dacă există deja o încercare promovată.
+    const priorAttempts = await prisma.quizAttempt.findMany({
+      where: { userId: req.userId!, quizId: quiz.id },
+      select: { score: true, total: true },
+    });
+    const alreadyPassed = priorAttempts.some((a) => isQuizPass(a.score, a.total));
+
     await prisma.quizAttempt.create({
       data: { userId: req.userId!, quizId: quiz.id, score: graded.score, total: graded.total },
     });
-    res.json(graded);
+
+    let reward: { cash: number; credits: number } | null = null;
+    if (!alreadyPassed) {
+      reward = quizReward(graded.score, graded.total, {
+        cash: config.quizRewardCash,
+        credits: config.quizRewardCredits,
+      });
+      if (reward) {
+        const r = reward;
+        await prisma.user.update({
+          where: { id: req.userId! },
+          data: {
+            cash: { increment: r.cash },
+            tradeCredits: { increment: r.credits },
+          },
+        });
+      }
+    }
+
+    res.json({ ...graded, reward });
   }),
 );
 

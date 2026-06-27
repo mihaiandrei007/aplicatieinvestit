@@ -22,8 +22,28 @@ const loginSchema = z.object({
 });
 
 /** Reprezentare publică a utilizatorului (fără hash-ul parolei). */
-function publicUser(u: { id: string; email: string; displayName: string; cash: number; startingCash: number }) {
-  return { id: u.id, email: u.email, displayName: u.displayName, cash: u.cash, startingCash: u.startingCash };
+function publicUser(u: {
+  id: string;
+  email: string;
+  displayName: string;
+  cash: number;
+  startingCash: number;
+  tradeCredits: number;
+  currentStreak: number;
+  longestStreak: number;
+  streakFreezes: number;
+}) {
+  return {
+    id: u.id,
+    email: u.email,
+    displayName: u.displayName,
+    cash: u.cash,
+    startingCash: u.startingCash,
+    tradeCredits: u.tradeCredits,
+    currentStreak: u.currentStreak,
+    longestStreak: u.longestStreak,
+    streakFreezes: u.streakFreezes,
+  };
 }
 
 authRouter.post(
@@ -43,6 +63,7 @@ authRouter.post(
         displayName,
         cash: config.startingCash,
         startingCash: config.startingCash,
+        tradeCredits: config.tradeCreditsStart,
       },
     });
 
@@ -108,6 +129,7 @@ authRouter.post(
           oauthSub: profile.providerSub,
           cash: config.startingCash,
           startingCash: config.startingCash,
+          tradeCredits: config.tradeCreditsStart,
         },
       });
     } else if (!user.oauthProvider) {
