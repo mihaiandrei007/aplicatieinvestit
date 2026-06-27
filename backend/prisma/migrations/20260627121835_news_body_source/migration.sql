@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "News" ADD COLUMN     "body" TEXT NOT NULL DEFAULT '',
+ADD COLUMN     "source" TEXT NOT NULL DEFAULT '';
+

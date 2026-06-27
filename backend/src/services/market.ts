@@ -48,9 +48,11 @@ export async function tickMarket(seed: number): Promise<Array<{ symbol: string; 
     0.5,
   );
   if (news) {
-    await prisma.news.create({ data: { symbol: news.symbol, headline: news.headline, impact: news.impact } });
+    await prisma.news.create({
+      data: { symbol: news.symbol, headline: news.headline, body: news.body, source: news.source, impact: news.impact },
+    });
     // Difuzăm fără `impact` — direcția nu se dezvăluie, utilizatorul interpretează.
-    hub.broadcastAll({ type: 'NEWS', payload: { symbol: news.symbol, headline: news.headline } });
+    hub.broadcastAll({ type: 'NEWS', payload: { symbol: news.symbol, headline: news.headline, body: news.body, source: news.source } });
   }
 
   const changes: Array<{ symbol: string; prev: number; next: number }> = [];

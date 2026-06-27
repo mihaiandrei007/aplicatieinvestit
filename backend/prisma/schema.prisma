@@ -112,7 +112,9 @@ model News {
   id        String   @id @default(cuid())
   symbol    String?
   headline  String
-  /// Impact semnat aplicat la preț (ex. +0.07 = +7%).
+  body      String   @default("")
+  source    String   @default("")
+  /// Impact semnat aplicat la preț (intern, nedezvăluit clientului).
   impact    Float
   createdAt DateTime @default(now())
 

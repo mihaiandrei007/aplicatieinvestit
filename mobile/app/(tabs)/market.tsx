@@ -33,7 +33,7 @@ export default function MarketScreen() {
   useRealtime({
     onMessage: (msg) => {
       if (msg.type === 'NEWS') {
-        const n = msg.payload as { symbol: string | null; headline: string };
+        const n = msg.payload as { symbol: string | null; headline: string; body: string; source: string };
         setNews((cur) => [{ id: `${Date.now()}`, createdAt: new Date().toISOString(), ...n }, ...cur].slice(0, 30));
         return;
       }
@@ -92,10 +92,15 @@ export default function MarketScreen() {
               <Label>Știri de piață</Label>
             </View>
             {news.slice(0, 3).map((n) => (
-              <View key={n.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingVertical: 7 }}>
-                {n.symbol ? <SymbolTile symbol={n.symbol} size={30} /> : null}
-                <Text numberOfLines={2} style={{ flex: 1, color: c.muted2, fontSize: 12 }}>{n.headline}</Text>
-              </View>
+              <Pressable key={n.id} onPress={() => Alert.alert(n.headline, `${n.source ? n.source + '\n\n' : ''}${n.body}`)}>
+                <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingVertical: 8 }}>
+                  {n.symbol ? <SymbolTile symbol={n.symbol} size={30} /> : null}
+                  <View style={{ flex: 1 }}>
+                    <Text numberOfLines={2} style={{ color: c.text, fontSize: 13, fontWeight: '600' }}>{n.headline}</Text>
+                    {!!n.source && <Label style={{ marginTop: 3 }}>{n.source}</Label>}
+                  </View>
+                </View>
+              </Pressable>
             ))}
           </>
         )}

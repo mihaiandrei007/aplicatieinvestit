@@ -44,7 +44,7 @@ marketRouter.get(
     });
     // Nu expunem `impact` — utilizatorul trebuie să interpreteze singur știrea.
     res.json({
-      news: news.map((n) => ({ id: n.id, symbol: n.symbol, headline: n.headline, createdAt: n.createdAt })),
+      news: news.map((n) => ({ id: n.id, symbol: n.symbol, headline: n.headline, body: n.body, source: n.source, createdAt: n.createdAt })),
     });
   }),
 );
