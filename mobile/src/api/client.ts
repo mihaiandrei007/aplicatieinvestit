@@ -183,19 +183,6 @@ export interface TournamentEntry {
   isMe: boolean;
 }
 
-export interface QuizView {
-  id: string;
-  title: string;
-  missionId: string;
-  questions: Array<{ id: string; question: string; options: string[] }>;
-}
-
-export interface QuizResult {
-  score: number;
-  total: number;
-  results: Array<{ questionId: string; correct: boolean; explanation: string }>;
-  reward?: { cash: number; credits: number } | null;
-}
 
 // ---- Endpoint-uri tipate ----
 
@@ -224,11 +211,6 @@ export const endpoints = {
   react: (eventId: string, emoji: string) => api.post(`/api/events/${eventId}/reactions`, { emoji }),
 
   badges: () => api.get<{ badges: BadgeView[] }>('/api/me/badges'),
-  missions: () =>
-    api.get<{ progress: number; next: { id: string; title: string } | null; missions: Array<{ id: string; title: string; description: string; completed: boolean }> }>(
-      '/api/academy/missions',
-    ),
-  completeMission: (id: string) => api.post(`/api/academy/missions/${id}/complete`),
 
   // Etapa 3 — push & OAuth
   oauth: (provider: 'google' | 'apple', idToken: string) =>
@@ -252,11 +234,6 @@ export const endpoints = {
     api.get<{ tournament: { id: string; name: string }; leaderboard: TournamentEntry[] }>(
       `/api/tournaments/${id}/leaderboard`,
     ),
-
-  // Etapa 5 — quiz (cu recompensă „Learn & Earn")
-  quiz: (id: string) => api.get<QuizView>(`/api/academy/quizzes/${id}`),
-  submitQuiz: (id: string, answers: Record<string, number>) =>
-    api.post<QuizResult>(`/api/academy/quizzes/${id}/submit`, { answers }),
 
   // Quick wins — streak & sentiment
   streak: () => api.get<StreakState>('/api/me/streak'),
