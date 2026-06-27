@@ -33,7 +33,7 @@ export default function MarketScreen() {
   useRealtime({
     onMessage: (msg) => {
       if (msg.type === 'NEWS') {
-        const n = msg.payload as { symbol: string | null; headline: string; impact: number };
+        const n = msg.payload as { symbol: string | null; headline: string };
         setNews((cur) => [{ id: `${Date.now()}`, createdAt: new Date().toISOString(), ...n }, ...cur].slice(0, 30));
         return;
       }
@@ -93,12 +93,8 @@ export default function MarketScreen() {
             </View>
             {news.slice(0, 3).map((n) => (
               <View key={n.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingVertical: 7 }}>
-                {n.symbol ? <SymbolTile symbol={n.symbol} accent={n.impact >= 0} size={30} /> : null}
+                {n.symbol ? <SymbolTile symbol={n.symbol} size={30} /> : null}
                 <Text numberOfLines={2} style={{ flex: 1, color: c.muted2, fontSize: 12 }}>{n.headline}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                  <Caret up={n.impact >= 0} color={gainColor(n.impact)} />
-                  <Mono style={{ color: gainColor(n.impact), fontSize: 12, fontWeight: '700' }}>{(n.impact >= 0 ? '+' : '') + (n.impact * 100).toFixed(0)}%</Mono>
-                </View>
               </View>
             ))}
           </>

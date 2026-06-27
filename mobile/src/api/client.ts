@@ -101,7 +101,6 @@ export interface NewsItem {
   id: string;
   symbol: string | null;
   headline: string;
-  impact: number;
   createdAt: string;
 }
 

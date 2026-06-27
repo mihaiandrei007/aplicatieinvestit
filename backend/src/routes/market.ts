@@ -42,8 +42,9 @@ marketRouter.get(
       orderBy: { createdAt: 'desc' },
       take: 30,
     });
+    // Nu expunem `impact` — utilizatorul trebuie să interpreteze singur știrea.
     res.json({
-      news: news.map((n) => ({ id: n.id, symbol: n.symbol, headline: n.headline, impact: n.impact, createdAt: n.createdAt })),
+      news: news.map((n) => ({ id: n.id, symbol: n.symbol, headline: n.headline, createdAt: n.createdAt })),
     });
   }),
 );

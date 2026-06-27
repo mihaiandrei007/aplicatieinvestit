@@ -15,17 +15,24 @@ export interface NewsTemplate {
   headline: (name: string) => string;
 }
 
+/**
+ * Catalog de știri AMBIGUE: titlul nu trădează direcția prețului. Polaritatea și
+ * magnitudinea sunt interne (mișcă prețul), dar utilizatorul trebuie să INTERPRETEZE
+ * știrea — nu i se spune dacă stocul urcă sau coboară.
+ */
 export const NEWS_TEMPLATES: readonly NewsTemplate[] = [
-  { polarity: 1, magnitude: 0.07, headline: (n) => `${n} raportează rezultate trimestriale peste așteptări` },
-  { polarity: 1, magnitude: 0.05, headline: (n) => `${n} lansează un produs nou primit entuziast de piață` },
-  { polarity: 1, magnitude: 0.06, headline: (n) => `Un analist important ridică ținta de preț pentru ${n}` },
-  { polarity: 1, magnitude: 0.04, headline: (n) => `${n} semnează un contract strategic major` },
-  { polarity: 1, magnitude: 0.08, headline: (n) => `${n} depășește estimările și anunță răscumpărări de acțiuni` },
-  { polarity: -1, magnitude: 0.07, headline: (n) => `${n} ratează estimările de venituri pe trimestru` },
-  { polarity: -1, magnitude: 0.06, headline: (n) => `Investigație de reglementare anunțată la ${n}` },
-  { polarity: -1, magnitude: 0.05, headline: (n) => `Analiștii retrogradează acțiunile ${n}` },
-  { polarity: -1, magnitude: 0.08, headline: (n) => `${n} retrage un produs din cauza unor defecte` },
-  { polarity: -1, magnitude: 0.04, headline: (n) => `Un director-cheie părăsește ${n}` },
+  { polarity: 1, magnitude: 0.05, headline: (n) => `${n} anunță o investiție mare într-o nouă fabrică` },
+  { polarity: 1, magnitude: 0.06, headline: (n) => `${n} este în discuții pentru o posibilă achiziție` },
+  { polarity: 1, magnitude: 0.04, headline: (n) => `Un fond mare își crește expunerea pe ${n}` },
+  { polarity: 1, magnitude: 0.05, headline: (n) => `${n} își extinde operațiunile pe o piață nouă` },
+  { polarity: 1, magnitude: 0.07, headline: (n) => `Zvonuri despre un parteneriat surpriză la ${n}` },
+  { polarity: 1, magnitude: 0.04, headline: (n) => `${n} schimbă strategia pentru următorul an` },
+  { polarity: -1, magnitude: 0.05, headline: (n) => `${n} amână lansarea unui produs așteptat` },
+  { polarity: -1, magnitude: 0.06, headline: (n) => `Volatilitate crescută pe ${n} înaintea raportării` },
+  { polarity: -1, magnitude: 0.04, headline: (n) => `Un investitor activist apare în acționariatul ${n}` },
+  { polarity: -1, magnitude: 0.05, headline: (n) => `${n} înlocuiește un director important` },
+  { polarity: -1, magnitude: 0.07, headline: (n) => `Presa scrie despre tensiuni interne la ${n}` },
+  { polarity: -1, magnitude: 0.04, headline: (n) => `${n} reduce estimările pentru un segment de business` },
 ];
 
 export interface GeneratedNews {
