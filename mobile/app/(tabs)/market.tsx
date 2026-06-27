@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Screen, Label, H1, Mono, Hairline, SymbolTile, Button, Segmented, Loading } from '../../src/components/ui';
 import { Caret, IconSearch } from '../../src/components/icons';
@@ -17,12 +17,20 @@ export default function MarketScreen() {
   const [stance, setStance] = useState<SentimentValue>('BULLISH');
   const [busy, setBusy] = useState(false);
   const [credits, setCredits] = useState<number | null>(null);
+  const [predStake, setPredStake] = useState('100');
+  const [multiplier, setMultiplier] = useState(1.9);
 
   const load = useCallback(async () => {
-    const [{ instruments }, st, nw] = await Promise.all([endpoints.instruments(), endpoints.streak(), endpoints.news()]);
+    const [{ instruments }, st, nw, rules] = await Promise.all([
+      endpoints.instruments(),
+      endpoints.streak(),
+      endpoints.news(),
+      endpoints.predictionRules(),
+    ]);
     setInstruments(instruments);
     setCredits(st.tradeCredits);
     setNews(nw.news);
+    setMultiplier(rules.multiplier);
     setPrev((p) => {
       const next = { ...p };
       for (const i of instruments) if (next[i.symbol] === undefined) next[i.symbol] = i.currentPrice;
@@ -35,6 +43,16 @@ export default function MarketScreen() {
       if (msg.type === 'NEWS') {
         const n = msg.payload as { symbol: string | null; headline: string; body: string; source: string };
         setNews((cur) => [{ id: `${Date.now()}`, createdAt: new Date().toISOString(), ...n }, ...cur].slice(0, 30));
+        return;
+      }
+      if (msg.type === 'PREDICTION_RESOLVED') {
+        const r = msg.payload as { symbol: string; direction: string; won: boolean; stake: number; payout: number };
+        Alert.alert(
+          r.won ? 'Predicție câștigată' : 'Predicție pierdută',
+          r.won
+            ? `${r.symbol} ${r.direction === 'UP' ? 'SUS' : 'JOS'}: ai câștigat ${formatMoney(r.payout)} (miză ${formatMoney(r.stake)}).`
+            : `${r.symbol} ${r.direction === 'UP' ? 'SUS' : 'JOS'}: ai pierdut miza de ${formatMoney(r.stake)}.`,
+        );
         return;
       }
       if (msg.type !== 'PRICE_UPDATE') return;
@@ -50,6 +68,27 @@ export default function MarketScreen() {
   async function setSentiment(value: SentimentValue) {
     setStance(value);
     if (selected) await endpoints.setSentiment(selected.symbol, value).catch(() => {});
+  }
+
+  async function predict(direction: 'UP' | 'DOWN') {
+    if (!selected) return;
+    const stake = Number(predStake);
+    if (!Number.isFinite(stake) || stake <= 0) {
+      Alert.alert('Miză invalidă', 'Introdu o sumă pozitivă.');
+      return;
+    }
+    setBusy(true);
+    try {
+      await endpoints.placePrediction(selected.symbol, direction, stake);
+      Alert.alert(
+        'Predicție plasată',
+        `${selected.symbol} ${direction === 'UP' ? 'SUS' : 'JOS'}, miză ${formatMoney(stake)}. Se rezolvă la următorul tick (×${multiplier}).`,
+      );
+    } catch (e) {
+      Alert.alert('Eroare', e instanceof ApiError ? e.message : 'Predicție eșuată.');
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function trade(side: 'BUY' | 'SELL') {
@@ -170,6 +209,32 @@ export default function MarketScreen() {
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <View style={{ flex: 1 }}><Button title="CUMPĂRĂ" onPress={() => trade('BUY')} loading={busy} /></View>
               <View style={{ flex: 1 }}><Button title="VINDE" variant="ghost" onPress={() => trade('SELL')} loading={busy} /></View>
+            </View>
+
+            {/* Predicție rapidă (semi-gambling tematic) */}
+            <View style={{ borderTopWidth: 1, borderTopColor: c.hair, paddingTop: 12, gap: 8 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Label>Predicție rapidă · ×{multiplier}</Label>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: c.border, borderRadius: 6, paddingHorizontal: 10, height: 32 }}>
+                  <Label>Miză</Label>
+                  <TextInput
+                    value={predStake}
+                    onChangeText={setPredStake}
+                    keyboardType="numeric"
+                    style={{ color: c.text, fontSize: 14, minWidth: 50, padding: 0, fontVariant: ['tabular-nums'] }}
+                  />
+                </View>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <Pressable onPress={() => predict('UP')} disabled={busy} style={{ flex: 1, height: 44, borderRadius: 6, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6, borderWidth: 1, borderColor: c.lime }}>
+                  <Caret up color={c.lime} size={9} />
+                  <Text style={{ color: c.lime, fontWeight: '700', letterSpacing: 0.5 }}>SUS</Text>
+                </Pressable>
+                <Pressable onPress={() => predict('DOWN')} disabled={busy} style={{ flex: 1, height: 44, borderRadius: 6, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6, borderWidth: 1, borderColor: c.red }}>
+                  <Caret up={false} color={c.red} size={9} />
+                  <Text style={{ color: c.red, fontWeight: '700', letterSpacing: 0.5 }}>JOS</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
         )}

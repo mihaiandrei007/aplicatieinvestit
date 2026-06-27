@@ -12,7 +12,7 @@ export const config = {
   port: Number(process.env.PORT ?? 4000),
   jwtSecret: required('JWT_SECRET', 'dev-secret-schimba-ma'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
-  startingCash: Number(process.env.STARTING_CASH ?? 100000),
+  startingCash: Number(process.env.STARTING_CASH ?? 10000),
   /** Buget de tranzacții (anti-overtrading): credite de start + plafon. */
   tradeCreditsStart: Number(process.env.TRADE_CREDITS_START ?? 20),
   tradeCreditsMax: Number(process.env.TRADE_CREDITS_MAX ?? 30),

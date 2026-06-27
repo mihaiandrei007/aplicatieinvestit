@@ -32,9 +32,9 @@ model User {
   oauthSub      String?
   displayName  String
   /// Numerar virtual disponibil (necheltuit pe instrumente).
-  cash         Float    @default(100000)
+  cash         Float    @default(10000)
   /// Capitalul de start, păstrat pentru calculul ROI.
-  startingCash Float    @default(100000)
+  startingCash Float    @default(10000)
   /// Credite de tranzacționare (anti-overtrading + retenție). 1 credit / tranzacție.
   tradeCredits Int      @default(20)
   /// Streak de check-in zilnic.
@@ -57,8 +57,40 @@ model User {
   academyProgress   AcademyProgress[]
   quizAttempts      QuizAttempt[]
   sentiments        Sentiment[]
+  predictions       Prediction[]
 
   @@unique([oauthProvider, oauthSub])
+}
+
+enum PredictionDirection {
+  UP
+  DOWN
+}
+
+enum PredictionStatus {
+  PENDING
+  WON
+  LOST
+}
+
+/// „Predicție rapidă": pariu pe direcția unei acțiuni până la următorul tick.
+model Prediction {
+  id         String              @id @default(cuid())
+  userId     String
+  symbol     String
+  direction  PredictionDirection
+  stake      Float
+  multiplier Float
+  priceAtBet Float
+  status     PredictionStatus    @default(PENDING)
+  payout     Float               @default(0)
+  createdAt  DateTime            @default(now())
+  resolvedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status])
 }
 
 /// Poziția curentă (BULLISH/BEARISH) a unui utilizator per simbol.
@@ -150,7 +182,7 @@ model Group {
   name         String
   inviteCode   String   @unique
   ownerId      String
-  startingCash Float    @default(100000)
+  startingCash Float    @default(10000)
   createdAt    DateTime @default(now())
 
   owner       User            @relation("GroupOwner", fields: [ownerId], references: [id], onDelete: Cascade)

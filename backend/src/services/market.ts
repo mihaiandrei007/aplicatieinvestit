@@ -12,6 +12,7 @@ import { netNotionalBySymbol, priceImpact, applyMove, type Flow } from '../lib/p
 import { applySectorCorrelation } from '../lib/correlation.js';
 import { maybeGenerateNews } from '../lib/news.js';
 import { SECTOR_LEADERS } from '../data/instruments.js';
+import { resolvePredictions } from './predictionService.js';
 import { hub } from '../realtime/hub.js';
 import { computeEquity } from './portfolioService.js';
 import { sendToUser } from './pushService.js';
@@ -89,6 +90,9 @@ export async function tickMarket(seed: number): Promise<Array<{ symbol: string; 
 
   lastTickAt = now;
   hub.broadcastAll({ type: 'PRICE_UPDATE', payload: changes });
+
+  // Rezolvă predicțiile rapide cu prețurile noi.
+  await resolvePredictions(Object.fromEntries(changes.map((c) => [c.symbol, c.next])));
   await recheckOvertakes();
   return changes;
 }

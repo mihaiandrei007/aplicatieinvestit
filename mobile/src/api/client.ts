@@ -267,4 +267,12 @@ export const endpoints = {
     api.get<{ sentiment: GroupSentiment[] }>(`/api/groups/${groupId}/sentiment`),
 
   news: () => api.get<{ news: NewsItem[] }>('/api/market/news'),
+
+  // Predicție rapidă (semi-gambling tematic)
+  predictionRules: () => api.get<{ multiplier: number; minStake: number; maxStake: number }>('/api/predictions'),
+  placePrediction: (symbol: string, direction: 'UP' | 'DOWN', stake: number) =>
+    api.post<{ prediction: { id: string; symbol: string; direction: string; priceAtBet: number }; cash: number }>(
+      '/api/predictions',
+      { symbol, direction, stake },
+    ),
 };

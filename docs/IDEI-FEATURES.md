@@ -13,6 +13,18 @@ Fiecare idee are: **sursa** (ce app o face bine), **de ce contează**, **efort**
 
 ---
 
+## ★ Predicție rapidă (semi-gambling tematic) — IMPLEMENTAT
+Analiză opțiuni (tematic / sinergie / educativ / implicare):
+- **A. Predicție direcție SUS/JOS cu miză + multiplicator** — câștigătoare: tematic max,
+  folosește simulatorul + **știrile ambigue** (le interpretezi și pariezi direcția),
+  se rezolvă în 15s, are mic „avantaj al casei" (×1,9 la 50/50 → pierzi lent la noroc).
+- B. Parlay zilnic (3 acțiuni cresc) — bun add-on, rezolvare lentă.
+- C. Lanț „dublezi sau pierzi" (streak) — bun add-on peste A.
+- D. Ghicit culoare carte (literal) — respins (netematic).
+
+Implementat A: mizezi bani virtuali că o acțiune urcă/coboară până la următorul tick;
+corect → miză ×1,9, greșit → pierzi miza. Buget inițial redus la **10.000** ca mizele să conteze.
+
 ## 0. Ce avem deja (recap)
 Portofoliu personal + ROI, grupuri cu cod de invitație, clasament de grup, feed de activitate
 cu reacții + comentarii, WebSocket (prețuri + feed live), push (te-a depășit X / o acțiune a sărit),

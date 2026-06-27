@@ -12,6 +12,7 @@ import { badgesRouter } from './routes/badges.js';
 import { academyRouter } from './routes/academy.js';
 import { meRouter } from './routes/me.js';
 import { sentimentRouter } from './routes/sentiment.js';
+import { predictionsRouter } from './routes/predictions.js';
 import { errorHandler } from './http/errors.js';
 
 /** Construiește aplicația Express (separat de pornirea serverului, pt. teste). */
@@ -33,6 +34,7 @@ export function createApp() {
   app.use('/api', academyRouter);
   app.use('/api', meRouter);
   app.use('/api', sentimentRouter);
+  app.use('/api', predictionsRouter);
   app.use('/api', feedRouter);
 
   app.use(errorHandler);
