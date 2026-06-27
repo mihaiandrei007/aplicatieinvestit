@@ -97,15 +97,20 @@ export async function tickMarket(seed: number): Promise<Array<{ symbol: string; 
   return changes;
 }
 
-/** Notifică (push) utilizatorii care dețin un simbol care a sărit. */
+/** Notifică (push + live) utilizatorii care DEȚIN sau URMĂRESC un simbol care a sărit. */
 async function notifyHolders(symbol: string, prev: number, next: number): Promise<void> {
-  const holders = await prisma.transaction.findMany({
-    where: { instrument: { symbol } },
-    select: { userId: true },
-    distinct: ['userId'],
-  });
+  const [holders, watchers] = await Promise.all([
+    prisma.transaction.findMany({ where: { instrument: { symbol } }, select: { userId: true }, distinct: ['userId'] }),
+    prisma.watchlist.findMany({ where: { symbol }, select: { userId: true } }),
+  ]);
+  const userIds = new Set<string>([...holders.map((h) => h.userId), ...watchers.map((w) => w.userId)]);
   const payload = priceJumpPush(symbol, prev, next);
-  await Promise.all(holders.map((h) => sendToUser(h.userId, payload)));
+  await Promise.all(
+    [...userIds].map((uid) => {
+      hub.sendToUser(uid, { type: 'PRICE_ALERT', payload: { symbol, prev, next, ...payload } });
+      return sendToUser(uid, payload);
+    }),
+  );
 }
 
 /** Recalculează clasamentele și emite notificări de depășire. */

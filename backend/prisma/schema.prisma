@@ -56,8 +56,51 @@ model User {
   equitySnapshots   EquitySnapshot[]
   sentiments        Sentiment[]
   predictions       Prediction[]
+  watchlist         Watchlist[]
+  dailyEntries      DailyChallengeEntry[]
 
   @@unique([oauthProvider, oauthSub])
+}
+
+/// Instrument urmărit de un utilizator (pentru alerte de preț).
+model Watchlist {
+  id        String   @id @default(cuid())
+  userId    String
+  symbol    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, symbol])
+  @@index([symbol])
+}
+
+/// Provocarea zilnică: o singură acțiune pe zi, toți prezic aceeași direcție.
+model DailyChallenge {
+  id         String   @id @default(cuid())
+  date       String   @unique
+  symbol     String
+  startPrice Float
+  endPrice   Float?
+  resultUp   Boolean?
+  status     String   @default("OPEN")
+  createdAt  DateTime @default(now())
+
+  entries DailyChallengeEntry[]
+}
+
+model DailyChallengeEntry {
+  id          String              @id @default(cuid())
+  challengeId String
+  userId      String
+  direction   PredictionDirection
+  correct     Boolean?
+  createdAt   DateTime            @default(now())
+
+  challenge DailyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
 }
 
 enum PredictionDirection {
