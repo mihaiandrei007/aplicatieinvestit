@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Screen, Title, Subtitle, Card, Button, Loading } from '../../src/components/ui';
+import { Screen, Title, Subtitle, Card, Button, Loading, ProgressBar, Chip } from '../../src/components/ui';
 import { endpoints, type BadgeView } from '../../src/api/client';
 import { theme } from '../../src/theme';
 
@@ -49,8 +49,14 @@ export default function AcademyScreen() {
 
   return (
     <Screen>
-      <Title>Academie</Title>
-      <Subtitle>Progres: {progress}%</Subtitle>
+      <Title>Academie 🎓</Title>
+      <Card accent>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Subtitle>Progresul tău</Subtitle>
+          <Text style={{ color: theme.colors.text, fontWeight: '800', fontSize: 18 }}>{progress}%</Text>
+        </View>
+        <ProgressBar pct={progress} color={theme.colors.green} />
+      </Card>
 
       {missions.map((m) => (
         <Card key={m.id}>

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { Screen, Subtitle, Card, Field, Button, Loading } from '../../src/components/ui';
+import { Screen, Subtitle, Card, Field, Button, Loading, Avatar } from '../../src/components/ui';
 import {
   endpoints,
   ApiError,
@@ -98,21 +98,28 @@ export default function GroupDetail() {
 
       <ScrollView contentContainerStyle={{ gap: theme.spacing(1) }}>
         {tab === 'leaderboard' &&
-          leaderboard.map((e) => (
-            <Card key={e.userId}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700' }}>
-                  {e.rank}. {e.displayName} {e.isMe ? '(tu)' : ''}
-                </Text>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ color: e.roi >= 0 ? theme.colors.green : theme.colors.red, fontWeight: '700' }}>
+          leaderboard.map((e) => {
+            const medal = e.rank === 1 ? '🥇' : e.rank === 2 ? '🥈' : e.rank === 3 ? '🥉' : `${e.rank}`;
+            return (
+              <Card key={e.userId} accent={e.isMe}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <Text style={{ width: 28, textAlign: 'center', fontSize: 18, fontWeight: '800', color: theme.colors.gold }}>
+                    {medal}
+                  </Text>
+                  <Avatar name={e.displayName} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700' }}>
+                      {e.displayName} {e.isMe ? '· tu' : ''}
+                    </Text>
+                    <Text style={{ color: theme.colors.muted, fontSize: 12 }}>{formatMoney(e.equity)}</Text>
+                  </View>
+                  <Text style={{ color: e.roi >= 0 ? theme.colors.green : theme.colors.red, fontWeight: '800', fontSize: 16 }}>
                     {formatPct(e.roi)}
                   </Text>
-                  <Text style={{ color: theme.colors.muted, fontSize: 12 }}>{formatMoney(e.equity)}</Text>
                 </View>
-              </View>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
 
         {tab === 'feed' &&
           (feed.length === 0 ? (
