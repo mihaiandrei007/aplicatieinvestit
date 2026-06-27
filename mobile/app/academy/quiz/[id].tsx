@@ -58,6 +58,15 @@ export default function QuizScreen() {
           <Subtitle>
             Scor: {result.score}/{result.total}
           </Subtitle>
+          {result.reward ? (
+            <Text style={{ color: theme.colors.green, fontWeight: '700' }}>
+              🎉 Recompensă: +{result.reward.cash} cash virtual, +{result.reward.credits} credite!
+            </Text>
+          ) : (
+            <Text style={{ color: theme.colors.muted, fontSize: 13 }}>
+              {result.score / result.total >= 0.7 ? 'Deja ai primit recompensa pentru acest quiz.' : 'Ai nevoie de ≥70% pentru recompensă.'}
+            </Text>
+          )}
         </Card>
       )}
 

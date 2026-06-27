@@ -29,16 +29,18 @@ Relația reală (prietenii) e motorul de retenție — nu un feed public. *Răm�
 
 ## 1. Quick wins — impact mare, efort mic (de început cu astea)
 
-| # | Funcționalitate | Sursă | Efort | Se bazează pe |
+> ✅ **#1, #2, #3, #6 sunt IMPLEMENTATE** (backend + mobil, validate E2E). Restul rămân.
+
+| # | Funcționalitate | Sursă | Efort | Stare |
 |---|---|---|---|---|
-| 1 | **Buget de tranzacții ca „monedă"** — N tranzacții/zi, se reîncarcă la check-in zilnic și la level-up | Invstr | Mic | anti-overtrading existent |
-| 2 | **Streak de investiție** (zile la rând în care intri/iei o decizie) + „streak freeze" | Duolingo | Mic | push existent |
-| 3 | **Tag Bullish/Bearish cu un tap** pe tranzacții → sentiment de grup per simbol | Stocktwits | Mic | feed + reacții |
-| 4 | **„Explică-ți tranzacția"** — notă opțională atașată trade-ului, apare în feed | HowTheMarketWorks | Mic | feed existent |
-| 5 | **Reacții rapide (kudos) pe orice element din feed** | Strava | Mic | feed existent |
-| 6 | **Lecție → quiz → recompensă** (recompensa = cash virtual/insignă, nu bani reali) | Robinhood Learn&Earn | Mic | academie + quiz |
-| 7 | **Micro-lecție „înainte de primul trade"** (gating onboarding) | Robinhood 101 | Mic | academie |
-| 8 | **Clasament doar pe P&L realizat + actualizare orară** (anti-gaming pe câștiguri pe hârtie) | TradingView | Mic | clasament existent |
+| 1 | **Buget de tranzacții ca „monedă"** — 1 credit/trade, se reîncarcă la check-in | Invstr | Mic | ✅ implementat |
+| 2 | **Streak de investiție** + „streak freeze" | Duolingo | Mic | ✅ implementat |
+| 3 | **Tag Bullish/Bearish cu un tap** → sentiment de grup per simbol | Stocktwits | Mic | ✅ implementat |
+| 4 | **„Explică-ți tranzacția"** — notă opțională atașată trade-ului, apare în feed | HowTheMarketWorks | Mic | de făcut |
+| 5 | **Reacții rapide (kudos) pe orice element din feed** | Strava | Mic | de făcut |
+| 6 | **Lecție → quiz → recompensă** (cash virtual + credite, nu bani reali) | Robinhood Learn&Earn | Mic | ✅ implementat |
+| 7 | **Micro-lecție „înainte de primul trade"** (gating onboarding) | Robinhood 101 | Mic | de făcut |
+| 8 | **Clasament doar pe P&L realizat + actualizare orară** | TradingView | Mic | de făcut |
 
 ---
 

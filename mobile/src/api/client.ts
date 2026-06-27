@@ -73,7 +73,39 @@ export interface PortfolioSnapshot {
   equity: number;
   realizedPnL: number;
   unrealizedPnL: number;
+  tradeCredits: number;
+  currentStreak: number;
   holdings: Holding[];
+}
+
+export interface StreakState {
+  currentStreak: number;
+  longestStreak: number;
+  freezes: number;
+  tradeCredits: number;
+  checkedInToday: boolean;
+}
+
+export interface CheckInResult {
+  alreadyCheckedIn: boolean;
+  currentStreak: number;
+  longestStreak: number;
+  freezes: number;
+  creditsGranted: number;
+  tradeCredits: number;
+  usedFreeze?: boolean;
+  earnedFreeze?: boolean;
+}
+
+export type SentimentValue = 'BULLISH' | 'BEARISH';
+
+export interface GroupSentiment {
+  symbol: string;
+  bullish: number;
+  bearish: number;
+  total: number;
+  bullishPct: number;
+  myValue: SentimentValue | null;
 }
 
 export interface Instrument {
@@ -152,6 +184,7 @@ export interface QuizResult {
   score: number;
   total: number;
   results: Array<{ questionId: string; correct: boolean; explanation: string }>;
+  reward?: { cash: number; credits: number } | null;
 }
 
 // ---- Endpoint-uri tipate ----
@@ -165,11 +198,10 @@ export const endpoints = {
   portfolio: () => api.get<PortfolioSnapshot>('/api/portfolio'),
   instruments: () => api.get<{ instruments: Instrument[] }>('/api/instruments'),
   trade: (symbol: string, side: 'BUY' | 'SELL', quantity: number) =>
-    api.post<{ cash: number; newBadges: Array<{ code: string; label: string }> }>('/api/portfolio/trade', {
-      symbol,
-      side,
-      quantity,
-    }),
+    api.post<{ cash: number; tradeCredits: number; newBadges: Array<{ code: string; label: string }> }>(
+      '/api/portfolio/trade',
+      { symbol, side, quantity },
+    ),
 
   groups: () => api.get<{ groups: GroupSummary[] }>('/api/groups'),
   createGroup: (name: string) => api.post<{ group: { id: string; name: string; inviteCode: string } }>('/api/groups', { name }),
@@ -211,8 +243,16 @@ export const endpoints = {
       `/api/tournaments/${id}/leaderboard`,
     ),
 
-  // Etapa 5 — quiz
+  // Etapa 5 — quiz (cu recompensă „Learn & Earn")
   quiz: (id: string) => api.get<QuizView>(`/api/academy/quizzes/${id}`),
   submitQuiz: (id: string, answers: Record<string, number>) =>
     api.post<QuizResult>(`/api/academy/quizzes/${id}/submit`, { answers }),
+
+  // Quick wins — streak & sentiment
+  streak: () => api.get<StreakState>('/api/me/streak'),
+  checkIn: () => api.post<CheckInResult>('/api/me/checkin'),
+  setSentiment: (symbol: string, value: SentimentValue) =>
+    api.post<{ symbol: string; myValue: SentimentValue | null }>('/api/sentiment', { symbol, value }),
+  groupSentiment: (groupId: string) =>
+    api.get<{ sentiment: GroupSentiment[] }>(`/api/groups/${groupId}/sentiment`),
 };

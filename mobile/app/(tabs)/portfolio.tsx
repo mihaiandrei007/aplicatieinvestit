@@ -1,8 +1,8 @@
 import React, { useCallback, useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Screen, Title, Subtitle, Card, Button, Loading } from '../../src/components/ui';
-import { endpoints, type PortfolioSnapshot, type EquityPoint } from '../../src/api/client';
+import { endpoints, type PortfolioSnapshot, type EquityPoint, type StreakState } from '../../src/api/client';
 import { useAuth } from '../../src/auth/AuthContext';
 import { EquityChart } from '../../src/components/EquityChart';
 import { theme, formatMoney, formatPct } from '../../src/theme';
@@ -11,18 +11,41 @@ export default function PortfolioScreen() {
   const { user, signOut } = useAuth();
   const [data, setData] = useState<PortfolioSnapshot | null>(null);
   const [history, setHistory] = useState<EquityPoint[]>([]);
+  const [streak, setStreak] = useState<StreakState | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
 
   const load = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [snapshot, hist] = await Promise.all([endpoints.portfolio(), endpoints.history()]);
+      const [snapshot, hist, st] = await Promise.all([
+        endpoints.portfolio(),
+        endpoints.history(),
+        endpoints.streak(),
+      ]);
       setData(snapshot);
       setHistory(hist.history);
+      setStreak(st);
     } finally {
       setRefreshing(false);
     }
   }, []);
+
+  async function checkIn() {
+    setCheckingIn(true);
+    try {
+      const r = await endpoints.checkIn();
+      if (r.alreadyCheckedIn) {
+        Alert.alert('Deja făcut', 'Ai făcut deja check-in azi. Revino mâine!');
+      } else {
+        const extra = r.earnedFreeze ? '\n❄️ Ai câștigat un streak freeze!' : '';
+        Alert.alert('Check-in reușit 🔥', `Streak: ${r.currentStreak} zile\n+${r.creditsGranted} credite de tranzacționare${extra}`);
+      }
+      await load();
+    } finally {
+      setCheckingIn(false);
+    }
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -44,6 +67,30 @@ export default function PortfolioScreen() {
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Title>Salut, {user?.displayName} 👋</Title>
         </View>
+
+        {streak && (
+          <Card>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View>
+                <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '700' }}>
+                  🔥 Streak: {streak.currentStreak} {streak.currentStreak === 1 ? 'zi' : 'zile'}
+                </Text>
+                <Text style={{ color: theme.colors.muted, fontSize: 13 }}>
+                  🎟️ {streak.tradeCredits} credite · ❄️ {streak.freezes} freeze
+                </Text>
+              </View>
+              <View style={{ width: 130 }}>
+                <Button
+                  title={streak.checkedInToday ? 'Revino mâine' : 'Check-in zilnic'}
+                  onPress={checkIn}
+                  loading={checkingIn}
+                  disabled={streak.checkedInToday}
+                  variant={streak.checkedInToday ? 'ghost' : 'primary'}
+                />
+              </View>
+            </View>
+          </Card>
+        )}
 
         <Card>
           <Subtitle>Capital total (equity)</Subtitle>

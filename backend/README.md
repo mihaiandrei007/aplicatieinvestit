@@ -104,6 +104,18 @@ Server emite `NEW_ACTIVITY`, `PRICE_UPDATE`, `PRICE_JUMP`, `NOTIFICATION`.
 | `POST` | `/api/academy/calculator/compound` | calculator dobândă compusă |
 | `GET` | `/api/academy/risk-score` | scor de risc al portofoliului |
 
+### Quick wins (din cercetarea de piață)
+
+| Metodă | Rută | Descriere |
+| --- | --- | --- |
+| `GET` | `/api/me/streak` | streak + credite de tranzacționare |
+| `POST` | `/api/me/checkin` | check-in zilnic (streak + acordă credite) |
+| `POST` | `/api/sentiment` | setează/comută Bullish/Bearish pe un simbol |
+| `GET` | `/api/groups/:id/sentiment` | sentiment agregat al grupului per simbol |
+
+Note: fiecare tranzacție costă **1 credit** (anti-overtrading); creditele se reîncarcă
+la check-in. Promovarea unui quiz (≥70%) acordă o singură dată cash virtual + credite.
+
 ## Note
 
 - Bani strict **virtuali** (educativ). Capital de start: 100.000 (configurabil prin `STARTING_CASH`).

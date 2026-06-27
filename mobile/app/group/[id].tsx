@@ -8,11 +8,12 @@ import {
   type LeaderboardEntry,
   type FeedEvent,
   type TournamentSummary,
+  type GroupSentiment,
 } from '../../src/api/client';
 import { useRealtime } from '../../src/realtime/useRealtime';
 import { theme, formatMoney, formatPct } from '../../src/theme';
 
-type Tab = 'leaderboard' | 'feed' | 'tournaments';
+type Tab = 'leaderboard' | 'feed' | 'tournaments' | 'sentiment';
 
 export default function GroupDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,20 +22,23 @@ export default function GroupDetail() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[] | null>(null);
   const [feed, setFeed] = useState<FeedEvent[] | null>(null);
   const [tournaments, setTournaments] = useState<TournamentSummary[]>([]);
+  const [sentiment, setSentiment] = useState<GroupSentiment[]>([]);
   const [groupName, setGroupName] = useState('Grup');
   const [tname, setTname] = useState('');
 
   const load = useCallback(async () => {
     if (!id) return;
-    const [lb, fd, tr] = await Promise.all([
+    const [lb, fd, tr, sn] = await Promise.all([
       endpoints.leaderboard(id),
       endpoints.feed(id),
       endpoints.tournaments(id),
+      endpoints.groupSentiment(id),
     ]);
     setLeaderboard(lb.leaderboard);
     setGroupName(lb.group.name);
     setFeed(fd.events);
     setTournaments(tr.tournaments);
+    setSentiment(sn.sentiment);
   }, [id]);
 
   useEffect(() => {
@@ -89,6 +93,7 @@ export default function GroupDetail() {
         <TabButton label="Clasament" active={tab === 'leaderboard'} onPress={() => setTab('leaderboard')} />
         <TabButton label="Feed" active={tab === 'feed'} onPress={() => setTab('feed')} />
         <TabButton label="Turnee" active={tab === 'tournaments'} onPress={() => setTab('tournaments')} />
+        <TabButton label="Sentiment" active={tab === 'sentiment'} onPress={() => setTab('sentiment')} />
       </View>
 
       <ScrollView contentContainerStyle={{ gap: theme.spacing(1) }}>
@@ -160,6 +165,32 @@ export default function GroupDetail() {
             </Card>
           </>
         )}
+
+        {tab === 'sentiment' &&
+          (sentiment.length === 0 ? (
+            <Card>
+              <Text style={{ color: theme.colors.muted }}>
+                Niciun vot încă. Marchează Bullish/Bearish din „Piață".
+              </Text>
+            </Card>
+          ) : (
+            sentiment.map((s) => (
+              <Card key={s.symbol}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ color: theme.colors.text, fontWeight: '700' }}>
+                    {s.symbol} {s.myValue === 'BULLISH' ? '📈' : s.myValue === 'BEARISH' ? '📉' : ''}
+                  </Text>
+                  <Text style={{ color: theme.colors.muted, fontSize: 12 }}>
+                    {s.bullish}↑ / {s.bearish}↓
+                  </Text>
+                </View>
+                <View style={{ height: 8, borderRadius: 4, backgroundColor: theme.colors.red, overflow: 'hidden' }}>
+                  <View style={{ width: `${s.bullishPct}%`, height: 8, backgroundColor: theme.colors.green }} />
+                </View>
+                <Text style={{ color: theme.colors.muted, fontSize: 12 }}>{s.bullishPct}% bullish</Text>
+              </Card>
+            ))
+          ))}
       </ScrollView>
     </Screen>
   );
