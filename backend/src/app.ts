@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import { generalLimiter, authLimiter } from './http/rateLimit.js';
 import { authRouter } from './routes/auth.js';
 import { instrumentsRouter } from './routes/instruments.js';
 import { portfolioRouter } from './routes/portfolio.js';
@@ -17,12 +19,16 @@ import { errorHandler } from './http/errors.js';
 /** Construiește aplicația Express (separat de pornirea serverului, pt. teste). */
 export function createApp() {
   const app = express();
+  // Necesar în spatele unui proxy (Render/Railway) pentru rate-limit pe IP corect.
+  app.set('trust proxy', 1);
+  app.use(helmet());
   app.use(cors());
-  app.use(express.json());
+  app.use(express.json({ limit: '100kb' }));
+  app.use('/api', generalLimiter);
 
   app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
-  app.use('/api/auth', authRouter);
+  app.use('/api/auth', authLimiter, authRouter);
   app.use('/api/instruments', instrumentsRouter);
   app.use('/api/portfolio', portfolioRouter);
   app.use('/api/groups', groupsRouter);

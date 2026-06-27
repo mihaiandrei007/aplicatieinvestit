@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../db.js';
 import { asyncHandler, badRequest } from '../http/errors.js';
 import { requireAuth, type AuthedRequest } from '../http/requireAuth.js';
+import { actionLimiter } from '../http/rateLimit.js';
 import { isDirection, MIN_STAKE, MAX_STAKE, DEFAULT_MULTIPLIER, type Direction } from '../lib/prediction.js';
 import { placePrediction } from '../services/predictionService.js';
 
@@ -17,6 +18,7 @@ const placeSchema = z.object({
 /** Plasează o predicție rapidă (SUS/JOS) pe direcția unei acțiuni. */
 predictionsRouter.post(
   '/predictions',
+  actionLimiter,
   requireAuth,
   asyncHandler(async (req: AuthedRequest, res) => {
     const parsed = placeSchema.safeParse(req.body);

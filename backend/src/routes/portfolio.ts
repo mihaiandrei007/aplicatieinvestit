@@ -6,6 +6,7 @@ import { requireAuth, type AuthedRequest } from '../http/requireAuth.js';
 import { executeTrade } from '../lib/trading.js';
 import { paginate } from '../lib/paginate.js';
 import { canTrade, spendCredit } from '../lib/tradeCredits.js';
+import { actionLimiter } from '../http/rateLimit.js';
 import { buildSnapshot, loadTrades } from '../services/portfolioService.js';
 import { emitToUserGroups } from '../services/activityService.js';
 import { awardBadges } from '../services/gamificationService.js';
@@ -73,6 +74,7 @@ const tradeSchema = z.object({
 /** Execută o cumpărare sau vânzare la prețul curent al instrumentului. */
 portfolioRouter.post(
   '/trade',
+  actionLimiter,
   requireAuth,
   asyncHandler(async (req: AuthedRequest, res) => {
     const parsed = tradeSchema.safeParse(req.body);
