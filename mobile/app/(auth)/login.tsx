@@ -26,9 +26,9 @@ export default function Login() {
       <View style={{ padding: 20, paddingTop: 60, gap: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <View style={{ width: 8, height: 8, backgroundColor: c.lime, borderRadius: 1 }} />
-          <Text style={{ color: c.text, fontSize: 30, fontWeight: '800', letterSpacing: -1 }}>InvestPals</Text>
+          <Text style={{ color: c.text, fontSize: 30, fontWeight: '800', letterSpacing: -1 }}>Tickr</Text>
         </View>
-        <Label>Virtual stock market among friends · zero real risk</Label>
+        <Label>Trade fake money with your friends · no real risk</Label>
 
         <View style={{ height: 24 }} />
         <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="email@example.com" />

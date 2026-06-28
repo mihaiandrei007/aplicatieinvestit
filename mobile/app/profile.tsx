@@ -37,7 +37,7 @@ export default function ProfileScreen() {
 
         <Pressable onPress={() => router.push('/wrapped')} style={{ borderWidth: 1, borderColor: c.lime, borderRadius: 6, padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View>
-            <Text style={{ color: c.lime, fontWeight: '700' }}>InvestPals Wrapped</Text>
+            <Text style={{ color: c.lime, fontWeight: '700' }}>Tickr Wrapped</Text>
             <Label>Your summary · shareable</Label>
           </View>
           <Text style={{ color: c.lime, fontSize: 18 }}>›</Text>

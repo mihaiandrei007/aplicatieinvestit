@@ -25,7 +25,7 @@ export default function WrappedScreen() {
   return (
     <Screen>
       <View style={{ padding: 20, gap: 4 }}>
-        <Label>InvestPals Wrapped</Label>
+        <Label>Tickr Wrapped</Label>
         <H1>{w.displayName}</H1>
         <Text style={{ color: c.muted, marginTop: 4 }}>Your summary so far</Text>
       </View>

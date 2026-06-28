@@ -73,9 +73,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: apk-latest
-          name: InvestPals APK (latest)
+          name: Tickr APK (latest)
           body: |
-            Latest InvestPals Android build. Android only.
+            Latest Tickr Android build. Android only.
             Download `investpals.apk`, open it on the phone, allow install from unknown sources.
           files: investpals.apk
           make_latest: true

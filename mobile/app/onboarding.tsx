@@ -14,33 +14,33 @@ type Slide = { icon: (color: string) => React.ReactNode; title: string; body: st
 const SLIDES: Slide[] = [
   {
     icon: (col) => <IconTrophy color={col} size={46} />,
-    title: 'Welcome to InvestPals',
-    body: 'Invest with virtual money and compete with friends. Zero real risk — it is all for fun and learning.',
+    title: 'Welcome to Tickr',
+    body: 'Play the market with fake money and see who is actually any good. No real cash, no real risk.',
   },
   {
     icon: (col) => <IconPortfolio color={col} size={46} />,
-    title: 'Your portfolio',
-    body: 'You start with 10,000 virtual. The goal is to grow it. Track your value, holdings and return (ROI) on the Portfolio tab.',
+    title: 'Your money',
+    body: 'You get 10,000 to start. Grow it however you want. The Portfolio tab shows what you are worth and how you are doing.',
   },
   {
     icon: (col) => <IconMarket color={col} size={46} />,
     title: 'Buy and sell',
-    body: 'Open the Market tab, tap a stock, then Buy or Sell. It is one shared market: everyone sees the same live prices, and heavy buying pushes a price up.',
+    body: 'Tap a stock in Market to buy or sell. Everyone trades the same live market, so when people pile into a stock, it climbs.',
   },
   {
     icon: (col) => <IconNews color={col} size={46} />,
-    title: 'Read the news',
-    body: 'The News tab shows market headlines. They hint at what might move — but never say up or down. Read between the lines and decide for yourself.',
+    title: 'Watch the news',
+    body: 'Headlines drop in the News tab. They never tell you up or down, so you have to read them and make the call.',
   },
   {
     icon: (col) => <Caret up color={col} size={40} />,
-    title: 'Predict and win',
-    body: 'Think a stock will go UP or DOWN soon? Place a quick prediction. Guess right and you multiply your stake into credits.',
+    title: 'Call it',
+    body: 'Think a stock is about to pop or drop? Bet UP or DOWN. Get it right and your stake multiplies.',
   },
   {
     icon: (col) => <IconGroups color={col} size={46} />,
-    title: 'Play with friends',
-    body: 'Create or join a group with an invite code, then climb the leaderboard by return. Daily check-ins keep your streak alive.',
+    title: 'Bring your friends',
+    body: 'Start a group, share the code, and fight for the top of the leaderboard. Check in daily to keep your streak.',
   },
 ];
 
@@ -75,7 +75,7 @@ export default function Onboarding() {
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <View style={{ width: 8, height: 8, backgroundColor: c.lime, borderRadius: 1 }} />
-          <Text style={{ color: c.text, fontSize: 16, fontWeight: '800', letterSpacing: -0.5 }}>InvestPals</Text>
+          <Text style={{ color: c.text, fontSize: 16, fontWeight: '800', letterSpacing: -0.5 }}>Tickr</Text>
         </View>
         <Pressable onPress={finish} hitSlop={10}>
           <Text style={{ color: c.muted2, fontSize: 13, fontWeight: '700', letterSpacing: 0.5 }}>
