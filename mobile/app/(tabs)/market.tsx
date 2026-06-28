@@ -1,18 +1,16 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { Screen, Label, H1, Mono, Hairline, SymbolTile, Button, Segmented, Loading } from '../../src/components/ui';
 import { Caret, IconSearch } from '../../src/components/icons';
-import { endpoints, ApiError, type Instrument, type SentimentValue, type NewsItem } from '../../src/api/client';
+import { endpoints, ApiError, type Instrument, type SentimentValue } from '../../src/api/client';
 import { useRealtime } from '../../src/realtime/useRealtime';
 import { theme, formatMoney, gainColor } from '../../src/theme';
 
 export default function MarketScreen() {
   const c = theme.colors;
-  const router = useRouter();
   const [instruments, setInstruments] = useState<Instrument[] | null>(null);
   const [prev, setPrev] = useState<Record<string, number>>({});
-  const [news, setNews] = useState<NewsItem[]>([]);
   const [watched, setWatched] = useState<Set<string>>(new Set());
   const [onlyWatched, setOnlyWatched] = useState(false);
   const [selected, setSelected] = useState<Instrument | null>(null);
@@ -24,16 +22,14 @@ export default function MarketScreen() {
   const [multiplier, setMultiplier] = useState(1.9);
 
   const load = useCallback(async () => {
-    const [{ instruments }, st, nw, rules, wl] = await Promise.all([
+    const [{ instruments }, st, rules, wl] = await Promise.all([
       endpoints.instruments(),
       endpoints.streak(),
-      endpoints.news(),
       endpoints.predictionRules(),
       endpoints.watchlist(),
     ]);
     setInstruments(instruments);
     setCredits(st.tradeCredits);
-    setNews(nw.news);
     setMultiplier(rules.multiplier);
     setWatched(new Set(wl.symbols));
     setPrev((p) => {
@@ -45,11 +41,6 @@ export default function MarketScreen() {
 
   useRealtime({
     onMessage: (msg) => {
-      if (msg.type === 'NEWS') {
-        const n = msg.payload as { symbol: string | null; headline: string; body: string; source: string };
-        setNews((cur) => [{ id: `${Date.now()}`, createdAt: new Date().toISOString(), ...n }, ...cur].slice(0, 30));
-        return;
-      }
       if (msg.type === 'PREDICTION_RESOLVED') {
         const r = msg.payload as { symbol: string; direction: string; won: boolean; stake: number; payout: number };
         Alert.alert(
@@ -141,29 +132,7 @@ export default function MarketScreen() {
           </View>
         </View>
 
-        {/* news strip */}
-        {news.length > 0 && (
-          <>
-            <Hairline inset={20} />
-            <Pressable onPress={() => router.push('/news')}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 4 }}>
-                <Label>Market news</Label>
-                <Text style={{ color: c.lime, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>SEE ALL ›</Text>
-              </View>
-            </Pressable>
-            {news.slice(0, 3).map((n) => (
-              <Pressable key={n.id} onPress={() => Alert.alert(n.headline, `${n.source ? n.source + '\n\n' : ''}${n.body}`)}>
-                <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingVertical: 8 }}>
-                  {n.symbol ? <SymbolTile symbol={n.symbol} size={30} /> : null}
-                  <View style={{ flex: 1 }}>
-                    <Text numberOfLines={2} style={{ color: c.text, fontSize: 13, fontWeight: '600' }}>{n.headline}</Text>
-                    {!!n.source && <Label style={{ marginTop: 3 }}>{n.source}</Label>}
-                  </View>
-                </View>
-              </Pressable>
-            ))}
-          </>
-        )}
+        <Hairline inset={20} />
 
         {/* filters */}
         <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingTop: 10 }}>

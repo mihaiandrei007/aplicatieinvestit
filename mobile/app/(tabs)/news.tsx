@@ -1,9 +1,10 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { Screen, Label, Hairline, SymbolTile, Loading } from '../src/components/ui';
-import { endpoints, type NewsItem } from '../src/api/client';
-import { theme } from '../src/theme';
+import { Screen, Label, H1, Hairline, SymbolTile, Loading } from '../../src/components/ui';
+import { endpoints, type NewsItem } from '../../src/api/client';
+import { useRealtime } from '../../src/realtime/useRealtime';
+import { theme } from '../../src/theme';
 
 export default function NewsScreen() {
   const c = theme.colors;
@@ -14,12 +15,22 @@ export default function NewsScreen() {
   }, []);
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
+  // Live: prepend headlines as the market generates them.
+  useRealtime({
+    onMessage: (msg) => {
+      if (msg.type !== 'NEWS') return;
+      const n = msg.payload as { symbol: string | null; headline: string; body: string; source: string };
+      setNews((cur) => [{ id: `${Date.now()}`, createdAt: new Date().toISOString(), ...n }, ...(cur ?? [])].slice(0, 40));
+    },
+  });
+
   if (!news) return <Loading />;
 
   return (
     <Screen>
-      <View style={{ padding: 20, paddingBottom: 8 }}>
-        <Label>All news · interpret the direction yourself</Label>
+      <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 10 }}>
+        <Label>Market feed · interpret the direction yourself</Label>
+        <View style={{ marginTop: 5 }}><H1>News</H1></View>
       </View>
       <Hairline inset={20} />
       {news.length === 0 ? (

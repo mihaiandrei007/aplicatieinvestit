@@ -43,6 +43,18 @@ export function IconTrophy({ color, size = 22 }: IconProps) {
   );
 }
 
+export function IconNews({ color, size = 22 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5}>
+      <Rect x={3} y={5} width={18} height={14} rx={1.5} />
+      <Line x1={6.5} y1={9} x2={13} y2={9} strokeLinecap="round" />
+      <Line x1={6.5} y1={12} x2={13} y2={12} strokeLinecap="round" />
+      <Line x1={6.5} y1={15} x2={11} y2={15} strokeLinecap="round" />
+      <Rect x={15.5} y={9} width={3} height={3} rx={0.5} />
+    </Svg>
+  );
+}
+
 export function IconSearch({ color, size = 17 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.5}>

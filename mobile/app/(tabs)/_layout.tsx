@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { theme } from '../../src/theme';
-import { IconPortfolio, IconMarket, IconGroups, IconTrophy } from '../../src/components/icons';
+import { IconPortfolio, IconMarket, IconNews, IconGroups, IconTrophy } from '../../src/components/icons';
 
 export default function TabsLayout() {
   return (
@@ -19,6 +19,7 @@ export default function TabsLayout() {
         options={{ title: 'Portfolio', tabBarIcon: ({ color }) => <IconPortfolio color={color} /> }}
       />
       <Tabs.Screen name="market" options={{ title: 'Market', tabBarIcon: ({ color }) => <IconMarket color={color} /> }} />
+      <Tabs.Screen name="news" options={{ title: 'News', tabBarIcon: ({ color }) => <IconNews color={color} /> }} />
       <Tabs.Screen name="groups" options={{ title: 'Groups', tabBarIcon: ({ color }) => <IconGroups color={color} /> }} />
       <Tabs.Screen
         name="provocari"

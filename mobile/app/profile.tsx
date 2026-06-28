@@ -42,6 +42,14 @@ export default function ProfileScreen() {
           </View>
           <Text style={{ color: c.lime, fontSize: 18 }}>›</Text>
         </Pressable>
+
+        <Pressable onPress={() => router.push('/onboarding?review=1')} style={{ borderWidth: 1, borderColor: c.border, borderRadius: 6, padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View>
+            <Text style={{ color: c.text, fontWeight: '700' }}>How it works</Text>
+            <Label>Replay the tutorial</Label>
+          </View>
+          <Text style={{ color: c.muted2, fontSize: 18 }}>›</Text>
+        </Pressable>
       </View>
       <Hairline inset={20} />
 

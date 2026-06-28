@@ -4,10 +4,14 @@ import { endpoints, setAuthToken, type PublicUser } from '../api/client';
 import { registerForPush } from '../push/registerPush';
 
 const TOKEN_KEY = 'investpals_token';
+const ONBOARD_KEY = 'investpals_onboarded';
 
 interface AuthState {
   user: PublicUser | null;
   loading: boolean;
+  /** Whether the first-launch tutorial has been completed on this device. */
+  onboarded: boolean;
+  completeOnboarding: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   signInWithOAuth: (provider: 'google' | 'apple', idToken: string) => Promise<void>;
@@ -20,11 +24,14 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<PublicUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [onboarded, setOnboarded] = useState(false);
 
-  /** On startup: try to restore the session from secure storage. */
+  /** On startup: restore the session and read the onboarding flag from secure storage. */
   useEffect(() => {
     (async () => {
       try {
+        const seen = await SecureStore.getItemAsync(ONBOARD_KEY);
+        setOnboarded(seen === '1');
         const token = await SecureStore.getItemAsync(TOKEN_KEY);
         if (token) {
           setAuthToken(token);
@@ -54,6 +61,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthState = {
     user,
     loading,
+    onboarded,
+    completeOnboarding: async () => {
+      await SecureStore.setItemAsync(ONBOARD_KEY, '1');
+      setOnboarded(true);
+    },
     signIn: async (email, password) => {
       const res = await endpoints.login(email, password);
       await persist(res.token, res.user);
