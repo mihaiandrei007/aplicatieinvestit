@@ -23,5 +23,7 @@ export const config = {
   /** OAuth client IDs (the expected audience in the ID token). */
   googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
   appleClientId: process.env.APPLE_CLIENT_ID ?? '',
+  /** Secret that protects the /admin page. Empty = admin page disabled. */
+  adminKey: process.env.ADMIN_KEY ?? '',
   isProd,
 } as const;

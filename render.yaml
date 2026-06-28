@@ -19,6 +19,9 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
+      # Secret for the owner-only /admin page (Render generates a random value).
+      - key: ADMIN_KEY
+        generateValue: true
       - key: NODE_ENV
         value: production
       - key: PORT
