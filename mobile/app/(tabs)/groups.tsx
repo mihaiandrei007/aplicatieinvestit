@@ -27,9 +27,9 @@ export default function GroupsScreen() {
       const r = await endpoints.createGroup(name.trim());
       setName('');
       await load();
-      Alert.alert('Grup creat', `Cod de invitație: ${r.group.inviteCode}`);
+      Alert.alert('Group created', `Invite code: ${r.group.inviteCode}`);
     } catch (e) {
-      Alert.alert('Eroare', e instanceof ApiError ? e.message : 'Creare eșuată.');
+      Alert.alert('Error', e instanceof ApiError ? e.message : 'Creation failed.');
     } finally { setBusy(false); }
   }
 
@@ -37,7 +37,7 @@ export default function GroupsScreen() {
     if (!code.trim()) return;
     setBusy(true);
     try { await endpoints.joinGroup(code.trim()); setCode(''); await load(); }
-    catch (e) { Alert.alert('Eroare', e instanceof ApiError ? e.message : 'Alăturare eșuată.'); }
+    catch (e) { Alert.alert('Error', e instanceof ApiError ? e.message : 'Join failed.'); }
     finally { setBusy(false); }
   }
 
@@ -46,8 +46,8 @@ export default function GroupsScreen() {
   return (
     <Screen>
       <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 10 }}>
-        <Label>Ligi private</Label>
-        <View style={{ marginTop: 5 }}><H1>Grupuri</H1></View>
+        <Label>Private leagues</Label>
+        <View style={{ marginTop: 5 }}><H1>Groups</H1></View>
       </View>
       <Hairline inset={20} />
 
@@ -58,7 +58,7 @@ export default function GroupsScreen() {
               <Monogram name={g.name} />
               <View style={{ flex: 1 }}>
                 <Text style={{ color: c.text, fontSize: 15, fontWeight: '700' }}>{g.name}</Text>
-                <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{g.memberCount} membri · {g.role === 'OWNER' ? 'proprietar' : 'membru'}</Mono>
+                <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{g.memberCount} members · {g.role === 'OWNER' ? 'owner' : 'member'}</Mono>
               </View>
               <Mono style={{ color: c.lime, fontSize: 12, fontWeight: '700' }}>{g.inviteCode}</Mono>
             </View>
@@ -68,15 +68,15 @@ export default function GroupsScreen() {
       ))}
 
       <View style={{ padding: 20, gap: 12 }}>
-        <Label>Creează un grup</Label>
-        <Field label="Nume grup" value={name} onChangeText={setName} placeholder="Prietenii de la liceu" />
-        <Button title="CREEAZĂ" onPress={create} loading={busy} />
+        <Label>Create a group</Label>
+        <Field label="Group name" value={name} onChangeText={setName} placeholder="High school friends" />
+        <Button title="CREATE" onPress={create} loading={busy} />
       </View>
       <Hairline inset={20} />
       <View style={{ padding: 20, gap: 12 }}>
-        <Label>Intră cu un cod</Label>
-        <Field label="Cod de invitație" value={code} onChangeText={setCode} autoCapitalize="characters" placeholder="ABC234" />
-        <Button title="ALĂTURĂ-TE" variant="ghost" onPress={join} loading={busy} />
+        <Label>Join with a code</Label>
+        <Field label="Invite code" value={code} onChangeText={setCode} autoCapitalize="characters" placeholder="ABC234" />
+        <Button title="JOIN" variant="ghost" onPress={join} loading={busy} />
       </View>
     </Screen>
   );

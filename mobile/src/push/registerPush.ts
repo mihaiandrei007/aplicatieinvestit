@@ -1,6 +1,6 @@
 /**
- * Înregistrarea notificărilor push (Expo). Cere permisiune, obține token-ul
- * Expo și îl trimite la backend (/api/push/register). Eșecurile sunt tolerate.
+ * Push notification registration (Expo). Requests permission, obtains the
+ * Expo token and sends it to the backend (/api/push/register). Failures are tolerated.
  */
 
 import { Platform } from 'react-native';
@@ -20,7 +20,7 @@ Notifications.setNotificationHandler({
 });
 
 export async function registerForPush(): Promise<string | null> {
-  if (!Device.isDevice) return null; // notificările push nu merg pe simulator
+  if (!Device.isDevice) return null; // push notifications don't work on the simulator
 
   const { status: existing } = await Notifications.getPermissionsAsync();
   let status = existing;

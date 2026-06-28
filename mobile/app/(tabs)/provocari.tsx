@@ -31,15 +31,15 @@ export default function ProvocariScreen() {
     try {
       const now = new Date();
       const end = new Date(now.getTime() + 30 * 24 * 3600 * 1000);
-      await endpoints.createTournament(groupId, 'Sezon nou', now.toISOString(), end.toISOString());
+      await endpoints.createTournament(groupId, 'New season', now.toISOString(), end.toISOString());
       await load();
-    } catch (e) { Alert.alert('Eroare', e instanceof ApiError ? e.message : 'Creare eșuată.'); }
+    } catch (e) { Alert.alert('Error', e instanceof ApiError ? e.message : 'Creation failed.'); }
     finally { setBusy(false); }
   }
 
   async function join(id: string) {
-    try { await endpoints.joinTournament(id); Alert.alert('Înscris', 'Te-ai înscris în turneu.'); load(); }
-    catch (e) { Alert.alert('Eroare', e instanceof ApiError ? e.message : 'Înscriere eșuată.'); }
+    try { await endpoints.joinTournament(id); Alert.alert('Registered', 'You have joined the tournament.'); load(); }
+    catch (e) { Alert.alert('Error', e instanceof ApiError ? e.message : 'Registration failed.'); }
   }
 
   if (!data) return <Loading />;
@@ -47,13 +47,13 @@ export default function ProvocariScreen() {
   return (
     <Screen>
       <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 10 }}>
-        <Label>Turnee pe sezon</Label>
-        <View style={{ marginTop: 5 }}><H1>Provocări</H1></View>
+        <Label>Seasonal tournaments</Label>
+        <View style={{ marginTop: 5 }}><H1>Challenges</H1></View>
       </View>
       <Hairline inset={20} />
 
       {data.length === 0 && (
-        <Text style={{ color: c.muted, padding: 20 }}>Intră într-un grup ca să poți crea sau juca turnee.</Text>
+        <Text style={{ color: c.muted, padding: 20 }}>Join a group to create or play tournaments.</Text>
       )}
 
       {data.map(({ group, tournaments }) => (
@@ -61,22 +61,22 @@ export default function ProvocariScreen() {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 }}>
             <Label>{group.name}</Label>
             <Pressable onPress={() => createFor(group.id)} disabled={busy}>
-              <Text style={{ color: c.lime, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' }}>+ Turneu</Text>
+              <Text style={{ color: c.lime, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' }}>+ Tournament</Text>
             </Pressable>
           </View>
           <Hairline inset={20} />
           {tournaments.length === 0 ? (
-            <Text style={{ color: c.faint, paddingHorizontal: 20, paddingVertical: 12, fontSize: 13 }}>Niciun turneu activ.</Text>
+            <Text style={{ color: c.faint, paddingHorizontal: 20, paddingVertical: 12, fontSize: 13 }}>No active tournament.</Text>
           ) : (
             tournaments.map((t) => (
               <View key={t.id}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, gap: 12 }}>
                   <Pressable style={{ flex: 1 }} onPress={() => router.push(`/tournament/${t.id}`)}>
                     <Text style={{ color: c.text, fontSize: 15, fontWeight: '700' }}>{t.name}</Text>
-                    <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{t.participants} participanți · vezi clasament ›</Mono>
+                    <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{t.participants} participants · view leaderboard ›</Mono>
                   </Pressable>
                   <Pressable onPress={() => join(t.id)} style={{ borderWidth: 1, borderColor: c.lime, borderRadius: 5, paddingHorizontal: 14, paddingVertical: 8 }}>
-                    <Text style={{ color: c.lime, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' }}>Înscrie-te</Text>
+                    <Text style={{ color: c.lime, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' }}>Join</Text>
                   </Pressable>
                 </View>
                 <Hairline inset={20} />

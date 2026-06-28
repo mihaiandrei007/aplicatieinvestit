@@ -41,7 +41,7 @@ export default function PortfolioScreen() {
     try {
       setDaily(await endpoints.voteDaily(direction));
     } catch (e) {
-      Alert.alert('Provocare', e instanceof Error ? e.message : 'Vot eșuat.');
+      Alert.alert('Challenge', e instanceof Error ? e.message : 'Vote failed.');
     }
   }
 
@@ -52,8 +52,8 @@ export default function PortfolioScreen() {
     try {
       const r = await endpoints.checkIn();
       Alert.alert(
-        r.alreadyCheckedIn ? 'Deja făcut' : 'Check-in reușit',
-        r.alreadyCheckedIn ? 'Revino mâine.' : `Streak ${r.currentStreak} zile · +${r.creditsGranted} credite`,
+        r.alreadyCheckedIn ? 'Already done' : 'Check-in successful',
+        r.alreadyCheckedIn ? 'Come back tomorrow.' : `Streak ${r.currentStreak} days · +${r.creditsGranted} credits`,
       );
       await load();
     } finally {
@@ -79,36 +79,36 @@ export default function PortfolioScreen() {
           <View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
               <View style={{ width: 5, height: 5, backgroundColor: c.lime, borderRadius: 1 }} />
-              <Text style={{ color: c.muted2, fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase' }}>Bursa noastră</Text>
+              <Text style={{ color: c.muted2, fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase' }}>Our Market</Text>
             </View>
-            <Text style={{ color: c.faint, fontSize: 11, marginTop: 6 }}>Portofoliu virtual · {user?.displayName}</Text>
+            <Text style={{ color: c.faint, fontSize: 11, marginTop: 6 }}>Virtual portfolio · {user?.displayName}</Text>
           </View>
           <Pressable onPress={() => router.push('/profile')} style={{ width: 32, height: 32, borderWidth: 1, borderColor: c.borderHi, borderRadius: 4, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ color: c.lime, fontSize: 11, fontWeight: '700' }}>{initials(user?.displayName ?? '')}</Text>
           </Pressable>
         </View>
 
-        {/* provocarea zilnică (#13) */}
+        {/* daily challenge (#13) */}
         {daily && (
           <View style={{ marginHorizontal: 20, marginTop: 14, borderWidth: 1, borderColor: c.lime + '55', borderRadius: 8, padding: 14 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Label>Provocarea zilei · +{daily.reward.cash}$ +{daily.reward.credits}cr</Label>
+              <Label>Daily Challenge · +{daily.reward.cash}$ +{daily.reward.credits}cr</Label>
               <Mono style={{ color: c.muted, fontSize: 11 }}>{daily.votesUp}↑ / {daily.votesDown}↓</Mono>
             </View>
             <Text style={{ color: c.text, fontSize: 15, fontWeight: '700', marginTop: 6 }}>
-              {daily.name} ({daily.symbol}) — sus sau jos azi?
+              {daily.name} ({daily.symbol}) — up or down today?
             </Text>
             {daily.myDirection ? (
               <Text style={{ color: c.lime, fontSize: 12, marginTop: 8, fontWeight: '700' }}>
-                Ai votat: {daily.myDirection === 'UP' ? 'SUS' : 'JOS'} · revino mâine pentru rezultat
+                You voted: {daily.myDirection === 'UP' ? 'UP' : 'DOWN'} · come back tomorrow for the result
               </Text>
             ) : (
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
                 <Pressable onPress={() => voteDaily('UP')} style={{ flex: 1, height: 40, borderRadius: 6, borderWidth: 1, borderColor: c.lime, alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ color: c.lime, fontWeight: '700' }}>SUS</Text>
+                  <Text style={{ color: c.lime, fontWeight: '700' }}>UP</Text>
                 </Pressable>
                 <Pressable onPress={() => voteDaily('DOWN')} style={{ flex: 1, height: 40, borderRadius: 6, borderWidth: 1, borderColor: c.red, alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ color: c.red, fontWeight: '700' }}>JOS</Text>
+                  <Text style={{ color: c.red, fontWeight: '700' }}>DOWN</Text>
                 </Pressable>
               </View>
             )}
@@ -117,7 +117,7 @@ export default function PortfolioScreen() {
 
         {/* equity */}
         <View style={{ paddingHorizontal: 20, paddingTop: 16 }}>
-          <Label>Valoare portofoliu</Label>
+          <Label>Portfolio value</Label>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 9 }}>
             <Mono style={{ fontSize: 42, fontWeight: '600', letterSpacing: -1.5, lineHeight: 44 }}>
               {formatMoney(data.equity).split(',')[0]}
@@ -149,11 +149,11 @@ export default function PortfolioScreen() {
             <Hairline inset={20} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 13 }}>
               <View style={{ flexDirection: 'row', gap: 20 }}>
-                <View><Label>Streak</Label><Mono style={{ fontSize: 15, fontWeight: '600', marginTop: 3 }}>{streak.currentStreak} zile</Mono></View>
-                <View><Label>Credite</Label><Mono style={{ fontSize: 15, fontWeight: '600', marginTop: 3 }}>{streak.tradeCredits}</Mono></View>
+                <View><Label>Streak</Label><Mono style={{ fontSize: 15, fontWeight: '600', marginTop: 3 }}>{streak.currentStreak} days</Mono></View>
+                <View><Label>Credits</Label><Mono style={{ fontSize: 15, fontWeight: '600', marginTop: 3 }}>{streak.tradeCredits}</Mono></View>
               </View>
               <Text style={{ color: streak.checkedInToday ? c.faint : c.lime, fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' }}>
-                {streak.checkedInToday ? 'Revino mâine' : 'Check-in ▸'}
+                {streak.checkedInToday ? 'Come back tomorrow' : 'Check-in ▸'}
               </Text>
             </View>
           </Pressable>
@@ -161,13 +161,13 @@ export default function PortfolioScreen() {
 
         {/* holdings */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 9 }}>
-          <Label>Dețineri · {data.holdings.length} poziții</Label>
-          <Label>Valoare / P&L</Label>
+          <Label>Holdings · {data.holdings.length} positions</Label>
+          <Label>Value / P&L</Label>
         </View>
         <Hairline inset={20} />
 
         {data.holdings.length === 0 ? (
-          <Text style={{ color: c.muted, paddingHorizontal: 20, paddingVertical: 18 }}>Nicio deținere. Mergi la „Piață".</Text>
+          <Text style={{ color: c.muted, paddingHorizontal: 20, paddingVertical: 18 }}>No holdings. Go to "Market".</Text>
         ) : (
           data.holdings.map((h) => {
             const pl = h.unrealizedPnL / (h.avgCost * h.quantity || 1);
@@ -177,7 +177,7 @@ export default function PortfolioScreen() {
                   <SymbolTile symbol={h.symbol} accent={h.unrealizedPnL >= 0} />
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: c.text, fontSize: 14, fontWeight: '600' }}>{h.symbol}</Text>
-                    <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{h.quantity} buc · {formatMoney(h.avgCost)}</Mono>
+                    <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{h.quantity} sh · {formatMoney(h.avgCost)}</Mono>
                   </View>
                   <Mono style={{ fontSize: 14, fontWeight: '600' }}>{formatMoney(h.marketValue)}</Mono>
                   <Mono style={{ color: gainColor(h.unrealizedPnL), fontSize: 12, fontWeight: '600', minWidth: 60, textAlign: 'right' }}>
@@ -192,7 +192,7 @@ export default function PortfolioScreen() {
 
         {/* cash */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 13 }}>
-          <Label>Numerar disponibil</Label>
+          <Label>Available cash</Label>
           <Mono style={{ color: c.muted2, fontSize: 14, fontWeight: '600' }}>{formatMoney(data.cash)}</Mono>
         </View>
 

@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/auth/AuthContext';
 import { Loading } from '../src/components/ui';
 
-/** Redirecționează între zona autentificată și ecranele de login. */
+/** Redirects between the authenticated area and the login screens. */
 function AuthGate() {
   const { user, loading } = useAuth();
   const segments = useSegments();
@@ -27,11 +27,11 @@ function AuthGate() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0A0B0D' } }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="group/[id]" options={stackHeader('Grup')} />
-      <Stack.Screen name="profile" options={stackHeader('Profil')} />
-      <Stack.Screen name="news" options={stackHeader('Știri')} />
+      <Stack.Screen name="group/[id]" options={stackHeader('Group')} />
+      <Stack.Screen name="profile" options={stackHeader('Profile')} />
+      <Stack.Screen name="news" options={stackHeader('News')} />
       <Stack.Screen name="wrapped" options={stackHeader('Wrapped')} />
-      <Stack.Screen name="tournament/[id]" options={stackHeader('Turneu')} />
+      <Stack.Screen name="tournament/[id]" options={stackHeader('Tournament')} />
     </Stack>
   );
 }

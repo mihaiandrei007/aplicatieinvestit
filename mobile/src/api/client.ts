@@ -1,6 +1,6 @@
 import { API_URL } from '../config';
 
-/** Eroare cu mesajul venit de la API. */
+/** Error carrying the message returned by the API. */
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -10,12 +10,12 @@ export class ApiError extends Error {
 
 let authToken: string | null = null;
 
-/** Setează token-ul folosit la cererile autentificate. */
+/** Sets the token used for authenticated requests. */
 export function setAuthToken(token: string | null): void {
   authToken = token;
 }
 
-/** Token-ul curent (pentru conexiunea WebSocket). */
+/** The current token (for the WebSocket connection). */
 export function getAuthToken(): string | null {
   return authToken;
 }
@@ -33,7 +33,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   const text = await res.text();
   const data = text ? JSON.parse(text) : {};
   if (!res.ok) {
-    throw new ApiError(res.status, (data as { error?: string }).error ?? `Eroare ${res.status}`);
+    throw new ApiError(res.status, (data as { error?: string }).error ?? `Error ${res.status}`);
   }
   return data as T;
 }
@@ -43,7 +43,7 @@ export const api = {
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
 };
 
-// ---- Tipuri partajate cu backend-ul ----
+// ---- Types shared with the backend ----
 
 export interface PublicUser {
   id: string;
@@ -209,7 +209,7 @@ export interface TournamentEntry {
 }
 
 
-// ---- Endpoint-uri tipate ----
+// ---- Typed endpoints ----
 
 export const endpoints = {
   register: (email: string, password: string, displayName: string) =>
@@ -237,15 +237,15 @@ export const endpoints = {
 
   badges: () => api.get<{ badges: BadgeView[] }>('/api/me/badges'),
 
-  // Etapa 3 — push & OAuth
+  // Stage 3 — push & OAuth
   oauth: (provider: 'google' | 'apple', idToken: string) =>
     api.post<AuthResponse>('/api/auth/oauth', { provider, idToken }),
   registerPush: (token: string) => api.post('/api/push/register', { token }),
 
-  // grafic portofoliu
+  // portfolio chart
   history: () => api.get<{ history: EquityPoint[] }>('/api/portfolio/history'),
 
-  // Etapa 4 — turnee
+  // Stage 4 — tournaments
   tournaments: (groupId: string) =>
     api.get<{ tournaments: TournamentSummary[] }>(`/api/groups/${groupId}/tournaments`),
   createTournament: (groupId: string, name: string, startsAt: string, endsAt: string) =>
@@ -274,20 +274,20 @@ export const endpoints = {
   watchlist: () => api.get<{ symbols: string[] }>('/api/watchlist'),
   toggleWatch: (symbol: string) => api.post<{ symbol: string; watching: boolean }>('/api/watchlist', { symbol }),
 
-  // #13 provocare zilnică
+  // #13 daily challenge
   daily: () => api.get<DailyChallenge>('/api/daily'),
   voteDaily: (direction: 'UP' | 'DOWN') => api.post<DailyChallenge>('/api/daily', { direction }),
 
   // #12 wrapped
   wrapped: () => api.get<Wrapped>('/api/wrapped'),
 
-  // #8 clasament Sharpe
+  // #8 Sharpe leaderboard
   sharpeLeaderboard: (groupId: string) =>
     api.get<{ group: { id: string; name: string }; leaderboard: Array<{ rank: number; userId: string; displayName: string; sharpe: number; isMe: boolean }> }>(
       `/api/groups/${groupId}/leaderboard/sharpe`,
     ),
 
-  // Predicție rapidă (semi-gambling tematic)
+  // Quick prediction (themed semi-gambling)
   predictionRules: () => api.get<{ multiplier: number; minStake: number; maxStake: number }>('/api/predictions'),
   placePrediction: (symbol: string, direction: 'UP' | 'DOWN', stake: number) =>
     api.post<{ prediction: { id: string; symbol: string; direction: string; priceAtBet: number }; cash: number }>(

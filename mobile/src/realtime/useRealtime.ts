@@ -8,15 +8,15 @@ export interface RealtimeMessage {
 }
 
 interface Options {
-  /** Grup la care să se aboneze (pentru NEW_ACTIVITY). */
+  /** Group to subscribe to (for NEW_ACTIVITY). */
   groupId?: string;
-  /** Apelat la fiecare mesaj de la server. */
+  /** Called on every message from the server. */
   onMessage: (msg: RealtimeMessage) => void;
 }
 
 /**
- * Conexiune WebSocket live la backend. Se reconectează automat la deconectare.
- * Folosit pentru actualizări de preț și evenimente de feed în timp real.
+ * Live WebSocket connection to the backend. Reconnects automatically on disconnect.
+ * Used for real-time price updates and feed events.
  */
 export function useRealtime({ groupId, onMessage }: Options): void {
   const handlerRef = useRef(onMessage);
@@ -40,7 +40,7 @@ export function useRealtime({ groupId, onMessage }: Options): void {
         try {
           handlerRef.current(JSON.parse(typeof e.data === 'string' ? e.data : '') as RealtimeMessage);
         } catch {
-          // ignoră mesaje malformate
+          // ignore malformed messages
         }
       };
       socket.onclose = () => {

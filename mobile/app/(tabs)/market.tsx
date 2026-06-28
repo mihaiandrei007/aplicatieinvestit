@@ -53,10 +53,10 @@ export default function MarketScreen() {
       if (msg.type === 'PREDICTION_RESOLVED') {
         const r = msg.payload as { symbol: string; direction: string; won: boolean; stake: number; payout: number };
         Alert.alert(
-          r.won ? 'Predicție câștigată' : 'Predicție pierdută',
+          r.won ? 'Prediction won' : 'Prediction lost',
           r.won
-            ? `${r.symbol} ${r.direction === 'UP' ? 'SUS' : 'JOS'}: ai câștigat ${formatMoney(r.payout)} (miză ${formatMoney(r.stake)}).`
-            : `${r.symbol} ${r.direction === 'UP' ? 'SUS' : 'JOS'}: ai pierdut miza de ${formatMoney(r.stake)}.`,
+            ? `${r.symbol} ${r.direction === 'UP' ? 'UP' : 'DOWN'}: you won ${formatMoney(r.payout)} (stake ${formatMoney(r.stake)}).`
+            : `${r.symbol} ${r.direction === 'UP' ? 'UP' : 'DOWN'}: you lost the stake of ${formatMoney(r.stake)}.`,
         );
         return;
       }
@@ -84,7 +84,7 @@ export default function MarketScreen() {
         return n;
       });
     } catch {
-      // ignoră
+      // ignore
     }
   }
 
@@ -92,18 +92,18 @@ export default function MarketScreen() {
     if (!selected) return;
     const stake = Number(predStake);
     if (!Number.isFinite(stake) || stake <= 0) {
-      Alert.alert('Miză invalidă', 'Introdu o sumă pozitivă.');
+      Alert.alert('Invalid stake', 'Enter a positive amount.');
       return;
     }
     setBusy(true);
     try {
       await endpoints.placePrediction(selected.symbol, direction, stake);
       Alert.alert(
-        'Predicție plasată',
-        `${selected.symbol} ${direction === 'UP' ? 'SUS' : 'JOS'}, miză ${formatMoney(stake)}. Se rezolvă la următorul tick (×${multiplier}).`,
+        'Prediction placed',
+        `${selected.symbol} ${direction === 'UP' ? 'UP' : 'DOWN'}, stake ${formatMoney(stake)}. Resolves at the next tick (×${multiplier}).`,
       );
     } catch (e) {
-      Alert.alert('Eroare', e instanceof ApiError ? e.message : 'Predicție eșuată.');
+      Alert.alert('Error', e instanceof ApiError ? e.message : 'Prediction failed.');
     } finally {
       setBusy(false);
     }
@@ -115,11 +115,11 @@ export default function MarketScreen() {
     try {
       const res = await endpoints.trade(selected.symbol, side, qty);
       setCredits(res.tradeCredits);
-      Alert.alert(side === 'BUY' ? 'Cumpărare reușită' : 'Vânzare reușită', `Numerar: ${formatMoney(res.cash)} · Credite: ${res.tradeCredits}`);
+      Alert.alert(side === 'BUY' ? 'Buy successful' : 'Sell successful', `Cash: ${formatMoney(res.cash)} · Credits: ${res.tradeCredits}`);
       setSelected(null);
       load();
     } catch (e) {
-      Alert.alert('Eroare', e instanceof ApiError ? e.message : 'Tranzacție eșuată.');
+      Alert.alert('Error', e instanceof ApiError ? e.message : 'Trade failed.');
     } finally {
       setBusy(false);
     }
@@ -133,8 +133,8 @@ export default function MarketScreen() {
         {/* header */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 10 }}>
           <View>
-            <Label>Piață deschisă{credits !== null ? ` · ${credits} credite` : ''}</Label>
-            <View style={{ marginTop: 5 }}><H1>Instrumente</H1></View>
+            <Label>Market open{credits !== null ? ` · ${credits} credits` : ''}</Label>
+            <View style={{ marginTop: 5 }}><H1>Instruments</H1></View>
           </View>
           <View style={{ width: 34, height: 34, borderWidth: 1, borderColor: c.border, borderRadius: 5, alignItems: 'center', justifyContent: 'center' }}>
             <IconSearch color={c.muted2} />
@@ -147,8 +147,8 @@ export default function MarketScreen() {
             <Hairline inset={20} />
             <Pressable onPress={() => router.push('/news')}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 4 }}>
-                <Label>Știri de piață</Label>
-                <Text style={{ color: c.lime, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>VEZI TOATE ›</Text>
+                <Label>Market news</Label>
+                <Text style={{ color: c.lime, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>SEE ALL ›</Text>
               </View>
             </Pressable>
             {news.slice(0, 3).map((n) => (
@@ -165,9 +165,9 @@ export default function MarketScreen() {
           </>
         )}
 
-        {/* filtre */}
+        {/* filters */}
         <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingTop: 10 }}>
-          {[{ k: false, l: 'Toate' }, { k: true, l: 'Urmărite' }].map((f) => (
+          {[{ k: false, l: 'All' }, { k: true, l: 'Watchlist' }].map((f) => (
             <Pressable key={f.l} onPress={() => setOnlyWatched(f.k)} style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 4, borderWidth: 1, borderColor: onlyWatched === f.k ? c.lime : c.border, backgroundColor: onlyWatched === f.k ? c.lime : 'transparent' }}>
               <Text style={{ color: onlyWatched === f.k ? c.limeInk : c.muted2, fontSize: 11, fontWeight: '700' }}>{f.l}</Text>
             </Pressable>
@@ -176,8 +176,8 @@ export default function MarketScreen() {
 
         {/* column head */}
         <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 8, gap: 10 }}>
-          <Text style={{ flex: 1, color: c.faint, fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase' }}>Simbol</Text>
-          <Text style={{ width: 78, textAlign: 'right', color: c.faint, fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase' }}>Preț · 24h</Text>
+          <Text style={{ flex: 1, color: c.faint, fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase' }}>Symbol</Text>
+          <Text style={{ width: 78, textAlign: 'right', color: c.faint, fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase' }}>Price · 24h</Text>
           <View style={{ width: 24 }} />
         </View>
         <Hairline inset={20} />
@@ -232,7 +232,7 @@ export default function MarketScreen() {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: c.border, borderRadius: 6, paddingLeft: 14, height: 48 }}>
               <View style={{ flex: 1 }}>
-                <Label>Cantitate · est. {formatMoney(qty * selected.currentPrice)}</Label>
+                <Label>Quantity · est. {formatMoney(qty * selected.currentPrice)}</Label>
                 <Mono style={{ fontSize: 18, fontWeight: '600' }}>{qty}</Mono>
               </View>
               <Pressable onPress={() => setQty((q) => Math.max(1, q - 1))} style={{ width: 38, height: 46, alignItems: 'center', justifyContent: 'center' }}>
@@ -243,16 +243,16 @@ export default function MarketScreen() {
               </Pressable>
             </View>
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <View style={{ flex: 1 }}><Button title="CUMPĂRĂ" onPress={() => trade('BUY')} loading={busy} /></View>
-              <View style={{ flex: 1 }}><Button title="VINDE" variant="ghost" onPress={() => trade('SELL')} loading={busy} /></View>
+              <View style={{ flex: 1 }}><Button title="BUY" onPress={() => trade('BUY')} loading={busy} /></View>
+              <View style={{ flex: 1 }}><Button title="SELL" variant="ghost" onPress={() => trade('SELL')} loading={busy} /></View>
             </View>
 
-            {/* Predicție rapidă (semi-gambling tematic) */}
+            {/* Quick prediction (themed semi-gambling) */}
             <View style={{ borderTopWidth: 1, borderTopColor: c.hair, paddingTop: 12, gap: 8 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Label>Predicție rapidă · ×{multiplier}</Label>
+                <Label>Quick prediction · ×{multiplier}</Label>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: c.border, borderRadius: 6, paddingHorizontal: 10, height: 32 }}>
-                  <Label>Miză</Label>
+                  <Label>Stake</Label>
                   <TextInput
                     value={predStake}
                     onChangeText={setPredStake}
@@ -264,11 +264,11 @@ export default function MarketScreen() {
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <Pressable onPress={() => predict('UP')} disabled={busy} style={{ flex: 1, height: 44, borderRadius: 6, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6, borderWidth: 1, borderColor: c.lime }}>
                   <Caret up color={c.lime} size={9} />
-                  <Text style={{ color: c.lime, fontWeight: '700', letterSpacing: 0.5 }}>SUS</Text>
+                  <Text style={{ color: c.lime, fontWeight: '700', letterSpacing: 0.5 }}>UP</Text>
                 </Pressable>
                 <Pressable onPress={() => predict('DOWN')} disabled={busy} style={{ flex: 1, height: 44, borderRadius: 6, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6, borderWidth: 1, borderColor: c.red }}>
                   <Caret up={false} color={c.red} size={9} />
-                  <Text style={{ color: c.red, fontWeight: '700', letterSpacing: 0.5 }}>JOS</Text>
+                  <Text style={{ color: c.red, fontWeight: '700', letterSpacing: 0.5 }}>DOWN</Text>
                 </Pressable>
               </View>
             </View>

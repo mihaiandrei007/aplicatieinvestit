@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<PublicUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  /** La pornire: încearcă să restaureze sesiunea din stocarea securizată. */
+  /** On startup: try to restore the session from secure storage. */
   useEffect(() => {
     (async () => {
       try {
@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
-  /** Înregistrează push-ul când există o sesiune (best-effort, doar pe device fizic). */
+  /** Register push when a session exists (best-effort, only on a physical device). */
   useEffect(() => {
     if (user) registerForPush().catch(() => {});
   }, [user]);
@@ -82,6 +82,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth(): AuthState {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth trebuie folosit în interiorul AuthProvider.');
+  if (!ctx) throw new Error('useAuth must be used inside an AuthProvider.');
   return ctx;
 }

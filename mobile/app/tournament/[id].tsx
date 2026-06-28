@@ -10,7 +10,7 @@ export default function TournamentLeaderboard() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const [rows, setRows] = useState<TournamentEntry[] | null>(null);
-  const [name, setName] = useState('Turneu');
+  const [name, setName] = useState('Tournament');
 
   useEffect(() => {
     if (!id) return;
@@ -25,7 +25,7 @@ export default function TournamentLeaderboard() {
 
   return (
     <Screen>
-      <View style={{ padding: 20, paddingBottom: 8 }}><Label>Clasament turneu · ROI în fereastră</Label></View>
+      <View style={{ padding: 20, paddingBottom: 8 }}><Label>Tournament leaderboard · ROI in window</Label></View>
       <Hairline inset={20} />
       {rows.map((e) => (
         <View key={e.userId}>
@@ -33,7 +33,7 @@ export default function TournamentLeaderboard() {
             <Text style={{ width: 22, textAlign: 'center', color: e.rank <= 3 ? c.lime : c.faint, fontSize: 16, fontWeight: '700' }}>{e.rank}</Text>
             <Monogram name={e.displayName} />
             <View style={{ flex: 1 }}>
-              <Text style={{ color: c.text, fontSize: 15, fontWeight: '600' }}>{e.displayName}{e.isMe ? '  ·  tu' : ''}</Text>
+              <Text style={{ color: c.text, fontSize: 15, fontWeight: '600' }}>{e.displayName}{e.isMe ? '  ·  you' : ''}</Text>
               <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{formatMoney(e.equity)}</Mono>
             </View>
             <Mono style={{ color: gainColor(e.roi), fontSize: 16, fontWeight: '700' }}>{formatPct(e.roi)}</Mono>

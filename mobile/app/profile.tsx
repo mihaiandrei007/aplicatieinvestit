@@ -31,21 +31,21 @@ export default function ProfileScreen() {
           <Monogram name={user?.displayName ?? ''} size={52} />
           <View>
             <H1>{user?.displayName}</H1>
-            <Label>{earned}/{badges.length} insigne · streak {streak?.currentStreak ?? 0} zile</Label>
+            <Label>{earned}/{badges.length} badges · streak {streak?.currentStreak ?? 0} days</Label>
           </View>
         </View>
 
         <Pressable onPress={() => router.push('/wrapped')} style={{ borderWidth: 1, borderColor: c.lime, borderRadius: 6, padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View>
             <Text style={{ color: c.lime, fontWeight: '700' }}>InvestPals Wrapped</Text>
-            <Label>Rezumatul tău · partajabil</Label>
+            <Label>Your summary · shareable</Label>
           </View>
           <Text style={{ color: c.lime, fontSize: 18 }}>›</Text>
         </Pressable>
       </View>
       <Hairline inset={20} />
 
-      <View style={{ padding: 20, paddingBottom: 8 }}><Label>Insigne</Label></View>
+      <View style={{ padding: 20, paddingBottom: 8 }}><Label>Badges</Label></View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 14, gap: 10 }}>
         {badges.map((b) => (
           <View
@@ -59,7 +59,7 @@ export default function ProfileScreen() {
       </View>
 
       <View style={{ padding: 20, marginTop: 8 }}>
-        <Button title="IEȘI DIN CONT" variant="ghost" onPress={signOut} />
+        <Button title="LOG OUT" variant="ghost" onPress={signOut} />
       </View>
     </Screen>
   );

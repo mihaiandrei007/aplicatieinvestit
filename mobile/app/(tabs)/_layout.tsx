@@ -16,13 +16,13 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="portfolio"
-        options={{ title: 'Portofoliu', tabBarIcon: ({ color }) => <IconPortfolio color={color} /> }}
+        options={{ title: 'Portfolio', tabBarIcon: ({ color }) => <IconPortfolio color={color} /> }}
       />
-      <Tabs.Screen name="market" options={{ title: 'Piață', tabBarIcon: ({ color }) => <IconMarket color={color} /> }} />
-      <Tabs.Screen name="groups" options={{ title: 'Grupuri', tabBarIcon: ({ color }) => <IconGroups color={color} /> }} />
+      <Tabs.Screen name="market" options={{ title: 'Market', tabBarIcon: ({ color }) => <IconMarket color={color} /> }} />
+      <Tabs.Screen name="groups" options={{ title: 'Groups', tabBarIcon: ({ color }) => <IconGroups color={color} /> }} />
       <Tabs.Screen
         name="provocari"
-        options={{ title: 'Provocări', tabBarIcon: ({ color }) => <IconTrophy color={color} /> }}
+        options={{ title: 'Challenges', tabBarIcon: ({ color }) => <IconTrophy color={color} /> }}
       />
     </Tabs>
   );

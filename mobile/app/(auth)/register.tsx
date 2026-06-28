@@ -18,29 +18,29 @@ export default function Register() {
   async function onSubmit() {
     setError(''); setLoading(true);
     try { await signUp(email.trim(), password, displayName.trim()); }
-    catch (e) { setError(e instanceof ApiError ? e.message : 'Înregistrare eșuată.'); }
+    catch (e) { setError(e instanceof ApiError ? e.message : 'Sign up failed.'); }
     finally { setLoading(false); }
   }
 
   return (
     <Screen>
       <View style={{ padding: 20, paddingTop: 60, gap: 8 }}>
-        <Text style={{ color: c.text, fontSize: 28, fontWeight: '800', letterSpacing: -1 }}>Cont nou</Text>
-        <Label>Primești 100.000 virtuali de start</Label>
+        <Text style={{ color: c.text, fontSize: 28, fontWeight: '800', letterSpacing: -1 }}>New account</Text>
+        <Label>You get 10,000 virtual to start</Label>
 
         <View style={{ height: 24 }} />
-        <Field label="Nume afișat" value={displayName} onChangeText={setDisplayName} autoCapitalize="words" placeholder="Ana" />
+        <Field label="Display name" value={displayName} onChangeText={setDisplayName} autoCapitalize="words" placeholder="Ana" />
         <View style={{ height: 12 }} />
-        <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="email@exemplu.ro" />
+        <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="email@example.com" />
         <View style={{ height: 12 }} />
-        <Field label="Parolă (min. 8)" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
+        <Field label="Password (min. 8)" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
         <ErrorText>{error}</ErrorText>
         <View style={{ height: 8 }} />
-        <Button title="CREEAZĂ CONT" onPress={onSubmit} loading={loading} />
+        <Button title="CREATE ACCOUNT" onPress={onSubmit} loading={loading} />
 
         <View style={{ height: 20 }} />
         <Link href="/(auth)/login" style={{ color: c.lime, textAlign: 'center', fontSize: 13, fontWeight: '700' }}>
-          Ai deja cont? Autentifică-te
+          Already have an account? Log in
         </Link>
       </View>
     </Screen>

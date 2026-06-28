@@ -19,11 +19,11 @@ export default function NewsScreen() {
   return (
     <Screen>
       <View style={{ padding: 20, paddingBottom: 8 }}>
-        <Label>Toate știrile · interpretează singur direcția</Label>
+        <Label>All news · interpret the direction yourself</Label>
       </View>
       <Hairline inset={20} />
       {news.length === 0 ? (
-        <Text style={{ color: c.muted, padding: 20 }}>Nicio știre încă. Apar pe măsură ce piața avansează.</Text>
+        <Text style={{ color: c.muted, padding: 20 }}>No news yet. It appears as the market advances.</Text>
       ) : (
         news.map((n) => (
           <View key={n.id}>

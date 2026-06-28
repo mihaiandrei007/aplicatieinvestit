@@ -26,7 +26,7 @@ export function Screen({ children, scroll = true }: { children: ReactNode; scrol
   );
 }
 
-/** Etichetă mică, uppercase, tracked. */
+/** Small uppercase, tracked label. */
 export function Label({ children, style }: { children: ReactNode; style?: object }) {
   return <Text style={[styles.label, style]}>{children}</Text>;
 }
@@ -39,7 +39,7 @@ export function Mono({ children, style }: { children: ReactNode; style?: object 
   return <Text style={[styles.mono, style]}>{children}</Text>;
 }
 
-/** Linie subțire de separare. */
+/** Thin separator line. */
 export function Hairline({ inset = 0 }: { inset?: number }) {
   return <View style={[styles.hair, { marginHorizontal: inset }]} />;
 }
@@ -96,7 +96,7 @@ export function Field(props: TextInputProps & { label: string }) {
   );
 }
 
-/** Pătrat cu simbolul instrumentului (bordură subțire). */
+/** Square with the instrument symbol (thin border). */
 export function SymbolTile({ symbol, accent, size = 36 }: { symbol: string; accent?: boolean; size?: number }) {
   return (
     <View style={[styles.symbol, { width: size, height: size }]}>
@@ -107,7 +107,7 @@ export function SymbolTile({ symbol, accent, size = 36 }: { symbol: string; acce
   );
 }
 
-/** Monogramă pătrată cu inițiale. */
+/** Square monogram with initials. */
 export function Monogram({ name, size = 34 }: { name: string; size?: number }) {
   return (
     <View style={[styles.symbol, { width: size, height: size }]}>
@@ -116,7 +116,7 @@ export function Monogram({ name, size = 34 }: { name: string; size?: number }) {
   );
 }
 
-/** Control segmentat (ex. Clasament / Feed, Bullish / Bearish). */
+/** Segmented control (e.g. Leaderboard / Feed, Bullish / Bearish). */
 export function Segmented({
   options,
   value,

@@ -1,7 +1,7 @@
 import React from 'react';
 import Svg, { Path, Circle, Rect, Line, Polyline } from 'react-native-svg';
 
-/** Iconițe line-art (fără emoji), în stilul terminalului pro-trader. */
+/** Line-art icons (no emoji), in the pro-trader terminal style. */
 
 type IconProps = { color: string; size?: number };
 
@@ -52,7 +52,7 @@ export function IconSearch({ color, size = 17 }: IconProps) {
   );
 }
 
-/** Triunghi sus (creștere) sau jos (scădere). */
+/** Triangle pointing up (gain) or down (loss). */
 export function Caret({ up, color, size = 8 }: { up: boolean; color: string; size?: number }) {
   const h = size * 0.875;
   return (
@@ -62,7 +62,7 @@ export function Caret({ up, color, size = 8 }: { up: boolean; color: string; siz
   );
 }
 
-/** Mini status bar (semnal + baterie), fără emoji. */
+/** Mini status bar (signal + battery), no emoji. */
 export function StatusIcons({ color, muted }: { color: string; muted: string }) {
   return (
     <>
@@ -81,7 +81,7 @@ export function StatusIcons({ color, muted }: { color: string; muted: string }) 
   );
 }
 
-/** Grafic-linie de capital (stroke lime + arie). */
+/** Equity line chart (lime stroke + area). */
 export function EquitySparkline({
   values,
   width,

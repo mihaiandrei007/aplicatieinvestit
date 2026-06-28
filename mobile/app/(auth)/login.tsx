@@ -17,7 +17,7 @@ export default function Login() {
   async function onSubmit() {
     setError(''); setLoading(true);
     try { await signIn(email.trim(), password); }
-    catch (e) { setError(e instanceof ApiError ? e.message : 'Autentificare eșuată.'); }
+    catch (e) { setError(e instanceof ApiError ? e.message : 'Log in failed.'); }
     finally { setLoading(false); }
   }
 
@@ -28,26 +28,26 @@ export default function Login() {
           <View style={{ width: 8, height: 8, backgroundColor: c.lime, borderRadius: 1 }} />
           <Text style={{ color: c.text, fontSize: 30, fontWeight: '800', letterSpacing: -1 }}>InvestPals</Text>
         </View>
-        <Label>Bursă virtuală între prieteni · zero risc real</Label>
+        <Label>Virtual stock market among friends · zero real risk</Label>
 
         <View style={{ height: 24 }} />
-        <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="email@exemplu.ro" />
+        <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="email@example.com" />
         <View style={{ height: 12 }} />
-        <Field label="Parolă" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
+        <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
         <ErrorText>{error}</ErrorText>
         <View style={{ height: 8 }} />
-        <Button title="INTRĂ ÎN CONT" onPress={onSubmit} loading={loading} />
+        <Button title="LOG IN" onPress={onSubmit} loading={loading} />
 
         <View style={{ height: 28 }} />
-        <Label>Sau continuă cu</Label>
+        <Label>Or continue with</Label>
         <View style={{ height: 8 }} />
-        <Button title="GOOGLE" variant="ghost" onPress={() => Alert.alert('OAuth Google', 'Backend gata (/api/auth/oauth). Configurează GOOGLE_CLIENT_ID + expo-auth-session.')} />
+        <Button title="GOOGLE" variant="ghost" onPress={() => Alert.alert('OAuth Google', 'Backend ready (/api/auth/oauth). Configure GOOGLE_CLIENT_ID + expo-auth-session.')} />
         <View style={{ height: 10 }} />
-        <Button title="APPLE" variant="ghost" onPress={() => Alert.alert('OAuth Apple', 'Disponibil pe iOS cu expo-apple-authentication.')} />
+        <Button title="APPLE" variant="ghost" onPress={() => Alert.alert('OAuth Apple', 'Available on iOS with expo-apple-authentication.')} />
 
         <View style={{ height: 24 }} />
         <Link href="/(auth)/register" style={{ color: c.lime, textAlign: 'center', fontSize: 13, fontWeight: '700' }}>
-          Nu ai cont? Înregistrează-te
+          No account? Sign up
         </Link>
       </View>
     </Screen>

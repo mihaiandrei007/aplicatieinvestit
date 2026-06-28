@@ -1,6 +1,6 @@
 /**
- * Temă — direcția „Terminal pro-trader": negru profund, accent lime, cifre mono.
- * Câștigurile se afișează în lime (accentul), pierderile în roșu. Fără emoji.
+ * Theme — the "pro-trader terminal" direction: deep black, lime accent, mono digits.
+ * Gains are shown in lime (the accent), losses in red. No emoji.
  */
 export const theme = {
   colors: {
@@ -23,23 +23,23 @@ export const theme = {
   radiusSm: 4,
 } as const;
 
-/** Sumă în format ro-RO (ex. 112.340,50). */
+/** Amount in ro-RO format (e.g. 112.340,50). */
 export function formatMoney(value: number): string {
   return value.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-/** Randament procentual cu semn, format ro-RO (ex. +12,34%). */
+/** Signed percentage return, ro-RO format (e.g. +12,34%). */
 export function formatPct(value: number): string {
   const sign = value >= 0 ? '+' : '';
   return `${sign}${(value * 100).toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
 }
 
-/** Culoarea pentru o valoare: lime pe plus, roșu pe minus. */
+/** Color for a value: lime when positive, red when negative. */
 export function gainColor(value: number): string {
   return value >= 0 ? theme.colors.lime : theme.colors.red;
 }
 
-/** Inițialele pentru monogramă (ex. „Ana Popescu" -> „AP"). */
+/** Initials for the monogram (e.g. "Ana Popescu" -> "AP"). */
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/);
   return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';

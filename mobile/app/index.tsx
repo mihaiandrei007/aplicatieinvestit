@@ -1,6 +1,6 @@
 import { Redirect } from 'expo-router';
 
-/** Punct de intrare: AuthGate (din _layout) va redirecționa corect. */
+/** Entry point: AuthGate (from _layout) will redirect correctly. */
 export default function Index() {
   return <Redirect href="/(tabs)/portfolio" />;
 }

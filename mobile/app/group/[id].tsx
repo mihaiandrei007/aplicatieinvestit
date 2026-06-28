@@ -18,7 +18,7 @@ export default function GroupDetail() {
   const [feed, setFeed] = useState<FeedEvent[] | null>(null);
   const [sentiment, setSentiment] = useState<GroupSentiment[]>([]);
   const [sharpe, setSharpe] = useState<SharpeEntry[]>([]);
-  const [name, setName] = useState('Grup');
+  const [name, setName] = useState('Group');
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -67,7 +67,7 @@ export default function GroupDetail() {
                 <Text style={{ width: 22, textAlign: 'center', color: e.rank <= 3 ? c.lime : c.faint, fontSize: 16, fontWeight: '700', fontVariant: ['tabular-nums'] }}>{e.rank}</Text>
                 <Monogram name={e.displayName} />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: c.text, fontSize: 15, fontWeight: '600' }}>{e.displayName}{e.isMe ? '  ·  tu' : ''}</Text>
+                  <Text style={{ color: c.text, fontSize: 15, fontWeight: '600' }}>{e.displayName}{e.isMe ? '  ·  you' : ''}</Text>
                   <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{formatMoney(e.equity)}</Mono>
                 </View>
                 <Mono style={{ color: gainColor(e.roi), fontSize: 16, fontWeight: '700' }}>{formatPct(e.roi)}</Mono>
@@ -78,7 +78,7 @@ export default function GroupDetail() {
 
         {tab === 'sharpe' &&
           (sharpe.length === 0 ? (
-            <Text style={{ color: c.muted, padding: 20 }}>Clasamentul pe risc apare după câteva tick-uri de piață.</Text>
+            <Text style={{ color: c.muted, padding: 20 }}>The risk leaderboard appears after a few market ticks.</Text>
           ) : (
             sharpe.map((e) => (
               <View key={e.userId}>
@@ -86,8 +86,8 @@ export default function GroupDetail() {
                   <Text style={{ width: 22, textAlign: 'center', color: e.rank <= 3 ? c.lime : c.faint, fontSize: 16, fontWeight: '700' }}>{e.rank}</Text>
                   <Monogram name={e.displayName} />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: c.text, fontSize: 15, fontWeight: '600' }}>{e.displayName}{e.isMe ? '  ·  tu' : ''}</Text>
-                    <Label>randament ajustat la risc</Label>
+                    <Text style={{ color: c.text, fontSize: 15, fontWeight: '600' }}>{e.displayName}{e.isMe ? '  ·  you' : ''}</Text>
+                    <Label>risk-adjusted return</Label>
                   </View>
                   <Mono style={{ color: gainColor(e.sharpe), fontSize: 16, fontWeight: '700' }}>{e.sharpe.toFixed(2)}</Mono>
                 </View>
@@ -98,7 +98,7 @@ export default function GroupDetail() {
 
         {tab === 'feed' &&
           (feed.length === 0 ? (
-            <Text style={{ color: c.muted, padding: 20 }}>Niciun eveniment încă.</Text>
+            <Text style={{ color: c.muted, padding: 20 }}>No events yet.</Text>
           ) : (
             feed.map((ev) => (
               <View key={ev.id}>
@@ -107,10 +107,10 @@ export default function GroupDetail() {
                   <View style={{ flexDirection: 'row', gap: 16, marginTop: 8, alignItems: 'center' }}>
                     <Pressable onPress={() => react(ev.id)}>
                       <Mono style={{ color: ev.reactions.some((r) => r.reactedByMe) ? c.lime : c.muted, fontSize: 12 }}>
-                        REACȚII {ev.reactions.reduce((s, r) => s + r.count, 0)}
+                        REACTIONS {ev.reactions.reduce((s, r) => s + r.count, 0)}
                       </Mono>
                     </Pressable>
-                    <Mono style={{ color: c.muted, fontSize: 12 }}>COM {ev.commentCount}</Mono>
+                    <Mono style={{ color: c.muted, fontSize: 12 }}>COMMENTS {ev.commentCount}</Mono>
                   </View>
                 </View>
                 <Hairline inset={20} />
@@ -120,7 +120,7 @@ export default function GroupDetail() {
 
         {tab === 'sentiment' &&
           (sentiment.length === 0 ? (
-            <Text style={{ color: c.muted, padding: 20 }}>Niciun vot. Marchează Bullish/Bearish din „Piață".</Text>
+            <Text style={{ color: c.muted, padding: 20 }}>No votes. Mark Bullish/Bearish from "Market".</Text>
           ) : (
             sentiment.map((s) => (
               <View key={s.symbol}>
