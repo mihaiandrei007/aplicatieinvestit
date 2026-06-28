@@ -23,6 +23,8 @@ export const config = {
   /** OAuth client IDs (the expected audience in the ID token). */
   googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
   appleClientId: process.env.APPLE_CLIENT_ID ?? '',
+  /** Secret that protects the web /admin page. Empty = web admin page disabled. */
+  adminKey: process.env.ADMIN_KEY ?? '',
   /** Email of the owner account that gets in-app admin access. Empty = no admin. */
   ownerEmail: (process.env.OWNER_EMAIL ?? '').trim().toLowerCase(),
   isProd,

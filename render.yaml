@@ -23,6 +23,10 @@ services:
       # Render dashboard (kept out of the repo).
       - key: OWNER_EMAIL
         sync: false
+      # Secret password for the web /admin page (open /admin?key=...).
+      # Pick your own value in the Render dashboard (kept out of the repo).
+      - key: ADMIN_KEY
+        sync: false
       - key: NODE_ENV
         value: production
       - key: PORT
