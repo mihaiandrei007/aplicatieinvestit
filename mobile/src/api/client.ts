@@ -51,6 +51,18 @@ export interface PublicUser {
   displayName: string;
   cash: number;
   startingCash: number;
+  isAdmin?: boolean;
+}
+
+export interface AdminUser {
+  id: string;
+  displayName: string;
+  email: string;
+  createdAt: string;
+  cash: number;
+  currentStreak: number;
+  trades: number;
+  predictions: number;
 }
 
 export interface AuthResponse {
@@ -216,6 +228,8 @@ export const endpoints = {
     api.post<AuthResponse>('/api/auth/register', { email, password, displayName }),
   login: (email: string, password: string) => api.post<AuthResponse>('/api/auth/login', { email, password }),
   me: () => api.get<{ user: PublicUser }>('/api/auth/me'),
+
+  adminUsers: () => api.get<{ users: AdminUser[] }>('/api/admin/users'),
 
   portfolio: () => api.get<PortfolioSnapshot>('/api/portfolio'),
   instruments: () => api.get<{ instruments: Instrument[] }>('/api/instruments'),

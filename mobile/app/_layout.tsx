@@ -37,6 +37,7 @@ function AuthGate() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="group/[id]" options={stackHeader('Group')} />
       <Stack.Screen name="profile" options={stackHeader('Profile')} />
+      <Stack.Screen name="admin" options={stackHeader('Admin')} />
       <Stack.Screen name="wrapped" options={stackHeader('Wrapped')} />
       <Stack.Screen name="tournament/[id]" options={stackHeader('Tournament')} />
     </Stack>

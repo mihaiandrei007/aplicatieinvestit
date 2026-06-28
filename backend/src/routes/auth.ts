@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db.js';
-import { config } from '../config.js';
+import { config, isOwnerEmail } from '../config.js';
 import { hashPassword, signToken, verifyPassword } from '../auth/auth.js';
 import { asyncHandler, badRequest, conflict, unauthorized } from '../http/errors.js';
 import { requireAuth, type AuthedRequest } from '../http/requireAuth.js';
@@ -43,6 +43,7 @@ function publicUser(u: {
     currentStreak: u.currentStreak,
     longestStreak: u.longestStreak,
     streakFreezes: u.streakFreezes,
+    isAdmin: isOwnerEmail(u.email),
   };
 }
 

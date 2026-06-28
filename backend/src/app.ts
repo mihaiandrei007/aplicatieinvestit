@@ -17,7 +17,7 @@ import { predictionsRouter } from './routes/predictions.js';
 import { watchlistRouter } from './routes/watchlist.js';
 import { dailyRouter } from './routes/daily.js';
 import { wrappedRouter } from './routes/wrapped.js';
-import { adminRouter } from './routes/admin.js';
+import { adminApiRouter } from './routes/admin.js';
 import { errorHandler } from './http/errors.js';
 
 /** Builds the Express application (separate from starting the server, for tests). */
@@ -31,8 +31,6 @@ export function createApp() {
   app.use('/api', generalLimiter);
 
   app.get('/health', (_req, res) => res.json({ status: 'ok' }));
-
-  app.use('/admin', generalLimiter, adminRouter);
 
   app.use('/api/auth', authLimiter, authRouter);
   app.use('/api/instruments', instrumentsRouter);
@@ -49,6 +47,7 @@ export function createApp() {
   app.use('/api', dailyRouter);
   app.use('/api', wrappedRouter);
   app.use('/api', feedRouter);
+  app.use('/api', adminApiRouter);
 
   app.use(errorHandler);
   return app;

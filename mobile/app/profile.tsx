@@ -50,6 +50,16 @@ export default function ProfileScreen() {
           </View>
           <Text style={{ color: c.muted2, fontSize: 18 }}>›</Text>
         </Pressable>
+
+        {user?.isAdmin && (
+          <Pressable onPress={() => router.push('/admin')} style={{ borderWidth: 1, borderColor: c.border, borderRadius: 6, padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View>
+              <Text style={{ color: c.text, fontWeight: '700' }}>Admin</Text>
+              <Label>Who signed up</Label>
+            </View>
+            <Text style={{ color: c.muted2, fontSize: 18 }}>›</Text>
+          </Pressable>
+        )}
       </View>
       <Hairline inset={20} />
 
