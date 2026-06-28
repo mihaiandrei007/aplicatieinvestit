@@ -46,11 +46,15 @@ jobs:
         working-directory: mobile
         run: npx expo prebuild --platform android --no-install
 
+      - name: Pin Kotlin version (Compose compiler compatibility)
+        working-directory: mobile/android
+        run: echo "android.kotlinVersion=1.9.25" >> gradle.properties
+
       - name: Build release APK
         working-directory: mobile/android
         run: |
           chmod +x ./gradlew
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleRelease --no-daemon -Pandroid.kotlinVersion=1.9.25
 
       - name: Stage APK
         run: cp mobile/android/app/build/outputs/apk/release/app-release.apk investpals.apk
