@@ -1,0 +1,74 @@
+name: Build Android APK
+
+# Builds a sideloadable Android APK in the cloud and publishes it as a direct
+# download link in the "apk-latest" GitHub Release. No laptop required:
+# run it from the phone via the Actions tab (Run workflow), then share the
+# release asset link with friends.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/android-apk.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    name: Build APK
+    runs-on: ubuntu-latest
+    env:
+      EXPO_PUBLIC_API_URL: https://investpals-backend.onrender.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci
+
+      - name: Generate native Android project
+        working-directory: mobile
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build release APK
+        working-directory: mobile/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Stage APK
+        run: cp mobile/android/app/build/outputs/apk/release/app-release.apk investpals.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: investpals-apk
+          path: investpals.apk
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-latest
+          name: InvestPals APK (latest)
+          body: |
+            Latest InvestPals Android build. Android only.
+            Download `investpals.apk`, open it on the phone, allow install from unknown sources.
+          files: investpals.apk
+          make_latest: true
+          fail_on_unmatched_files: true
