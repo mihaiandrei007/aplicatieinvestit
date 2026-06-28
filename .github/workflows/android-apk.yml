@@ -46,9 +46,13 @@ jobs:
         working-directory: mobile
         run: npx expo prebuild --platform android --no-install
 
-      - name: Pin Kotlin version (Compose compiler compatibility)
+      - name: Tune Gradle (Kotlin pin + JVM heap)
         working-directory: mobile/android
-        run: echo "android.kotlinVersion=1.9.25" >> gradle.properties
+        run: |
+          {
+            echo "android.kotlinVersion=1.9.25"
+            echo "org.gradle.jvmargs=-Xmx6144m -XX:MaxMetaspaceSize=1024m -Dfile.encoding=UTF-8"
+          } >> gradle.properties
 
       - name: Build release APK
         working-directory: mobile/android
