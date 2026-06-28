@@ -13,7 +13,7 @@ import { awardBadges } from '../services/gamificationService.js';
 
 export const portfolioRouter = Router();
 
-/** Snapshot complet: numerar, dețineri, P&L, equity. */
+/** Full snapshot: cash, holdings, P&L, equity. */
 portfolioRouter.get(
   '/',
   requireAuth,
@@ -22,7 +22,7 @@ portfolioRouter.get(
   }),
 );
 
-/** Istoricul tranzacțiilor, paginat. */
+/** Transaction history, paginated. */
 portfolioRouter.get(
   '/transactions',
   requireAuth,
@@ -50,7 +50,7 @@ portfolioRouter.get(
   }),
 );
 
-/** Istoricul de capital (equity) pentru grafic — instantanee cronologice. */
+/** Equity history for the chart — chronological snapshots. */
 portfolioRouter.get(
   '/history',
   requireAuth,
@@ -71,31 +71,31 @@ const tradeSchema = z.object({
   quantity: z.number().positive(),
 });
 
-/** Execută o cumpărare sau vânzare la prețul curent al instrumentului. */
+/** Executes a buy or sell at the instrument's current price. */
 portfolioRouter.post(
   '/trade',
   actionLimiter,
   requireAuth,
   asyncHandler(async (req: AuthedRequest, res) => {
     const parsed = tradeSchema.safeParse(req.body);
-    if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? 'Cerere invalidă.');
+    if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? 'Invalid request.');
     const { symbol, side, quantity } = parsed.data;
 
     const instrument = await prisma.instrument.findUnique({ where: { symbol } });
-    if (!instrument) throw notFound(`Instrumentul ${symbol} nu există.`);
+    if (!instrument) throw notFound(`Instrument ${symbol} does not exist.`);
 
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.user.findUniqueOrThrow({ where: { id: req.userId } });
 
-      // Anti-overtrading: fiecare tranzacție costă 1 credit (lib/tradeCredits).
+      // Anti-overtrading: each trade costs 1 credit (lib/tradeCredits).
       if (!canTrade(user.tradeCredits)) {
-        throw badRequest('Nu mai ai credite de tranzacționare. Fă check-in zilnic ca să primești.');
+        throw badRequest('You have no trade credits left. Check in daily to earn more.');
       }
       const creditsAfter = spendCredit(user.tradeCredits);
 
       const history = await loadTrades(req.userId!);
 
-      // Logica pură validează fonduri/dețineri și calculează noul numerar.
+      // The pure logic validates funds/holdings and computes the new cash balance.
       const { cashAfter, trade, notional } = executeTrade(user.cash, history, {
         symbol,
         side,
@@ -114,7 +114,7 @@ portfolioRouter.post(
         },
       });
 
-      // Stratul social: anunță grupurile despre tranzacție (atomic cu trade-ul).
+      // Social layer: announce the trade to the groups (atomic with the trade).
       await emitToUserGroups(
         user.id,
         'TRADE',
@@ -124,11 +124,11 @@ portfolioRouter.post(
       return { created, cashAfter, notional, creditsAfter };
     });
 
-    // Înregistrează un instantaneu de capital pentru grafic/Sharpe.
+    // Record an equity snapshot for the chart/Sharpe.
     const snapshot = await buildSnapshot(req.userId!);
     await prisma.equitySnapshot.create({ data: { userId: req.userId!, equity: snapshot.equity } });
 
-    // După trade: evaluează insignele nou câștigate (idempotent).
+    // After the trade: evaluate the newly earned badges (idempotent).
     const newBadges = await awardBadges(req.userId!);
 
     res.status(201).json({

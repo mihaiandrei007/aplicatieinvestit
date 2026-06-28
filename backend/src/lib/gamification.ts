@@ -1,29 +1,29 @@
 /**
- * lib/gamification — reguli educative: anti-overtrading + insigne (badges).
+ * lib/gamification — educational rules: anti-overtrading + badges.
  *
- * Pur și testat. Regula anti-overtrading descurajează tranzacționarea excesivă;
- * insignele răsplătesc comportamente sănătoase / repere de învățare.
+ * Pure and tested. The anti-overtrading rule discourages excessive trading;
+ * badges reward healthy behaviors / learning milestones.
  */
 
 export const DEFAULT_DAILY_TRADE_LIMIT = 20;
 
-/** Câte tranzacții mai are voie azi un utilizator. */
+/** How many trades a user is still allowed to make today. */
 export function tradesRemaining(tradesToday: number, limit = DEFAULT_DAILY_TRADE_LIMIT): number {
   return Math.max(0, limit - tradesToday);
 }
 
-/** True dacă o nouă tranzacție ar depăși limita zilnică. */
+/** True if a new trade would exceed the daily limit. */
 export function wouldExceedDailyLimit(tradesToday: number, limit = DEFAULT_DAILY_TRADE_LIMIT): boolean {
   return tradesToday >= limit;
 }
 
-/** Statistici agregate ale unui utilizator, intrare pentru evaluarea insignelor. */
+/** Aggregated user statistics, the input for badge evaluation. */
 export interface UserStats {
   tradeCount: number;
   distinctSymbols: number;
   roi: number;
   realizedPnL: number;
-  /** Are cont într-un grup (a socializat). */
+  /** Has an account in a group (has socialized). */
   inGroup: boolean;
 }
 
@@ -34,52 +34,52 @@ export interface BadgeDef {
   earned: (s: UserStats) => boolean;
 }
 
-/** Catalogul de insigne. Predicate pure peste UserStats. */
+/** The badge catalog. Pure predicates over UserStats. */
 export const BADGES: readonly BadgeDef[] = [
   {
     code: 'FIRST_TRADE',
-    label: 'Primul pas',
-    description: 'Ai făcut prima tranzacție.',
+    label: 'First step',
+    description: 'You made your first trade.',
     earned: (s) => s.tradeCount >= 1,
   },
   {
     code: 'DIVERSIFIED',
-    label: 'Diversificat',
-    description: 'Deții/ai tranzacționat cel puțin 5 simboluri diferite.',
+    label: 'Diversified',
+    description: 'You hold/have traded at least 5 different symbols.',
     earned: (s) => s.distinctSymbols >= 5,
   },
   {
     code: 'IN_THE_GREEN',
-    label: 'Pe plus',
-    description: 'Randament pozitiv (ROI > 0).',
+    label: 'In the green',
+    description: 'Positive return (ROI > 0).',
     earned: (s) => s.roi > 0,
   },
   {
     code: 'TEN_PERCENT',
-    label: 'Două cifre',
-    description: 'Ai depășit +10% randament.',
+    label: 'Double digits',
+    description: 'You passed +10% return.',
     earned: (s) => s.roi >= 0.1,
   },
   {
     code: 'PROFIT_TAKER',
-    label: 'Profit realizat',
-    description: 'Ai închis tranzacții cu profit total pozitiv.',
+    label: 'Profit taker',
+    description: 'You closed trades with a positive total profit.',
     earned: (s) => s.realizedPnL > 0,
   },
   {
     code: 'TEAM_PLAYER',
-    label: 'Spirit de echipă',
-    description: 'Ești membru într-un grup.',
+    label: 'Team player',
+    description: 'You are a member of a group.',
     earned: (s) => s.inGroup,
   },
 ];
 
-/** Codurile insignelor câștigate pe baza statisticilor. */
+/** The codes of the badges earned based on the statistics. */
 export function evaluateBadges(stats: UserStats): string[] {
   return BADGES.filter((b) => b.earned(stats)).map((b) => b.code);
 }
 
-/** Insignele nou câștigate față de cele deja deținute. */
+/** The newly earned badges compared to those already held. */
 export function newlyEarnedBadges(stats: UserStats, alreadyHave: readonly string[]): string[] {
   const have = new Set(alreadyHave);
   return evaluateBadges(stats).filter((code) => !have.has(code));

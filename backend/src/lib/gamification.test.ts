@@ -8,30 +8,30 @@ import {
 } from './gamification.js';
 
 describe('anti-overtrading', () => {
-  it('tradesRemaining scade cu numărul de tranzacții', () => {
+  it('tradesRemaining decreases with the number of trades', () => {
     expect(tradesRemaining(0, 20)).toBe(20);
     expect(tradesRemaining(18, 20)).toBe(2);
     expect(tradesRemaining(25, 20)).toBe(0);
   });
 
-  it('wouldExceedDailyLimit la atingerea limitei', () => {
+  it('wouldExceedDailyLimit when the limit is reached', () => {
     expect(wouldExceedDailyLimit(19, 20)).toBe(false);
     expect(wouldExceedDailyLimit(20, 20)).toBe(true);
   });
 });
 
-describe('insigne', () => {
+describe('badges', () => {
   const base: UserStats = { tradeCount: 0, distinctSymbols: 0, roi: 0, realizedPnL: 0, inGroup: false };
 
-  it('niciun trade => nicio insignă', () => {
+  it('no trade => no badge', () => {
     expect(evaluateBadges(base)).toEqual([]);
   });
 
-  it('primul trade deblochează FIRST_TRADE', () => {
+  it('first trade unlocks FIRST_TRADE', () => {
     expect(evaluateBadges({ ...base, tradeCount: 1 })).toContain('FIRST_TRADE');
   });
 
-  it('diversificare și randament', () => {
+  it('diversification and return', () => {
     const stats: UserStats = { tradeCount: 6, distinctSymbols: 5, roi: 0.12, realizedPnL: 500, inGroup: true };
     const earned = evaluateBadges(stats);
     expect(earned).toEqual(
@@ -39,7 +39,7 @@ describe('insigne', () => {
     );
   });
 
-  it('newlyEarnedBadges exclude insignele deja deținute', () => {
+  it('newlyEarnedBadges excludes badges already held', () => {
     const stats: UserStats = { ...base, tradeCount: 1, roi: 0.05 };
     expect(newlyEarnedBadges(stats, ['FIRST_TRADE'])).toEqual(['IN_THE_GREEN']);
   });

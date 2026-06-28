@@ -1,33 +1,33 @@
 /**
- * lib/priceSim — simulator DETERMINIST de preț.
+ * lib/priceSim — DETERMINISTIC price simulator.
  *
- * Același seed => exact aceeași serie de prețuri. Esențial pentru ca toți membrii
- * unui grup să vadă aceeași piață și pentru ca testele să fie reproductibile.
+ * The same seed => exactly the same price series. Essential so that all members
+ * of a group see the same market and so that tests are reproducible.
  *
- * Model: mișcare browniană geometrică (drift + volatilitate) cu salturi rare
- * opționale. Numerele „aleatoare" provin dintr-un PRNG determinist (mulberry32).
+ * Model: geometric Brownian motion (drift + volatility) with optional rare
+ * jumps. The "random" numbers come from a deterministic PRNG (mulberry32).
  */
 
 export interface PriceSimParams {
-  /** Prețul de pornire (strict pozitiv). */
+  /** The starting price (strictly positive). */
   basePrice: number;
-  /** Volatilitate anualizată (ex. 0.2 = 20%). */
+  /** Annualized volatility (e.g. 0.2 = 20%). */
   volatility: number;
-  /** Drift anualizat (randament mediu așteptat, ex. 0.05 = 5%). */
+  /** Annualized drift (expected mean return, e.g. 0.05 = 5%). */
   drift: number;
-  /** Număr de pași de simulat. */
+  /** Number of steps to simulate. */
   steps: number;
-  /** Fracțiune dintr-un an per pas (1/252 ≈ o zi de tranzacționare). */
+  /** Fraction of a year per step (1/252 ≈ one trading day). */
   dt?: number;
-  /** Probabilitatea unui salt per pas (0..1). Implicit 0 (fără salturi). */
+  /** The probability of a jump per step (0..1). Defaults to 0 (no jumps). */
   jumpProbability?: number;
-  /** Mărimea relativă maximă a unui salt (ex. 0.1 = ±10%). */
+  /** The maximum relative size of a jump (e.g. 0.1 = ±10%). */
   jumpSize?: number;
 }
 
 /**
- * PRNG determinist mulberry32. Întoarce o funcție care produce numere în [0, 1).
- * Exportat pentru ca alte module (ex. coduri de invitație) să reutilizeze aceeași sursă.
+ * Deterministic mulberry32 PRNG. Returns a function that produces numbers in [0, 1).
+ * Exported so other modules (e.g. invite codes) can reuse the same source.
  */
 export function makeRng(seed: number): () => number {
   let a = seed >>> 0;
@@ -40,17 +40,17 @@ export function makeRng(seed: number): () => number {
   };
 }
 
-/** Transformă două uniforme în (0,1) într-o normală standard (Box-Muller). */
+/** Turns two uniforms in (0,1) into a standard normal (Box-Muller). */
 function standardNormal(rng: () => number): number {
   let u1 = rng();
   const u2 = rng();
-  if (u1 < 1e-12) u1 = 1e-12; // evită log(0)
+  if (u1 < 1e-12) u1 = 1e-12; // avoids log(0)
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
 
 /**
- * Generează seria de prețuri (lungime `steps + 1`, inclusiv prețul inițial).
- * Prețurile rămân strict pozitive prin construcție (multiplicare exponențială).
+ * Generates the price series (length `steps + 1`, including the initial price).
+ * Prices stay strictly positive by construction (exponential multiplication).
  */
 export function simulatePrices(params: PriceSimParams, seed: number): number[] {
   const { basePrice, volatility, drift, steps } = params;
@@ -59,10 +59,10 @@ export function simulatePrices(params: PriceSimParams, seed: number): number[] {
   const jumpSize = params.jumpSize ?? 0;
 
   if (!Number.isFinite(basePrice) || basePrice <= 0) {
-    throw new Error(`basePrice trebuie să fie pozitiv (primit: ${basePrice}).`);
+    throw new Error(`basePrice must be positive (received: ${basePrice}).`);
   }
   if (!Number.isInteger(steps) || steps < 0) {
-    throw new Error(`steps trebuie să fie un întreg ≥ 0 (primit: ${steps}).`);
+    throw new Error(`steps must be an integer ≥ 0 (received: ${steps}).`);
   }
 
   const rng = makeRng(seed);
@@ -75,7 +75,7 @@ export function simulatePrices(params: PriceSimParams, seed: number): number[] {
     price *= Math.exp(diffusion);
 
     if (jumpProbability > 0 && rng() < jumpProbability) {
-      const jump = (rng() * 2 - 1) * jumpSize; // în [-jumpSize, +jumpSize]
+      const jump = (rng() * 2 - 1) * jumpSize; // in [-jumpSize, +jumpSize]
       price *= 1 + jump;
     }
 
@@ -85,7 +85,7 @@ export function simulatePrices(params: PriceSimParams, seed: number): number[] {
   return prices;
 }
 
-/** Prețul de la pasul următor, plecând de la unul curent (pentru avans incremental). */
+/** The price at the next step, starting from a current one (for incremental advance). */
 export function nextPrice(current: number, params: Omit<PriceSimParams, 'basePrice' | 'steps'>, seed: number): number {
   const series = simulatePrices({ ...params, basePrice: current, steps: 1 }, seed);
   return series[1]!;

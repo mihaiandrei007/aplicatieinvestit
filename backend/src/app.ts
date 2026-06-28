@@ -19,10 +19,10 @@ import { dailyRouter } from './routes/daily.js';
 import { wrappedRouter } from './routes/wrapped.js';
 import { errorHandler } from './http/errors.js';
 
-/** Construiește aplicația Express (separat de pornirea serverului, pt. teste). */
+/** Builds the Express application (separate from starting the server, for tests). */
 export function createApp() {
   const app = express();
-  // Necesar în spatele unui proxy (Render/Railway) pentru rate-limit pe IP corect.
+  // Required behind a proxy (Render/Railway) for correct per-IP rate limiting.
   app.set('trust proxy', 1);
   app.use(helmet());
   app.use(cors());

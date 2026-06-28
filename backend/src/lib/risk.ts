@@ -1,12 +1,12 @@
 /**
- * lib/risk — randament ajustat la risc (Sharpe) și statistici de bază.
+ * lib/risk — risk-adjusted return (Sharpe) and basic statistics.
  *
- * Funcții pure peste o serie de valori de capital (equity) sau de randamente.
- * Folosite la clasamentul „pe risc", nu doar pe randament brut (Etapa 4) și
- * la scorul de risc educativ (Etapa 5).
+ * Pure functions over a series of equity values or returns.
+ * Used for the "risk-adjusted" leaderboard, not just raw return (Stage 4), and
+ * for the educational risk score (Stage 5).
  */
 
-/** Randamente simple între valori consecutive: r_t = (v_t - v_{t-1}) / v_{t-1}. */
+/** Simple returns between consecutive values: r_t = (v_t - v_{t-1}) / v_{t-1}. */
 export function returnsFromSeries(values: readonly number[]): number[] {
   const out: number[] = [];
   for (let i = 1; i < values.length; i++) {
@@ -25,7 +25,7 @@ export function mean(xs: readonly number[]): number {
   return xs.reduce((s, x) => s + x, 0) / xs.length;
 }
 
-/** Deviație standard a populației (împarte la N). */
+/** Population standard deviation (divides by N). */
 export function stdDev(xs: readonly number[]): number {
   if (xs.length === 0) return 0;
   const m = mean(xs);
@@ -34,8 +34,8 @@ export function stdDev(xs: readonly number[]): number {
 }
 
 /**
- * Sharpe ratio = (randament mediu - rată fără risc) / deviație standard.
- * Întoarce 0 dacă volatilitatea e nulă (nu există risc măsurat) sau prea puține date.
+ * Sharpe ratio = (mean return - risk-free rate) / standard deviation.
+ * Returns 0 if volatility is zero (no measured risk) or there is too little data.
  */
 export function sharpeRatio(returns: readonly number[], riskFreePerPeriod = 0): number {
   if (returns.length < 2) return 0;
@@ -48,7 +48,7 @@ export function sharpeRatio(returns: readonly number[], riskFreePerPeriod = 0): 
 export interface SharpeParticipant {
   userId: string;
   displayName: string;
-  /** Serie de valori de capital în timp (cronologic). */
+  /** Series of equity values over time (chronological). */
   equitySeries: readonly number[];
 }
 
@@ -59,34 +59,34 @@ export interface SharpeRankEntry {
   rank: number;
 }
 
-/** O poziție din portofoliu, pentru scorul de risc. */
+/** A portfolio position, for the risk score. */
 export interface RiskPosition {
-  /** Ponderea poziției în portofoliu (0..1). */
+  /** The position's weight in the portfolio (0..1). */
   weight: number;
-  /** Volatilitatea instrumentului (ex. 0.3). */
+  /** The instrument's volatility (e.g. 0.3). */
   volatility: number;
 }
 
-/** Indicele Herfindahl-Hirschman al concentrării (0 = diversificat, 1 = totul într-unul). */
+/** The Herfindahl-Hirschman concentration index (0 = diversified, 1 = all in one). */
 export function herfindahl(weights: readonly number[]): number {
   return weights.reduce((s, w) => s + w * w, 0);
 }
 
 /**
- * Scor de risc educativ 0–100: combină volatilitatea ponderată a portofoliului
- * cu concentrarea (Herfindahl). Mai mare = mai riscant. Util pentru tooltips/educație.
+ * Educational risk score 0–100: combines the portfolio's weighted volatility
+ * with concentration (Herfindahl). Higher = riskier. Useful for tooltips/education.
  */
 export function portfolioRiskScore(positions: readonly RiskPosition[]): number {
   if (positions.length === 0) return 0;
   const weightedVol = positions.reduce((s, p) => s + p.weight * p.volatility, 0);
   const concentration = herfindahl(positions.map((p) => p.weight));
-  // 70% volatilitate (normalizată la ~0.6 vol = max), 30% concentrare.
+  // 70% volatility (normalized to ~0.6 vol = max), 30% concentration.
   const volComponent = Math.min(1, weightedVol / 0.6);
   const raw = 0.7 * volComponent + 0.3 * concentration;
   return Math.round(Math.min(100, raw * 100));
 }
 
-/** Clasament pe Sharpe (descrescător), cu ranguri egale la egalitate. */
+/** Sharpe leaderboard (descending), with equal ranks on ties. */
 export function rankBySharpe(participants: readonly SharpeParticipant[]): SharpeRankEntry[] {
   const scored = participants.map((p) => ({
     userId: p.userId,

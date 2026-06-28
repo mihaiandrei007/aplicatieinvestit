@@ -1,50 +1,50 @@
 /**
- * lib/streak — streak de check-in zilnic + „streak freeze" (inspirat din Duolingo).
+ * lib/streak — daily check-in streak + "streak freeze" (inspired by Duolingo).
  *
- * Logică PURĂ pe date `YYYY-MM-DD`: `today` se pasează ca parametru, deci
- * funcția e deterministă și testabilă. Un freeze acoperă o zi pierdută și
- * păstrează streak-ul; freeze-uri se câștigă la fiecare 7 zile de streak.
+ * PURE logic over `YYYY-MM-DD` dates: `today` is passed as a parameter, so the
+ * function is deterministic and testable. A freeze covers a missed day and
+ * preserves the streak; freezes are earned every 7 days of streak.
  */
 
-/** O zi câștigă un freeze la fiecare atâtea zile de streak. */
+/** A freeze is earned every this many days of streak. */
 export const FREEZE_EVERY = 7;
-/** Plafon de freeze-uri acumulate. */
+/** Cap on accumulated freezes. */
 export const MAX_FREEZES = 3;
-/** Credite de bază la check-in + un mic bonus care crește cu streak-ul. */
+/** Base credits at check-in + a small bonus that grows with the streak. */
 export const CHECKIN_BASE_CREDITS = 5;
 
 export interface StreakState {
   currentStreak: number;
   longestStreak: number;
-  /** Ultima zi de check-in (YYYY-MM-DD) sau null dacă niciodată. */
+  /** The last check-in day (YYYY-MM-DD) or null if never. */
   lastCheckIn: string | null;
   freezes: number;
 }
 
 export interface CheckInResult {
   state: StreakState;
-  /** True dacă utilizatorul a făcut deja check-in azi (fără efect/recompensă). */
+  /** True if the user has already checked in today (no effect/reward). */
   alreadyCheckedIn: boolean;
   usedFreeze: boolean;
   streakReset: boolean;
   earnedFreeze: boolean;
 }
 
-/** Transformă o dată YYYY-MM-DD într-un număr de zile (UTC). */
+/** Converts a YYYY-MM-DD date into a day number (UTC). */
 function toDayNumber(date: string): number {
   const [y, m, d] = date.split('-').map(Number);
-  if (!y || !m || !d) throw new Error(`Dată invalidă: ${date}`);
+  if (!y || !m || !d) throw new Error(`Invalid date: ${date}`);
   return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000);
 }
 
-/** Numărul de zile de la `a` la `b` (poate fi negativ). */
+/** The number of days from `a` to `b` (can be negative). */
 export function daysBetween(a: string, b: string): number {
   return toDayNumber(b) - toDayNumber(a);
 }
 
 /**
- * Aplică un check-in pentru ziua `today`. Întoarce noua stare și ce s-a întâmplat.
- * Idempotent: dacă s-a făcut deja check-in azi, nu schimbă nimic.
+ * Applies a check-in for the day `today`. Returns the new state and what happened.
+ * Idempotent: if a check-in was already done today, nothing changes.
  */
 export function applyCheckIn(state: StreakState, today: string): CheckInResult {
   if (state.lastCheckIn === today) {
@@ -61,7 +61,7 @@ export function applyCheckIn(state: StreakState, today: string): CheckInResult {
   } else {
     const gap = daysBetween(state.lastCheckIn, today);
     if (gap <= 0) {
-      // Ceas în urmă / dată anterioară — tratează ca deja făcut, fără efect.
+      // Clock behind / earlier date — treat as already done, no effect.
       return { state, alreadyCheckedIn: true, usedFreeze: false, streakReset: false, earnedFreeze: false };
     }
     if (gap === 1) {
@@ -79,7 +79,7 @@ export function applyCheckIn(state: StreakState, today: string): CheckInResult {
     }
   }
 
-  // Câștigă un freeze când treci de un nou multiplu de FREEZE_EVERY.
+  // Earn a freeze when you cross a new multiple of FREEZE_EVERY.
   let earnedFreeze = false;
   if (
     Math.floor(currentStreak / FREEZE_EVERY) > Math.floor(previousStreak / FREEZE_EVERY) &&
@@ -99,7 +99,7 @@ export function applyCheckIn(state: StreakState, today: string): CheckInResult {
   };
 }
 
-/** Creditele de tranzacționare acordate la un check-in, în funcție de streak. */
+/** The trade credits granted at a check-in, depending on the streak. */
 export function checkInCredits(streak: number): number {
   return CHECKIN_BASE_CREDITS + Math.min(5, Math.floor(streak / 3));
 }

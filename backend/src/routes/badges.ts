@@ -9,12 +9,12 @@ export const badgesRouter = Router();
 
 const byCode = new Map(BADGES.map((b) => [b.code, b]));
 
-/** Insignele mele (câștigate) + catalogul complet (pentru afișare „blocate"). */
+/** My badges (earned) + the full catalog (to display "locked" ones). */
 badgesRouter.get(
   '/me/badges',
   requireAuth,
   asyncHandler(async (req: AuthedRequest, res) => {
-    // Reevaluează la cerere, ca să prindă insigne câștigate prin mișcări de preț.
+    // Re-evaluate on request, to catch badges earned through price moves.
     await awardBadges(req.userId!);
     const owned = await prisma.badge.findMany({
       where: { userId: req.userId },

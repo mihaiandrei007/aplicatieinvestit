@@ -1,6 +1,6 @@
 /**
- * Serviciu de activitate: emite ActivityEvent în toate grupurile din care
- * face parte un utilizator (feed-ul social, Etapa 2).
+ * Activity service: emits an ActivityEvent in all the groups a user
+ * belongs to (the social feed, Stage 2).
  */
 
 import type { Prisma, PrismaClient } from '@prisma/client';
@@ -10,8 +10,8 @@ import { hub } from '../realtime/hub.js';
 type Db = PrismaClient | Prisma.TransactionClient;
 
 /**
- * Creează câte un eveniment în fiecare grup al utilizatorului.
- * Acceptă un client de tranzacție ca să fie atomic cu trade-ul care îl declanșează.
+ * Creates one event in each of the user's groups.
+ * Accepts a transaction client so it is atomic with the trade that triggers it.
  */
 export async function emitToUserGroups(
   userId: string,
@@ -29,7 +29,7 @@ export async function emitToUserGroups(
   }
 }
 
-/** Emite un eveniment într-un singur grup (ex. la alăturare). */
+/** Emits an event in a single group (e.g. on joining). */
 export async function emitToGroup(
   groupId: string,
   userId: string,

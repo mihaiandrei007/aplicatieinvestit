@@ -5,7 +5,7 @@ import { requireAuth } from '../http/requireAuth.js';
 
 export const instrumentsRouter = Router();
 
-/** Lista instrumentelor tranzacționabile, cu prețul curent. */
+/** List of tradable instruments, with the current price. */
 instrumentsRouter.get(
   '/',
   requireAuth,

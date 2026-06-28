@@ -1,9 +1,9 @@
 /**
- * Verificarea ID token-urilor OAuth (Google/Apple) prin JWKS.
+ * Verification of OAuth (Google/Apple) ID tokens via JWKS.
  *
- * Verifică semnătura RS256 cu cheile publice ale providerului, apoi delegă
- * validarea claim-urilor către lib/oauth (pur, testat). Fără dependențe externe:
- * folosește `crypto.createPublicKey({ format: 'jwk' })` din Node.
+ * Verifies the RS256 signature with the provider's public keys, then delegates
+ * claim validation to lib/oauth (pure, tested). No external dependencies:
+ * uses Node's `crypto.createPublicKey({ format: 'jwk' })`.
  */
 
 import { createPublicKey, type JsonWebKey } from 'node:crypto';
@@ -25,7 +25,7 @@ interface Jwk {
   alg?: string;
 }
 
-/** Cache simplu de chei publice per provider (cu expirare). */
+/** Simple per-provider public key cache (with expiry). */
 const jwksCache = new Map<OAuthProvider, { keys: Jwk[]; fetchedAt: number }>();
 const JWKS_TTL_MS = 60 * 60 * 1000;
 
@@ -34,7 +34,7 @@ async function getKeys(provider: OAuthProvider, nowMs: number): Promise<Jwk[]> {
   if (cached && nowMs - cached.fetchedAt < JWKS_TTL_MS) return cached.keys;
 
   const res = await fetch(JWKS_URLS[provider]);
-  if (!res.ok) throw new OAuthError(`Nu pot obține cheile ${provider} (HTTP ${res.status}).`);
+  if (!res.ok) throw new OAuthError(`Cannot fetch ${provider} keys (HTTP ${res.status}).`);
   const data = (await res.json()) as { keys: Jwk[] };
   jwksCache.set(provider, { keys: data.keys, fetchedAt: nowMs });
   return data.keys;
@@ -43,23 +43,23 @@ async function getKeys(provider: OAuthProvider, nowMs: number): Promise<Jwk[]> {
 function decodeKid(token: string): string {
   const decoded = jwt.decode(token, { complete: true });
   const kid = decoded?.header.kid;
-  if (!kid) throw new OAuthError('Token fără kid în antet.');
+  if (!kid) throw new OAuthError('Token without kid in the header.');
   return kid;
 }
 
 function audienceFor(provider: OAuthProvider): string {
   const aud = provider === 'google' ? config.googleClientId : config.appleClientId;
-  if (!aud) throw new OAuthError(`Client ID ${provider} neconfigurat pe server.`);
+  if (!aud) throw new OAuthError(`${provider} client ID not configured on the server.`);
   return aud;
 }
 
-/** Verifică un ID token și întoarce profilul normalizat. */
+/** Verifies an ID token and returns the normalized profile. */
 export async function verifyOAuthToken(provider: OAuthProvider, idToken: string): Promise<OAuthProfile> {
   const nowMs = Date.now();
   const kid = decodeKid(idToken);
   const keys = await getKeys(provider, nowMs);
   const jwk = keys.find((k) => k.kid === kid);
-  if (!jwk) throw new OAuthError('Cheia de semnare nu a fost găsită în JWKS.');
+  if (!jwk) throw new OAuthError('Signing key not found in JWKS.');
 
   const publicKey = createPublicKey({ key: jwk as unknown as JsonWebKey, format: 'jwk' });
 
@@ -67,7 +67,7 @@ export async function verifyOAuthToken(provider: OAuthProvider, idToken: string)
   try {
     payload = jwt.verify(idToken, publicKey, { algorithms: ['RS256'] }) as OAuthClaims;
   } catch (err) {
-    throw new OAuthError(`Semnătură invalidă: ${(err as Error).message}`);
+    throw new OAuthError(`Invalid signature: ${(err as Error).message}`);
   }
 
   return validateClaims(provider, payload, audienceFor(provider), Math.floor(nowMs / 1000));

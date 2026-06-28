@@ -6,7 +6,7 @@ import { requireAuth, type AuthedRequest } from '../http/requireAuth.js';
 
 export const watchlistRouter = Router();
 
-/** Simbolurile urmărite de mine. */
+/** The symbols I watch. */
 watchlistRouter.get(
   '/watchlist',
   requireAuth,
@@ -18,16 +18,16 @@ watchlistRouter.get(
 
 const schema = z.object({ symbol: z.string().min(1) });
 
-/** Comută urmărirea unui simbol (adaugă/scoate). */
+/** Toggle watching a symbol (add/remove). */
 watchlistRouter.post(
   '/watchlist',
   requireAuth,
   asyncHandler(async (req: AuthedRequest, res) => {
     const parsed = schema.safeParse(req.body);
-    if (!parsed.success) throw badRequest('Simbol invalid.');
+    if (!parsed.success) throw badRequest('Invalid symbol.');
     const { symbol } = parsed.data;
     const instrument = await prisma.instrument.findUnique({ where: { symbol } });
-    if (!instrument) throw notFound(`Instrumentul ${symbol} nu există.`);
+    if (!instrument) throw notFound(`Instrument ${symbol} does not exist.`);
 
     const key = { userId_symbol: { userId: req.userId!, symbol } };
     const existing = await prisma.watchlist.findUnique({ where: key });

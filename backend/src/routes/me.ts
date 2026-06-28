@@ -8,7 +8,7 @@ import { grantCredits } from '../lib/tradeCredits.js';
 
 export const meRouter = Router();
 
-/** Data curentă în format YYYY-MM-DD (fus local al serverului). */
+/** The current date in YYYY-MM-DD format (server's local time zone). */
 function todayString(): string {
   const d = new Date();
   const y = d.getFullYear();
@@ -31,7 +31,7 @@ function readStreak(u: {
   };
 }
 
-/** Starea curentă de streak + credite. */
+/** Current streak state + credits. */
 meRouter.get(
   '/me/streak',
   requireAuth,
@@ -48,7 +48,7 @@ meRouter.get(
   }),
 );
 
-/** Check-in zilnic: avansează streak-ul și acordă credite de tranzacționare. */
+/** Daily check-in: advances the streak and grants trade credits. */
 meRouter.post(
   '/me/checkin',
   requireAuth,

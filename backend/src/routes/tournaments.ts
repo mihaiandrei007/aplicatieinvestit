@@ -10,7 +10,7 @@ export const tournamentsRouter = Router();
 
 async function assertMember(groupId: string, userId: string): Promise<void> {
   const m = await prisma.membership.findUnique({ where: { groupId_userId: { groupId, userId } } });
-  if (!m) throw forbidden('Nu ești membru al acestui grup.');
+  if (!m) throw forbidden('You are not a member of this group.');
 }
 
 const createSchema = z.object({
@@ -19,7 +19,7 @@ const createSchema = z.object({
   endsAt: z.coerce.date(),
 });
 
-/** Creează un turneu într-un grup. Creatorul e înscris automat. */
+/** Creates a tournament in a group. The creator is automatically entered. */
 tournamentsRouter.post(
   '/groups/:id/tournaments',
   requireAuth,
@@ -27,8 +27,8 @@ tournamentsRouter.post(
     const groupId = req.params.id!;
     await assertMember(groupId, req.userId!);
     const parsed = createSchema.safeParse(req.body);
-    if (!parsed.success) throw badRequest('Date turneu invalide.');
-    if (parsed.data.endsAt <= parsed.data.startsAt) throw badRequest('endsAt trebuie să fie după startsAt.');
+    if (!parsed.success) throw badRequest('Invalid tournament data.');
+    if (parsed.data.endsAt <= parsed.data.startsAt) throw badRequest('endsAt must be after startsAt.');
 
     const { equity } = await computeEquity(req.userId!);
     const tournament = await prisma.tournament.create({
@@ -44,7 +44,7 @@ tournamentsRouter.post(
   }),
 );
 
-/** Lista turneelor unui grup. */
+/** List of a group's tournaments. */
 tournamentsRouter.get(
   '/groups/:id/tournaments',
   requireAuth,
@@ -68,19 +68,19 @@ tournamentsRouter.get(
   }),
 );
 
-/** Înscriere în turneu (capturează capitalul de start). */
+/** Enter a tournament (captures the starting equity). */
 tournamentsRouter.post(
   '/tournaments/:id/join',
   requireAuth,
   asyncHandler(async (req: AuthedRequest, res) => {
     const tournament = await prisma.tournament.findUnique({ where: { id: req.params.id! } });
-    if (!tournament) throw notFound('Turneu inexistent.');
+    if (!tournament) throw notFound('Tournament not found.');
     await assertMember(tournament.groupId, req.userId!);
 
     const existing = await prisma.tournamentEntry.findUnique({
       where: { tournamentId_userId: { tournamentId: tournament.id, userId: req.userId! } },
     });
-    if (existing) throw conflict('Ești deja înscris în acest turneu.');
+    if (existing) throw conflict('You are already entered in this tournament.');
 
     const { equity } = await computeEquity(req.userId!);
     await prisma.tournamentEntry.create({
@@ -90,7 +90,7 @@ tournamentsRouter.post(
   }),
 );
 
-/** Clasamentul turneului: ROI de la capitalul de înscriere până acum. */
+/** Tournament leaderboard: ROI from the entry equity until now. */
 tournamentsRouter.get(
   '/tournaments/:id/leaderboard',
   requireAuth,
@@ -99,7 +99,7 @@ tournamentsRouter.get(
       where: { id: req.params.id! },
       include: { entries: { include: { user: { select: { id: true, displayName: true } } } } },
     });
-    if (!tournament) throw notFound('Turneu inexistent.');
+    if (!tournament) throw notFound('Tournament not found.');
     await assertMember(tournament.groupId, req.userId!);
 
     const rows = await Promise.all(

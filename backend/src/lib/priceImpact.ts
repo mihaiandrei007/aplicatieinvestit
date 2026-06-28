@@ -1,9 +1,9 @@
 /**
- * lib/priceImpact — impactul cererii/ofertei asupra prețului.
+ * lib/priceImpact — the impact of supply/demand on the price.
  *
- * Dacă net se cumpără (mai mult BUY decât SELL), prețul urcă; dacă se vinde net,
- * prețul scade. Mărimea mișcării depinde de „lichiditatea" instrumentului
- * (cât capital e nevoie ca să-l miște). Funcții PURE, testate.
+ * If there is net buying (more BUY than SELL), the price goes up; if there is net
+ * selling, the price goes down. The size of the move depends on the instrument's
+ * "liquidity" (how much capital is needed to move it). PURE, tested functions.
  */
 
 export interface Flow {
@@ -13,7 +13,7 @@ export interface Flow {
   price: number;
 }
 
-/** Valoarea netă (BUY pozitiv, SELL negativ) pe fiecare simbol. */
+/** The net notional (BUY positive, SELL negative) for each symbol. */
 export function netNotionalBySymbol(flows: readonly Flow[]): Record<string, number> {
   const out: Record<string, number> = {};
   for (const f of flows) {
@@ -24,9 +24,9 @@ export function netNotionalBySymbol(flows: readonly Flow[]): Record<string, numb
 }
 
 /**
- * Fracțiunea de mișcare a prețului din valoarea netă tranzacționată.
- * impact = k * netNotional / liquidity, limitat la ±maxMove.
- * `liquidity` > 0 = cât capital net mișcă prețul cu ~k * 100%.
+ * The fraction of price movement from the net notional traded.
+ * impact = k * netNotional / liquidity, capped at ±maxMove.
+ * `liquidity` > 0 = how much net capital moves the price by ~k * 100%.
  */
 export function priceImpact(
   netNotional: number,
@@ -39,7 +39,7 @@ export function priceImpact(
   return Math.max(-maxMove, Math.min(maxMove, raw));
 }
 
-/** Aplică o mișcare fracționară unui preț (rămâne strict pozitiv). */
+/** Applies a fractional move to a price (stays strictly positive). */
 export function applyMove(price: number, fraction: number): number {
   const next = price * (1 + fraction);
   const safe = next > 0.01 ? next : 0.01;

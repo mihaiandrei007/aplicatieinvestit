@@ -1,19 +1,19 @@
 /**
- * lib/prediction — „Predicție rapidă" (semi-gambling tematic).
+ * lib/prediction — "Quick prediction" (themed semi-gambling).
  *
- * Mizezi bani virtuali că o acțiune urcă (UP) sau coboară (DOWN) până la următorul
- * tick de piață. Dacă nimerești direcția, primești miza × multiplicator; altfel pierzi.
- * Multiplicatorul < 2 dă un mic „avantaj al casei" — pariatul la noroc pierde lent,
- * dar cine interpretează piața/știrile poate ieși pe plus.
+ * You stake virtual money that a stock will go up (UP) or down (DOWN) by the next
+ * market tick. If you get the direction right, you receive the stake × multiplier;
+ * otherwise you lose. A multiplier < 2 gives a small "house edge" — betting at random
+ * loses slowly, but whoever interprets the market/news can come out ahead.
  *
- * Funcții pure, testate.
+ * Pure, tested functions.
  */
 
 export type Direction = 'UP' | 'DOWN';
 
-/** Multiplicatorul de plată la o predicție corectă (≈ dublu). */
+/** The payout multiplier for a correct prediction (≈ double). */
 export const DEFAULT_MULTIPLIER = 1.9;
-/** Miza minimă și maximă (în bani virtuali). */
+/** The minimum and maximum stake (in virtual money). */
 export const MIN_STAKE = 10;
 export const MAX_STAKE = 5000;
 
@@ -21,21 +21,21 @@ export function isDirection(value: string): value is Direction {
   return value === 'UP' || value === 'DOWN';
 }
 
-/** Validează miza față de numerarul disponibil. Aruncă mesaj clar dacă e invalidă. */
+/** Validates the stake against the available cash. Throws a clear message if invalid. */
 export function validateStake(stake: number, cash: number): void {
   if (!Number.isFinite(stake) || stake < MIN_STAKE) {
-    throw new Error(`Miza minimă este ${MIN_STAKE}.`);
+    throw new Error(`The minimum stake is ${MIN_STAKE}.`);
   }
   if (stake > MAX_STAKE) {
-    throw new Error(`Miza maximă este ${MAX_STAKE}.`);
+    throw new Error(`The maximum stake is ${MAX_STAKE}.`);
   }
   if (stake > cash + 1e-9) {
-    throw new Error('Nu ai suficient numerar pentru această miză.');
+    throw new Error('You do not have enough cash for this stake.');
   }
 }
 
 /**
- * Decide dacă predicția a fost corectă. Fără mișcare (preț egal) = pierdere.
+ * Decides whether the prediction was correct. No move (equal price) = a loss.
  */
 export function predictionWon(direction: Direction, priceBefore: number, priceAfter: number): boolean {
   if (priceAfter === priceBefore) return false;
@@ -43,7 +43,7 @@ export function predictionWon(direction: Direction, priceBefore: number, priceAf
   return direction === 'UP' ? wentUp : !wentUp;
 }
 
-/** Plata: miza × multiplicator dacă a câștigat, altfel 0. */
+/** The payout: stake × multiplier if won, otherwise 0. */
 export function payout(won: boolean, stake: number, multiplier = DEFAULT_MULTIPLIER): number {
   return won ? Math.round(stake * multiplier * 100) / 100 : 0;
 }

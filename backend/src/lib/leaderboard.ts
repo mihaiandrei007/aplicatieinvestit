@@ -1,40 +1,40 @@
 /**
- * lib/leaderboard — clasament de grup după randament (ROI).
+ * lib/leaderboard — group leaderboard by return (ROI).
  *
- * Funcții pure: primesc capitalul de start și capitalul curent (equity) al fiecărui
- * participant și produc un clasament ordonat. ROI = (equity - start) / start.
+ * Pure functions: they take each participant's starting capital and current
+ * capital (equity) and produce an ordered leaderboard. ROI = (equity - start) / start.
  *
- * Egalitățile primesc același rang („standard competition ranking": 1, 2, 2, 4).
+ * Ties get the same rank ("standard competition ranking": 1, 2, 2, 4).
  */
 
 export interface Participant {
   userId: string;
   displayName: string;
-  /** Capital de pornire (strict pozitiv). */
+  /** Starting capital (strictly positive). */
   startingCash: number;
-  /** Capital curent total: numerar + valoarea de piață a deținerilor. */
+  /** Total current capital: cash + the market value of the holdings. */
   equity: number;
 }
 
 export interface RankedEntry extends Participant {
-  /** Randament, ex. 0.12 = +12%. */
+  /** Return, e.g. 0.12 = +12%. */
   roi: number;
-  /** Rang în clasament (1 = cel mai bun). */
+  /** Rank on the leaderboard (1 = best). */
   rank: number;
 }
 
-/** ROI pentru un singur participant. */
+/** ROI for a single participant. */
 export function computeRoi(startingCash: number, equity: number): number {
   if (!Number.isFinite(startingCash) || startingCash <= 0) {
-    throw new Error(`startingCash trebuie să fie pozitiv (primit: ${startingCash}).`);
+    throw new Error(`startingCash must be positive (received: ${startingCash}).`);
   }
   return (equity - startingCash) / startingCash;
 }
 
 /**
- * Ordonează participanții descrescător după ROI și atribuie ranguri.
- * Egalitatea de ROI se sparge stabil după displayName (alfabetic) pentru afișare,
- * dar participanții egali la ROI primesc același rang.
+ * Orders participants in descending order by ROI and assigns ranks.
+ * ROI ties are broken stably by displayName (alphabetically) for display,
+ * but participants tied on ROI get the same rank.
  */
 export function rankByRoi(participants: readonly Participant[]): RankedEntry[] {
   const withRoi = participants.map((p) => ({ ...p, roi: computeRoi(p.startingCash, p.equity) }));
@@ -50,7 +50,7 @@ export function rankByRoi(participants: readonly Participant[]): RankedEntry[] {
 
   withRoi.forEach((entry, index) => {
     if (previousRoi === null || entry.roi !== previousRoi) {
-      currentRank = index + 1; // sare peste rangurile ocupate de egalități
+      currentRank = index + 1; // skips the ranks taken by ties
       previousRoi = entry.roi;
     }
     ranked.push({ ...entry, rank: currentRank });

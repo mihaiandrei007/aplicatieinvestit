@@ -1,8 +1,8 @@
 /**
- * lib/social — logică pură pentru stratul social (feed, reacții, profil).
+ * lib/social — pure logic for the social layer (feed, reactions, profile).
  *
- * Formatarea mesajelor de activitate, mascarea email-ului (intimitate) și
- * agregarea reacțiilor sunt funcții pure, testate, fără DB.
+ * Formatting activity messages, masking the email (privacy) and
+ * aggregating reactions are pure, tested functions, without a DB.
  */
 
 export type ActivityType = 'TRADE' | 'JOINED_GROUP' | 'BADGE';
@@ -16,8 +16,8 @@ export interface TradePayload {
 }
 
 /**
- * Maschează un email pentru afișare publică în grup:
- * `ana.popescu@test.ro` -> `an***@test.ro`. Păstrează domeniul.
+ * Masks an email for public display in a group:
+ * `ana.popescu@test.ro` -> `an***@test.ro`. Keeps the domain.
  */
 export function maskEmail(email: string): string {
   const at = email.indexOf('@');
@@ -28,7 +28,7 @@ export function maskEmail(email: string): string {
   return `${visible}***${domain}`;
 }
 
-/** Mesaj RO lizibil pentru un eveniment din feed. */
+/** Readable EN message for a feed event. */
 export function buildActivityMessage(
   type: ActivityType,
   displayName: string,
@@ -37,15 +37,15 @@ export function buildActivityMessage(
   switch (type) {
     case 'TRADE': {
       const p = payload as unknown as TradePayload;
-      const verb = p.side === 'BUY' ? 'a cumpărat' : 'a vândut';
-      return `${displayName} ${verb} ${formatQty(p.quantity)} ${p.symbol} la ${formatMoney(p.price)}`;
+      const verb = p.side === 'BUY' ? 'bought' : 'sold';
+      return `${displayName} ${verb} ${formatQty(p.quantity)} ${p.symbol} at ${formatMoney(p.price)}`;
     }
     case 'JOINED_GROUP':
-      return `${displayName} s-a alăturat grupului`;
+      return `${displayName} joined the group`;
     case 'BADGE':
-      return `${displayName} a primit insigna „${String(payload.badge ?? '')}"`;
+      return `${displayName} earned the "${String(payload.badge ?? '')}" badge`;
     default:
-      return `${displayName} a făcut o acțiune`;
+      return `${displayName} did something`;
   }
 }
 
@@ -57,11 +57,11 @@ export interface ReactionRow {
 export interface ReactionSummaryEntry {
   emoji: string;
   count: number;
-  /** Dacă utilizatorul curent a reacționat cu acest emoji. */
+  /** Whether the current user reacted with this emoji. */
   reactedByMe: boolean;
 }
 
-/** Agregă reacțiile pe emoji, marcând ce a folosit utilizatorul curent. */
+/** Aggregates reactions by emoji, marking which ones the current user used. */
 export function summarizeReactions(
   reactions: readonly ReactionRow[],
   currentUserId: string,
@@ -78,7 +78,7 @@ export function summarizeReactions(
     .sort((a, b) => b.count - a.count || a.emoji.localeCompare(b.emoji));
 }
 
-/** Emoji permise pentru reacții (listă închisă, validabilă). */
+/** Emojis allowed for reactions (a closed, validatable list). */
 export const ALLOWED_EMOJIS = ['👍', '🔥', '😂', '😮', '😢', '🚀'] as const;
 
 export function isAllowedEmoji(emoji: string): boolean {

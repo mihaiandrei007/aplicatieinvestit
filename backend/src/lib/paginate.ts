@@ -1,8 +1,8 @@
 /**
- * lib/paginate — paginare offset-based, pură și reutilizabilă.
+ * lib/paginate — offset-based pagination, pure and reusable.
  *
- * Validează și normalizează parametrii (page ≥ 1, pageSize în limite) și
- * întoarce felia cerută plus metadate de navigare.
+ * Validates and normalizes the parameters (page ≥ 1, pageSize within limits) and
+ * returns the requested slice plus navigation metadata.
  */
 
 export interface PageParams {
@@ -23,7 +23,7 @@ export interface Page<T> {
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
 
-/** Normalizează parametrii de paginare la valori sigure. */
+/** Normalizes the pagination parameters to safe values. */
 export function normalizePageParams(params: PageParams = {}): { page: number; pageSize: number } {
   const page = Math.max(1, Math.floor(params.page ?? 1));
   const rawSize = Math.floor(params.pageSize ?? DEFAULT_PAGE_SIZE);
@@ -31,7 +31,7 @@ export function normalizePageParams(params: PageParams = {}): { page: number; pa
   return { page, pageSize };
 }
 
-/** Paginează o listă deja încărcată în memorie. */
+/** Paginates a list already loaded in memory. */
 export function paginate<T>(items: readonly T[], params: PageParams = {}): Page<T> {
   const { page, pageSize } = normalizePageParams(params);
   const total = items.length;
@@ -50,7 +50,7 @@ export function paginate<T>(items: readonly T[], params: PageParams = {}): Page<
   };
 }
 
-/** Calculează `skip`/`take` pentru interogări de bază de date (ex. Prisma). */
+/** Computes `skip`/`take` for database queries (e.g. Prisma). */
 export function toSkipTake(params: PageParams = {}): { skip: number; take: number } {
   const { page, pageSize } = normalizePageParams(params);
   return { skip: (page - 1) * pageSize, take: pageSize };

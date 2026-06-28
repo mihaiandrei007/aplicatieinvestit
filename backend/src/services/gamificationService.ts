@@ -1,6 +1,6 @@
 /**
- * Serviciu de gamificare: calculează statisticile unui utilizator și acordă
- * insignele nou câștigate. Delegă regulile către lib/gamification (pur, testat).
+ * Gamification service: computes a user's statistics and grants the newly
+ * earned badges. Delegates the rules to lib/gamification (pure, tested).
  */
 
 import { prisma } from '../db.js';
@@ -9,7 +9,7 @@ import { newlyEarnedBadges, BADGES, type UserStats } from '../lib/gamification.j
 import { computeEquity } from './portfolioService.js';
 import { loadTrades } from './portfolioService.js';
 
-/** Adună statisticile relevante pentru insigne. */
+/** Gathers the statistics relevant to badges. */
 export async function buildUserStats(userId: string): Promise<UserStats> {
   const [trades, equityInfo, membershipCount] = await Promise.all([
     loadTrades(userId),
@@ -31,8 +31,8 @@ export async function buildUserStats(userId: string): Promise<UserStats> {
 }
 
 /**
- * Evaluează și persistă insignele nou câștigate. Întoarce definițiile lor
- * (pentru afișare/notificare). Idempotent: nu re-acordă insigne deținute.
+ * Evaluates and persists the newly earned badges. Returns their definitions
+ * (for display/notification). Idempotent: does not re-grant badges already held.
  */
 export async function awardBadges(userId: string): Promise<Array<{ code: string; label: string }>> {
   const stats = await buildUserStats(userId);

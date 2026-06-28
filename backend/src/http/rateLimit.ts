@@ -1,28 +1,28 @@
 import rateLimit from 'express-rate-limit';
 
-/** Limitator general (toate rutele): 300 cereri / minut / IP. */
+/** General limiter (all routes): 300 requests / minute / IP. */
 export const generalLimiter = rateLimit({
   windowMs: 60_000,
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Prea multe cereri. Încearcă din nou în scurt timp.' },
+  message: { error: 'Too many requests. Please try again shortly.' },
 });
 
-/** Limitator strict pentru acțiuni „costisitoare" (trade, predicții): 30 / minut / IP. */
+/** Strict limiter for "expensive" actions (trades, predictions): 30 / minute / IP. */
 export const actionLimiter = rateLimit({
   windowMs: 60_000,
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Prea multe acțiuni rapide. Ia o pauză scurtă.' },
+  message: { error: 'Too many rapid actions. Take a short break.' },
 });
 
-/** Limitator pentru autentificare (anti brute-force): 10 / 5 min / IP. */
+/** Authentication limiter (anti brute-force): 10 / 5 min / IP. */
 export const authLimiter = rateLimit({
   windowMs: 5 * 60_000,
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Prea multe încercări. Așteaptă câteva minute.' },
+  message: { error: 'Too many attempts. Wait a few minutes.' },
 });

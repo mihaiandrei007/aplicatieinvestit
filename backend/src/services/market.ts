@@ -1,7 +1,7 @@
 /**
- * Serviciu de piață: avansează prețurile instrumentelor (simulator determinist),
- * persistă, difuzează în timp real și declanșează notificări la salturi și
- * la depășiri în clasament.
+ * Market service: advances instrument prices (deterministic simulator),
+ * persists them, broadcasts in real time and triggers notifications on price
+ * jumps and on leaderboard overtakes.
  */
 
 import { prisma } from '../db.js';
@@ -17,24 +17,24 @@ import { hub } from '../realtime/hub.js';
 import { computeEquity } from './portfolioService.js';
 import { sendToUser } from './pushService.js';
 
-/** Ultimul clasament cunoscut per grup, pentru a detecta depășiri. */
+/** The last known leaderboard per group, used to detect overtakes. */
 const lastRankings = new Map<string, RankSnapshot[]>();
-/** Momentul ultimului tick — pentru a aduna fluxul de tranzacții din interval. */
+/** Time of the last tick — used to aggregate the trade flow over the interval. */
 let lastTickAt: Date | null = null;
 
 /**
- * Avansează toate prețurile cu un pas. Prețul nou combină:
- *  1. mișcarea de piață deterministă (lib/priceSim),
- *  2. cererea/oferta din tranzacțiile reale din interval (lib/priceImpact),
- *  3. eventuala știre falsă a tick-ului (lib/news).
- * Totul e global — toți utilizatorii văd aceleași prețuri.
+ * Advances all prices by one step. The new price combines:
+ *  1. the deterministic market move (lib/priceSim),
+ *  2. supply/demand from the real trades in the interval (lib/priceImpact),
+ *  3. the tick's possible fake news (lib/news).
+ * Everything is global — all users see the same prices.
  */
 export async function tickMarket(seed: number): Promise<Array<{ symbol: string; prev: number; next: number }>> {
   const instruments = await prisma.instrument.findMany();
   const since = lastTickAt;
   const now = new Date();
 
-  // 1. Flux net de tranzacții din interval (cerere/ofertă).
+  // 1. Net trade flow over the interval (supply/demand).
   const recentTx = since
     ? await prisma.transaction.findMany({
         where: { createdAt: { gte: since } },
@@ -44,7 +44,7 @@ export async function tickMarket(seed: number): Promise<Array<{ symbol: string; 
   const flows: Flow[] = recentTx.map((t) => ({ symbol: t.instrument.symbol, side: t.side, quantity: t.quantity, price: t.price }));
   const netBySymbol = netNotionalBySymbol(flows);
 
-  // 2. Eventuală știre falsă a acestui tick (deterministă din seed).
+  // 2. This tick's possible fake news (deterministic from the seed).
   const news = maybeGenerateNews(
     makeRng(seed * 7 + 13),
     instruments.map((i) => ({ symbol: i.symbol, name: i.name })),
@@ -54,11 +54,11 @@ export async function tickMarket(seed: number): Promise<Array<{ symbol: string; 
     await prisma.news.create({
       data: { symbol: news.symbol, headline: news.headline, body: news.body, source: news.source, impact: news.impact },
     });
-    // Difuzăm fără `impact` — direcția nu se dezvăluie, utilizatorul interpretează.
+    // Broadcast without `impact` — the direction is not revealed, the user interprets it.
     hub.broadcastAll({ type: 'NEWS', payload: { symbol: news.symbol, headline: news.headline, body: news.body, source: news.source } });
   }
 
-  // 3. Randamentul PROPRIU al fiecărui instrument (bază + cerere/ofertă + știre).
+  // 3. Each instrument's OWN return (base + supply/demand + news).
   const ownReturn: Record<string, number> = {};
   for (let i = 0; i < instruments.length; i++) {
     const inst = instruments[i]!;
@@ -69,7 +69,7 @@ export async function tickMarket(seed: number): Promise<Array<{ symbol: string; 
     ownReturn[inst.symbol] = baseReturn + demand + newsImpact;
   }
 
-  // 4. Overlay de corelație: urmăritorii preiau o parte din mișcarea liderului de sector.
+  // 4. Correlation overlay: followers pick up part of the sector leader's move.
   const finalReturn = applySectorCorrelation({
     members: instruments.map((i) => ({ symbol: i.symbol, sector: i.sector, correlation: i.correlation })),
     ownReturn,
@@ -91,13 +91,13 @@ export async function tickMarket(seed: number): Promise<Array<{ symbol: string; 
   lastTickAt = now;
   hub.broadcastAll({ type: 'PRICE_UPDATE', payload: changes });
 
-  // Rezolvă predicțiile rapide cu prețurile noi.
+  // Resolve the quick predictions with the new prices.
   await resolvePredictions(Object.fromEntries(changes.map((c) => [c.symbol, c.next])));
   await recheckOvertakes();
   return changes;
 }
 
-/** Notifică (push + live) utilizatorii care DEȚIN sau URMĂRESC un simbol care a sărit. */
+/** Notifies (push + live) the users who HOLD or WATCH a symbol that jumped. */
 async function notifyHolders(symbol: string, prev: number, next: number): Promise<void> {
   const [holders, watchers] = await Promise.all([
     prisma.transaction.findMany({ where: { instrument: { symbol } }, select: { userId: true }, distinct: ['userId'] }),
@@ -113,7 +113,7 @@ async function notifyHolders(symbol: string, prev: number, next: number): Promis
   );
 }
 
-/** Recalculează clasamentele și emite notificări de depășire. */
+/** Recomputes the leaderboards and emits overtake notifications. */
 async function recheckOvertakes(): Promise<void> {
   const groups = await prisma.group.findMany({
     include: { memberships: { include: { user: { select: { id: true, displayName: true } } } } },
@@ -124,7 +124,7 @@ async function recheckOvertakes(): Promise<void> {
     const participants: Participant[] = await Promise.all(
       group.memberships.map(async (m) => {
         const { equity, startingCash } = await computeEquity(m.userId);
-        // Înregistrează un instantaneu de capital o singură dată per utilizator/tick.
+        // Record an equity snapshot once per user/tick.
         if (!snapshotted.has(m.userId)) {
           snapshotted.add(m.userId);
           await prisma.equitySnapshot.create({ data: { userId: m.userId, equity } });

@@ -1,31 +1,31 @@
 /**
- * lib/correlation — dependențe între stocuri (co-mișcare pe sector).
+ * lib/correlation — dependencies between stocks (sector co-movement).
  *
- * Fiecare instrument aparține unui sector cu un LIDER (ex. NVDA pentru AI).
- * Mișcarea finală a unui urmăritor = mișcarea proprie + `correlation` × mișcarea
- * liderului. Astfel, când NVDA urcă/coboară, firmele AI se mișcă în aceeași direcție.
+ * Each instrument belongs to a sector with a LEADER (e.g. NVDA for AI).
+ * A follower's final move = its own move + `correlation` × the leader's move.
+ * So when NVDA goes up/down, the AI companies move in the same direction.
  *
- * Funcție pură, testată.
+ * Pure, tested function.
  */
 
 export interface CorrMember {
   symbol: string;
   sector: string | null;
-  /** Cât de mult urmează liderul (0 = lider/independent). */
+  /** How closely it follows the leader (0 = leader/independent). */
   correlation: number;
 }
 
 export interface CorrelationInput {
   members: readonly CorrMember[];
-  /** Randamentul „propriu" (idiosincratic) al fiecărui simbol pentru acest pas. */
+  /** The "own" (idiosyncratic) return of each symbol for this step. */
   ownReturn: Readonly<Record<string, number>>;
-  /** Liderul fiecărui sector. */
+  /** The leader of each sector. */
   leaders: Readonly<Record<string, string>>;
 }
 
 /**
- * Aplică overlay-ul de corelație: întoarce randamentul final per simbol.
- * Liderii și instrumentele fără sector/corelație rămân cu randamentul propriu.
+ * Applies the correlation overlay: returns the final return per symbol.
+ * Leaders and instruments without a sector/correlation keep their own return.
  */
 export function applySectorCorrelation(input: CorrelationInput): Record<string, number> {
   const { members, ownReturn, leaders } = input;

@@ -1,4 +1,4 @@
 import { PrismaClient } from '@prisma/client';
 
-/** Client Prisma partajat (singleton). */
+/** Shared Prisma client (singleton). */
 export const prisma = new PrismaClient();

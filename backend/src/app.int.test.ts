@@ -1,6 +1,6 @@
 /**
- * Teste de integrare pe stratul HTTP (necesită DATABASE_URL + migrări aplicate).
- * Rulează cu `npm run test:integration`. Folosesc email-uri unice ca să nu depindă de starea DB.
+ * Integration tests on the HTTP layer (require DATABASE_URL + applied migrations).
+ * Run with `npm run test:integration`. They use unique emails so they don't depend on DB state.
  */
 import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
@@ -25,7 +25,7 @@ beforeAll(async () => {
 });
 
 describe('auth', () => {
-  it('înregistrare → token + buget de start', async () => {
+  it('register → token + starting budget', async () => {
     const res = await request(app)
       .post('/api/auth/register')
       .send({ email: uniqueEmail(), password: 'parola123', displayName: 'Ana' });
@@ -34,20 +34,20 @@ describe('auth', () => {
     expect(res.body.user.cash).toBe(10000);
   });
 
-  it('login cu parolă greșită → 401', async () => {
+  it('login with wrong password → 401', async () => {
     const email = uniqueEmail();
     await request(app).post('/api/auth/register').send({ email, password: 'parola123', displayName: 'X' });
     const res = await request(app).post('/api/auth/login').send({ email, password: 'gresit' });
     expect(res.status).toBe(401);
   });
 
-  it('rută protejată fără token → 401', async () => {
+  it('protected route without token → 401', async () => {
     expect((await request(app).get('/api/portfolio')).status).toBe(401);
   });
 });
 
 describe('trade', () => {
-  it('cumpărare scade numerarul și apare în dețineri', async () => {
+  it('buying reduces cash and appears in holdings', async () => {
     const token = await newUser();
     const buy = await request(app)
       .post('/api/portfolio/trade')
@@ -60,7 +60,7 @@ describe('trade', () => {
     expect(pf.body.holdings.some((h: { symbol: string }) => h.symbol === 'AAPL')).toBe(true);
   });
 
-  it('vânzare descoperită → 400', async () => {
+  it('short sale → 400', async () => {
     const token = await newUser();
     const res = await request(app)
       .post('/api/portfolio/trade')
@@ -70,8 +70,8 @@ describe('trade', () => {
   });
 });
 
-describe('predicție', () => {
-  it('plasează și se rezolvă la tick', async () => {
+describe('prediction', () => {
+  it('places and resolves on tick', async () => {
     const token = await newUser();
     const place = await request(app)
       .post('/api/predictions')
@@ -85,7 +85,7 @@ describe('predicție', () => {
     expect(['WON', 'LOST']).toContain(list.body.predictions[0].status);
   });
 
-  it('miză peste buget → 400', async () => {
+  it('stake over budget → 400', async () => {
     const token = await newUser();
     const res = await request(app)
       .post('/api/predictions')
@@ -104,7 +104,7 @@ describe('watchlist + daily', () => {
     expect(list.body.symbols).toContain('TSLA');
   });
 
-  it('provocarea zilei: vot unic', async () => {
+  it('daily challenge: single vote', async () => {
     const token = await newUser();
     const day = await request(app).get('/api/daily').set('Authorization', `Bearer ${token}`);
     expect(day.body.symbol).toBeTruthy();

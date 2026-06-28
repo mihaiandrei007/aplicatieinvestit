@@ -15,7 +15,7 @@ const placeSchema = z.object({
   stake: z.number().positive(),
 });
 
-/** Plasează o predicție rapidă (SUS/JOS) pe direcția unei acțiuni. */
+/** Place a quick prediction (UP/DOWN) on a stock's direction. */
 predictionsRouter.post(
   '/predictions',
   actionLimiter,
@@ -23,7 +23,7 @@ predictionsRouter.post(
   asyncHandler(async (req: AuthedRequest, res) => {
     const parsed = placeSchema.safeParse(req.body);
     if (!parsed.success || !isDirection(parsed.data.direction)) {
-      throw badRequest('Cerere invalidă (symbol, direction UP/DOWN, stake).');
+      throw badRequest('Invalid request (symbol, direction UP/DOWN, stake).');
     }
     try {
       const { prediction, cashAfter } = await placePrediction(
@@ -49,7 +49,7 @@ predictionsRouter.post(
   }),
 );
 
-/** Predicțiile mele (în așteptare + rezolvate recent) + reguli. */
+/** My predictions (pending + recently resolved) + rules. */
 predictionsRouter.get(
   '/predictions',
   requireAuth,

@@ -1,16 +1,16 @@
 /**
- * Serviciu de predicții: plasează pariuri și le rezolvă la următorul tick.
- * Logica de câștig/plată e pură (lib/prediction); aici doar DB + notificări.
+ * Prediction service: places bets and resolves them on the next tick.
+ * The win/payout logic is pure (lib/prediction); here only DB + notifications.
  */
 
 import { prisma } from '../db.js';
 import { validateStake, predictionWon, payout, DEFAULT_MULTIPLIER, type Direction } from '../lib/prediction.js';
 import { hub } from '../realtime/hub.js';
 
-/** Plasează o predicție: validează, reține miza din numerar, creează PENDING. */
+/** Places a prediction: validates, holds the stake from cash, creates PENDING. */
 export async function placePrediction(userId: string, symbol: string, direction: Direction, stake: number) {
   const instrument = await prisma.instrument.findUnique({ where: { symbol } });
-  if (!instrument) throw new Error(`Instrumentul ${symbol} nu există.`);
+  if (!instrument) throw new Error(`Instrument ${symbol} does not exist.`);
 
   return prisma.$transaction(async (tx) => {
     const user = await tx.user.findUniqueOrThrow({ where: { id: userId } });
@@ -32,8 +32,8 @@ export async function placePrediction(userId: string, symbol: string, direction:
 }
 
 /**
- * Rezolvă toate predicțiile în așteptare comparând prețul de la pariu cu cel nou.
- * Apelat de tickMarket după actualizarea prețurilor. `priceBySymbol` = prețuri noi.
+ * Resolves all pending predictions by comparing the bet price with the new one.
+ * Called by tickMarket after the price update. `priceBySymbol` = new prices.
  */
 export async function resolvePredictions(priceBySymbol: Readonly<Record<string, number>>): Promise<void> {
   const pending = await prisma.prediction.findMany({ where: { status: 'PENDING' } });

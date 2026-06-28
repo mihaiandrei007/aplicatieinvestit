@@ -7,7 +7,7 @@ import { getTodayChallenge, submitDaily } from '../services/dailyService.js';
 
 export const dailyRouter = Router();
 
-/** Provocarea zilei. */
+/** The daily challenge. */
 dailyRouter.get(
   '/daily',
   requireAuth,
@@ -18,13 +18,13 @@ dailyRouter.get(
 
 const schema = z.object({ direction: z.string() });
 
-/** Votează direcția provocării de azi (o singură dată). */
+/** Vote on today's challenge direction (only once). */
 dailyRouter.post(
   '/daily',
   requireAuth,
   asyncHandler(async (req: AuthedRequest, res) => {
     const parsed = schema.safeParse(req.body);
-    if (!parsed.success || !isDirection(parsed.data.direction)) throw badRequest('Direcție invalidă (UP/DOWN).');
+    if (!parsed.success || !isDirection(parsed.data.direction)) throw badRequest('Invalid direction (UP/DOWN).');
     try {
       await submitDaily(req.userId!, parsed.data.direction as Direction);
       res.status(201).json(await getTodayChallenge(req.userId!));

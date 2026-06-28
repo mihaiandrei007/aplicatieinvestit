@@ -1,8 +1,8 @@
 /**
- * lib/notifications — logică pură pentru declanșarea notificărilor.
+ * lib/notifications — pure logic for triggering notifications.
  *
- * Detectează evenimente notabile (te-a depășit cineva, o acțiune a sărit) și
- * construiește payload-uri de notificare. Fără DB, fără trimitere efectivă.
+ * Detects notable events (someone overtook you, a stock jumped) and builds
+ * notification payloads. No DB, no actual sending.
  */
 
 export interface RankSnapshot {
@@ -12,16 +12,16 @@ export interface RankSnapshot {
 }
 
 export interface OvertakeEvent {
-  /** Cine a fost depășit (primește notificarea). */
+  /** Who was overtaken (receives the notification). */
   userId: string;
-  /** Cine l-a depășit. */
+  /** Who overtook them. */
   byUserId: string;
   byDisplayName: string;
 }
 
 /**
- * Compară două clasamente și întoarce depășirile noi: perechi (A depășit de B)
- * unde înainte A era peste B, iar acum B e peste A.
+ * Compares two leaderboards and returns the new overtakes: pairs (A overtaken by B)
+ * where A was above B before, and now B is above A.
  */
 export function detectOvertakes(
   previous: readonly RankSnapshot[],
@@ -38,7 +38,7 @@ export function detectOvertakes(
       if (a.userId === b.userId) continue;
       const prevB = prevRank.get(b.userId);
       if (prevB === undefined) continue;
-      // Înainte A era peste B (rang mai mic), acum B e peste A.
+      // Before, A was above B (lower rank), now B is above A.
       if (prevA < prevB && a.rank > b.rank) {
         const byUser = currByUser.get(b.userId)!;
         events.push({ userId: a.userId, byUserId: b.userId, byDisplayName: byUser.displayName });
@@ -48,13 +48,13 @@ export function detectOvertakes(
   return events;
 }
 
-/** Variația procentuală a prețului între două valori. */
+/** The percentage change in price between two values. */
 export function priceChangePct(prev: number, next: number): number {
   if (prev <= 0) return 0;
   return (next - prev) / prev;
 }
 
-/** True dacă variația absolută depășește pragul (ex. 0.05 = ±5%). */
+/** True if the absolute change exceeds the threshold (e.g. 0.05 = ±5%). */
 export function isPriceJump(prev: number, next: number, threshold = 0.05): boolean {
   return Math.abs(priceChangePct(prev, next)) >= threshold;
 }
@@ -65,22 +65,22 @@ export interface PushPayload {
   data: Record<string, unknown>;
 }
 
-/** Construiește payload-ul pentru o depășire în clasament. */
+/** Builds the payload for a leaderboard overtake. */
 export function overtakePush(event: OvertakeEvent, groupName: string): PushPayload {
   return {
-    title: 'Ai fost depășit!',
-    body: `${event.byDisplayName} te-a depășit în „${groupName}".`,
+    title: 'You have been overtaken!',
+    body: `${event.byDisplayName} overtook you in "${groupName}".`,
     data: { type: 'OVERTAKE', byUserId: event.byUserId },
   };
 }
 
-/** Construiește payload-ul pentru un salt de preț. */
+/** Builds the payload for a price jump. */
 export function priceJumpPush(symbol: string, prev: number, next: number): PushPayload {
   const pct = priceChangePct(prev, next);
-  const dir = pct >= 0 ? 'a urcat' : 'a scăzut';
+  const dir = pct >= 0 ? 'is up' : 'is down';
   return {
     title: `${symbol} ${dir}`,
-    body: `${symbol} ${dir} cu ${(Math.abs(pct) * 100).toFixed(1)}% (${prev.toFixed(2)} → ${next.toFixed(2)}).`,
+    body: `${symbol} ${dir} ${(Math.abs(pct) * 100).toFixed(1)}% (${prev.toFixed(2)} → ${next.toFixed(2)}).`,
     data: { type: 'PRICE_JUMP', symbol, changePct: pct },
   };
 }

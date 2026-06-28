@@ -1,20 +1,20 @@
 /**
- * lib/invite — coduri de invitație pentru grupuri.
+ * lib/invite — invite codes for groups.
  *
- * Normalizarea și validarea sunt pure. Generarea primește o sursă de aleator
- * (rng) ca să rămână testabilă/determinabilă (vezi lib/priceSim.makeRng).
+ * Normalization and validation are pure. Generation takes a source of randomness
+ * (rng) so it stays testable/deterministic (see lib/priceSim.makeRng).
  */
 
-/** Alfabet fără caractere ambigue (fără 0/O, 1/I/L). */
+/** Alphabet without ambiguous characters (no 0/O, 1/I/L). */
 const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 export const INVITE_CODE_LENGTH = 6;
 
-/** Aduce un cod la forma canonică: majuscule, fără spații/cratime. */
+/** Brings a code to its canonical form: uppercase, no spaces/hyphens. */
 export function normalizeInviteCode(raw: string): string {
   return raw.trim().toUpperCase().replace(/[\s-]/g, '');
 }
 
-/** Verifică dacă un cod (după normalizare) respectă formatul. */
+/** Checks whether a code (after normalization) matches the format. */
 export function isValidInviteCode(raw: string): boolean {
   const code = normalizeInviteCode(raw);
   if (code.length !== INVITE_CODE_LENGTH) return false;
@@ -22,8 +22,8 @@ export function isValidInviteCode(raw: string): boolean {
 }
 
 /**
- * Generează un cod folosind o sursă de aleator `rng` în [0, 1).
- * Determinist pentru un rng determinist — util în teste.
+ * Generates a code using a source of randomness `rng` in [0, 1).
+ * Deterministic for a deterministic rng — useful in tests.
  */
 export function generateInviteCode(rng: () => number, length: number = INVITE_CODE_LENGTH): string {
   let code = '';

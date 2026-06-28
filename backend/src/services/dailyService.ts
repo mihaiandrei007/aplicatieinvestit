@@ -1,6 +1,6 @@
 /**
- * Serviciu pentru provocarea zilnică. Creează provocarea zilei (determinist),
- * rezolvă provocările anterioare la rollover și acordă recompense.
+ * Service for the daily challenge. Creates the day's challenge (deterministically),
+ * resolves previous challenges at rollover and grants rewards.
  */
 
 import { prisma } from '../db.js';
@@ -13,7 +13,7 @@ function todayString(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-/** Rezolvă provocările deschise din zilele trecute: rezultat + recompense. */
+/** Resolves the open challenges from past days: result + rewards. */
 async function resolvePastChallenges(today: string): Promise<void> {
   const open = await prisma.dailyChallenge.findMany({ where: { status: 'OPEN', date: { not: today } } });
   for (const ch of open) {
@@ -44,7 +44,7 @@ async function resolvePastChallenges(today: string): Promise<void> {
   }
 }
 
-/** Provocarea de azi (o creează dacă nu există) + statistici de vot. */
+/** Today's challenge (creates it if it doesn't exist) + voting statistics. */
 export async function getTodayChallenge(userId: string) {
   const today = todayString();
   await resolvePastChallenges(today);
@@ -53,7 +53,7 @@ export async function getTodayChallenge(userId: string) {
   if (!challenge) {
     const instruments = await prisma.instrument.findMany({ select: { symbol: true } });
     const symbol = pickChallengeSymbol(today, instruments.map((i) => i.symbol));
-    if (!symbol) throw new Error('Nu există instrumente pentru provocare.');
+    if (!symbol) throw new Error('There are no instruments for the challenge.');
     const inst = await prisma.instrument.findUniqueOrThrow({ where: { symbol } });
     challenge = await prisma.dailyChallenge.create({ data: { date: today, symbol, startPrice: inst.currentPrice } });
   }
@@ -78,16 +78,16 @@ export async function getTodayChallenge(userId: string) {
   };
 }
 
-/** Trimite votul (o singură dată pe zi). */
+/** Submits the vote (only once per day). */
 export async function submitDaily(userId: string, direction: Direction) {
   const today = todayString();
   const challenge = await prisma.dailyChallenge.findUnique({ where: { date: today } });
-  if (!challenge) throw new Error('Provocarea de azi nu e încă disponibilă.');
+  if (!challenge) throw new Error("Today's challenge is not available yet.");
 
   const existing = await prisma.dailyChallengeEntry.findUnique({
     where: { challengeId_userId: { challengeId: challenge.id, userId } },
   });
-  if (existing) throw new Error('Ai votat deja azi. Revino mâine.');
+  if (existing) throw new Error('You have already voted today. Come back tomorrow.');
 
   await prisma.dailyChallengeEntry.create({ data: { challengeId: challenge.id, userId, direction } });
 }

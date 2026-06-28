@@ -13,7 +13,7 @@ const valid: OAuthClaims = {
 };
 
 describe('validateClaims', () => {
-  it('întoarce un profil normalizat pentru un token valid', () => {
+  it('returns a normalized profile for a valid token', () => {
     const profile = validateClaims('google', valid, 'client-123', NOW);
     expect(profile).toEqual({
       provider: 'google',
@@ -23,36 +23,36 @@ describe('validateClaims', () => {
     });
   });
 
-  it('acceptă audiență ca array', () => {
+  it('accepts audience as an array', () => {
     const profile = validateClaims('google', { ...valid, aud: ['other', 'client-123'] }, 'client-123', NOW);
     expect(profile.providerSub).toBe('google-sub-1');
   });
 
-  it('respinge emitent invalid', () => {
+  it('rejects an invalid issuer', () => {
     expect(() => validateClaims('google', { ...valid, iss: 'evil.com' }, 'client-123', NOW)).toThrow(OAuthError);
   });
 
-  it('respinge audiență greșită', () => {
-    expect(() => validateClaims('google', valid, 'alt-client', NOW)).toThrow(/Audiență/);
+  it('rejects a wrong audience', () => {
+    expect(() => validateClaims('google', valid, 'alt-client', NOW)).toThrow(/audience/);
   });
 
-  it('respinge token expirat', () => {
-    expect(() => validateClaims('google', { ...valid, exp: NOW - 1 }, 'client-123', NOW)).toThrow(/expirat/);
+  it('rejects an expired token', () => {
+    expect(() => validateClaims('google', { ...valid, exp: NOW - 1 }, 'client-123', NOW)).toThrow(/expired/);
   });
 
-  it('respinge email neverificat', () => {
+  it('rejects an unverified email', () => {
     expect(() => validateClaims('google', { ...valid, email_verified: false }, 'client-123', NOW)).toThrow(
-      /neverificat/,
+      /not verified/,
     );
   });
 
-  it('acceptă email_verified ca string „true" (Apple)', () => {
+  it('accepts email_verified as the string "true" (Apple)', () => {
     const profile = validateClaims('apple', { ...valid, iss: 'https://appleid.apple.com', email_verified: 'true' }, 'client-123', NOW);
     expect(profile.provider).toBe('apple');
   });
 
-  it('derivă displayName din email când lipsește numele', () => {
+  it('derives displayName from the email when the name is missing', () => {
     const profile = validateClaims('google', { ...valid, name: undefined }, 'client-123', NOW);
-    expect(profile.displayName).toBe('ana'); // partea locală din email-ul normalizat
+    expect(profile.displayName).toBe('ana'); // the local part of the normalized email
   });
 });

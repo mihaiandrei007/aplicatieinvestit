@@ -10,8 +10,8 @@ export const sentimentRouter = Router();
 const setSchema = z.object({ symbol: z.string().min(1), value: z.string() });
 
 /**
- * Setează (sau comută) sentimentul utilizatorului pentru un simbol.
- * Atingerea aceleiași valori o anulează (toggle off).
+ * Sets (or toggles) the user's sentiment for a symbol.
+ * Tapping the same value cancels it (toggle off).
  */
 sentimentRouter.post(
   '/sentiment',
@@ -19,13 +19,13 @@ sentimentRouter.post(
   asyncHandler(async (req: AuthedRequest, res) => {
     const parsed = setSchema.safeParse(req.body);
     if (!parsed.success || !isSentimentValue(parsed.data.value)) {
-      throw badRequest('Sentiment invalid (BULLISH/BEARISH).');
+      throw badRequest('Invalid sentiment (BULLISH/BEARISH).');
     }
     const { symbol } = parsed.data;
     const value = parsed.data.value as SentimentValue;
 
     const instrument = await prisma.instrument.findUnique({ where: { symbol } });
-    if (!instrument) throw notFound(`Instrumentul ${symbol} nu există.`);
+    if (!instrument) throw notFound(`Instrument ${symbol} does not exist.`);
 
     const key = { userId_symbol: { userId: req.userId!, symbol } };
     const existing = await prisma.sentiment.findUnique({ where: key });
@@ -47,7 +47,7 @@ sentimentRouter.post(
   }),
 );
 
-/** Sentimentul agregat al grupului, pe simboluri. */
+/** The group's aggregated sentiment, by symbol. */
 sentimentRouter.get(
   '/groups/:id/sentiment',
   requireAuth,
@@ -56,7 +56,7 @@ sentimentRouter.get(
     const membership = await prisma.membership.findUnique({
       where: { groupId_userId: { groupId, userId: req.userId! } },
     });
-    if (!membership) throw notFound('Grup inexistent sau nu ești membru.');
+    if (!membership) throw notFound('Group not found or you are not a member.');
 
     const memberIds = (
       await prisma.membership.findMany({ where: { groupId }, select: { userId: true } })

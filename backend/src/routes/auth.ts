@@ -12,7 +12,7 @@ export const authRouter = Router();
 
 const registerSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8, 'Parola trebuie să aibă cel puțin 8 caractere.'),
+  password: z.string().min(8, 'Password must be at least 8 characters long.'),
   displayName: z.string().min(2).max(40),
 });
 
@@ -21,7 +21,7 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-/** Reprezentare publică a utilizatorului (fără hash-ul parolei). */
+/** Public representation of the user (without the password hash). */
 function publicUser(u: {
   id: string;
   email: string;
@@ -50,11 +50,11 @@ authRouter.post(
   '/register',
   asyncHandler(async (req, res) => {
     const parsed = registerSchema.safeParse(req.body);
-    if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? 'Date invalide.');
+    if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? 'Invalid data.');
     const { email, password, displayName } = parsed.data;
 
     const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) throw conflict('Există deja un cont cu acest email.');
+    if (existing) throw conflict('An account with this email already exists.');
 
     const user = await prisma.user.create({
       data: {
@@ -75,16 +75,16 @@ authRouter.post(
   '/login',
   asyncHandler(async (req, res) => {
     const parsed = loginSchema.safeParse(req.body);
-    if (!parsed.success) throw badRequest('Email sau parolă invalide.');
+    if (!parsed.success) throw badRequest('Invalid email or password.');
     const { email, password } = parsed.data;
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user || !user.passwordHash) {
-      // Cont inexistent sau creat prin OAuth (fără parolă).
-      throw unauthorized('Email sau parolă greșite.');
+      // Account does not exist or was created via OAuth (no password).
+      throw unauthorized('Incorrect email or password.');
     }
     if (!(await verifyPassword(password, user.passwordHash))) {
-      throw unauthorized('Email sau parolă greșite.');
+      throw unauthorized('Incorrect email or password.');
     }
 
     res.json({ token: signToken(user.id), user: publicUser(user) });
@@ -97,14 +97,14 @@ const oauthSchema = z.object({
 });
 
 /**
- * Login/înregistrare prin OAuth. Clientul trimite ID token-ul de la Google/Apple;
- * serverul îl verifică (semnătură + claim-uri) și întoarce JWT-ul propriu.
+ * Log in / sign up via OAuth. The client sends the ID token from Google/Apple;
+ * the server verifies it (signature + claims) and returns its own JWT.
  */
 authRouter.post(
   '/oauth',
   asyncHandler(async (req, res) => {
     const parsed = oauthSchema.safeParse(req.body);
-    if (!parsed.success) throw badRequest('provider și idToken sunt obligatorii.');
+    if (!parsed.success) throw badRequest('provider and idToken are required.');
 
     let profile;
     try {
@@ -114,7 +114,7 @@ authRouter.post(
       throw err;
     }
 
-    // Caută după identitatea OAuth; apoi după email (leagă conturile existente).
+    // Look up by OAuth identity, then by email (links existing accounts).
     let user =
       (await prisma.user.findFirst({
         where: { oauthProvider: profile.provider, oauthSub: profile.providerSub },
@@ -133,7 +133,7 @@ authRouter.post(
         },
       });
     } else if (!user.oauthProvider) {
-      // Leagă identitatea OAuth de contul existent (cu email).
+      // Link the OAuth identity to the existing (email-based) account.
       user = await prisma.user.update({
         where: { id: user.id },
         data: { oauthProvider: profile.provider, oauthSub: profile.providerSub },

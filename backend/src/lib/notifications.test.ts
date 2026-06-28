@@ -9,7 +9,7 @@ import {
 } from './notifications.js';
 
 describe('detectOvertakes', () => {
-  it('detectează o depășire simplă', () => {
+  it('detects a simple overtake', () => {
     const prev: RankSnapshot[] = [
       { userId: 'a', displayName: 'Ana', rank: 1 },
       { userId: 'b', displayName: 'Bogdan', rank: 2 },
@@ -22,7 +22,7 @@ describe('detectOvertakes', () => {
     expect(events).toEqual([{ userId: 'a', byUserId: 'b', byDisplayName: 'Bogdan' }]);
   });
 
-  it('nu raportează nimic dacă ordinea nu se schimbă', () => {
+  it('reports nothing if the order does not change', () => {
     const same: RankSnapshot[] = [
       { userId: 'a', displayName: 'Ana', rank: 1 },
       { userId: 'b', displayName: 'Bogdan', rank: 2 },
@@ -30,7 +30,7 @@ describe('detectOvertakes', () => {
     expect(detectOvertakes(same, same)).toEqual([]);
   });
 
-  it('ignoră utilizatori noi (fără rang anterior)', () => {
+  it('ignores new users (with no previous rank)', () => {
     const prev: RankSnapshot[] = [{ userId: 'a', displayName: 'Ana', rank: 1 }];
     const curr: RankSnapshot[] = [
       { userId: 'c', displayName: 'Cristi', rank: 1 },
@@ -39,7 +39,7 @@ describe('detectOvertakes', () => {
     expect(detectOvertakes(prev, curr)).toEqual([]);
   });
 
-  it('gestionează depășiri multiple', () => {
+  it('handles multiple overtakes', () => {
     const prev: RankSnapshot[] = [
       { userId: 'a', displayName: 'A', rank: 1 },
       { userId: 'b', displayName: 'B', rank: 2 },
@@ -51,36 +51,36 @@ describe('detectOvertakes', () => {
       { userId: 'b', displayName: 'B', rank: 3 },
     ];
     const events = detectOvertakes(prev, curr);
-    // C a depășit pe A și pe B
+    // C overtook A and B
     expect(events).toContainEqual({ userId: 'a', byUserId: 'c', byDisplayName: 'C' });
     expect(events).toContainEqual({ userId: 'b', byUserId: 'c', byDisplayName: 'C' });
   });
 });
 
-describe('variație de preț', () => {
-  it('priceChangePct calculează corect', () => {
+describe('price variation', () => {
+  it('priceChangePct computes correctly', () => {
     expect(priceChangePct(100, 105)).toBeCloseTo(0.05);
     expect(priceChangePct(100, 90)).toBeCloseTo(-0.1);
     expect(priceChangePct(0, 50)).toBe(0);
   });
 
-  it('isPriceJump respectă pragul', () => {
+  it('isPriceJump respects the threshold', () => {
     expect(isPriceJump(100, 105, 0.05)).toBe(true);
     expect(isPriceJump(100, 104, 0.05)).toBe(false);
     expect(isPriceJump(100, 94, 0.05)).toBe(true);
   });
 });
 
-describe('payload-uri push', () => {
-  it('overtakePush conține numele și grupul', () => {
+describe('push payloads', () => {
+  it('overtakePush contains the name and the group', () => {
     const p = overtakePush({ userId: 'a', byUserId: 'b', byDisplayName: 'Bogdan' }, 'Liceu');
     expect(p.body).toContain('Bogdan');
     expect(p.body).toContain('Liceu');
     expect(p.data.type).toBe('OVERTAKE');
   });
 
-  it('priceJumpPush indică direcția și procentul', () => {
+  it('priceJumpPush indicates the direction and the percentage', () => {
     expect(priceJumpPush('AAPL', 100, 110).body).toContain('10.0%');
-    expect(priceJumpPush('AAPL', 100, 90).body).toContain('a scăzut');
+    expect(priceJumpPush('AAPL', 100, 90).body).toContain('is down');
   });
 });

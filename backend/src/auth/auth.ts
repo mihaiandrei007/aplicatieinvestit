@@ -1,11 +1,11 @@
-/** Helperi de autentificare: hashing parolă (bcrypt) + JWT. Izolate de rute. */
+/** Authentication helpers: password hashing (bcrypt) + JWT. Isolated from routes. */
 
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { config } from '../config.js';
 
 export interface JwtPayload {
-  /** ID-ul utilizatorului (subiectul token-ului). */
+  /** User ID (the token subject). */
   sub: string;
 }
 
@@ -25,7 +25,7 @@ export function signToken(userId: string): string {
 export function verifyToken(token: string): JwtPayload {
   const decoded = jwt.verify(token, config.jwtSecret);
   if (typeof decoded === 'string' || typeof decoded.sub !== 'string') {
-    throw new Error('Token invalid.');
+    throw new Error('Invalid token.');
   }
   return { sub: decoded.sub };
 }

@@ -13,23 +13,23 @@ import {
 
 export const feedRouter = Router();
 
-/** Verifică apartenența la grup; aruncă dacă nu e membru. */
+/** Checks group membership; throws if not a member. */
 async function assertMember(groupId: string, userId: string): Promise<void> {
   const membership = await prisma.membership.findUnique({
     where: { groupId_userId: { groupId, userId } },
   });
-  if (!membership) throw forbidden('Nu ești membru al acestui grup.');
+  if (!membership) throw forbidden('You are not a member of this group.');
 }
 
-/** Găsește grupul unui eveniment și verifică apartenența. */
+/** Finds an event's group and checks membership. */
 async function loadEventForMember(eventId: string, userId: string) {
   const event = await prisma.activityEvent.findUnique({ where: { id: eventId } });
-  if (!event) throw notFound('Eveniment inexistent.');
+  if (!event) throw notFound('Event not found.');
   await assertMember(event.groupId, userId);
   return event;
 }
 
-/** Feed-ul unui grup, paginat, cu mesaj formatat + reacții + nr. comentarii. */
+/** A group's feed, paginated, with formatted message + reactions + comment count. */
 feedRouter.get(
   '/groups/:id/feed',
   requireAuth,
@@ -77,13 +77,13 @@ feedRouter.get(
 
 const reactSchema = z.object({ emoji: z.string().min(1) });
 
-/** Comută o reacție (adaugă dacă lipsește, scoate dacă există). */
+/** Toggles a reaction (adds if missing, removes if present). */
 feedRouter.post(
   '/events/:id/reactions',
   requireAuth,
   asyncHandler(async (req: AuthedRequest, res) => {
     const parsed = reactSchema.safeParse(req.body);
-    if (!parsed.success || !isAllowedEmoji(parsed.data.emoji)) throw badRequest('Emoji invalid.');
+    if (!parsed.success || !isAllowedEmoji(parsed.data.emoji)) throw badRequest('Invalid emoji.');
     const event = await loadEventForMember(req.params.id!, req.userId!);
 
     const key = { eventId_userId_emoji: { eventId: event.id, userId: req.userId!, emoji: parsed.data.emoji } };
@@ -104,13 +104,13 @@ feedRouter.post(
 
 const commentSchema = z.object({ body: z.string().trim().min(1).max(500) });
 
-/** Adaugă un comentariu la un eveniment. */
+/** Adds a comment to an event. */
 feedRouter.post(
   '/events/:id/comments',
   requireAuth,
   asyncHandler(async (req: AuthedRequest, res) => {
     const parsed = commentSchema.safeParse(req.body);
-    if (!parsed.success) throw badRequest('Comentariu invalid (1–500 caractere).');
+    if (!parsed.success) throw badRequest('Invalid comment (1–500 characters).');
     const event = await loadEventForMember(req.params.id!, req.userId!);
 
     const comment = await prisma.comment.create({
@@ -128,7 +128,7 @@ feedRouter.post(
   }),
 );
 
-/** Listează comentariile unui eveniment (cronologic). */
+/** Lists an event's comments (chronological). */
 feedRouter.get(
   '/events/:id/comments',
   requireAuth,

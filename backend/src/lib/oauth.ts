@@ -1,13 +1,13 @@
 /**
- * lib/oauth — validare PURĂ a claim-urilor unui token OAuth (Google/Apple).
+ * lib/oauth — PURE validation of an OAuth (Google/Apple) token's claims.
  *
- * Verificarea semnăturii (JWKS, rețea) stă în services/oauthService.
- * Aici validăm doar conținutul decodat: emitent, audiență, expirare, email.
+ * Signature verification (JWKS, network) lives in services/oauthService.
+ * Here we validate only the decoded content: issuer, audience, expiry, email.
  */
 
 export type OAuthProvider = 'google' | 'apple';
 
-/** Claim-urile relevante dintr-un ID token decodat. */
+/** The relevant claims from a decoded ID token. */
 export interface OAuthClaims {
   iss?: string;
   aud?: string | string[];
@@ -18,7 +18,7 @@ export interface OAuthClaims {
   exp?: number;
 }
 
-/** Profil normalizat extras dintr-un token valid. */
+/** Normalized profile extracted from a valid token. */
 export interface OAuthProfile {
   provider: OAuthProvider;
   providerSub: string;
@@ -26,7 +26,7 @@ export interface OAuthProfile {
   displayName: string;
 }
 
-/** Emitenții acceptați per provider. */
+/** Accepted issuers per provider. */
 export const ISSUERS: Record<OAuthProvider, string[]> = {
   google: ['https://accounts.google.com', 'accounts.google.com'],
   apple: ['https://appleid.apple.com'],
@@ -45,8 +45,8 @@ function audienceMatches(aud: string | string[] | undefined, expected: string): 
 }
 
 /**
- * Validează claim-urile și întoarce un profil normalizat.
- * `nowSec` permite testarea expirării fără ceas real.
+ * Validates the claims and returns a normalized profile.
+ * `nowSec` allows testing expiry without a real clock.
  */
 export function validateClaims(
   provider: OAuthProvider,
@@ -55,20 +55,20 @@ export function validateClaims(
   nowSec: number,
 ): OAuthProfile {
   if (!claims.iss || !ISSUERS[provider].includes(claims.iss)) {
-    throw new OAuthError(`Emitent (iss) invalid pentru ${provider}.`);
+    throw new OAuthError(`Invalid issuer (iss) for ${provider}.`);
   }
   if (!audienceMatches(claims.aud, expectedAudience)) {
-    throw new OAuthError('Audiență (aud) invalidă — nu corespunde client ID-ului.');
+    throw new OAuthError('Invalid audience (aud) — does not match the client ID.');
   }
   if (typeof claims.exp === 'number' && claims.exp < nowSec) {
-    throw new OAuthError('Token expirat.');
+    throw new OAuthError('Token expired.');
   }
   if (!claims.sub) {
-    throw new OAuthError('Lipsește subiectul (sub).');
+    throw new OAuthError('Missing subject (sub).');
   }
   const verified = claims.email_verified === true || claims.email_verified === 'true';
   if (!claims.email || !verified) {
-    throw new OAuthError('Email lipsă sau neverificat.');
+    throw new OAuthError('Email missing or not verified.');
   }
 
   const email = claims.email.toLowerCase();

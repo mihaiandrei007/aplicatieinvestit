@@ -10,22 +10,22 @@ const server = createServer(app);
 attachWebSocket(server);
 
 async function start() {
-  // Auto-populează instrumentele dacă baza e goală (deploy într-un pas).
-  await ensureInstruments().catch((err) => console.error('Bootstrap eșuat:', err));
+  // Auto-seed the instruments if the database is empty (one-step deploy).
+  await ensureInstruments().catch((err) => console.error('Bootstrap failed:', err));
 
   server.listen(config.port, () => {
-    console.log(`InvestPals API ascultă pe portul ${config.port} (WS: /ws)`);
+    console.log(`InvestPals API listening on port ${config.port} (WS: /ws)`);
   });
 
-  // Loop de piață: avansează prețurile + generează știri periodic și difuzează live.
-  // În producție pornește automat (15s); local doar dacă setezi MARKET_TICK_MS.
+  // Market loop: advances prices + periodically generates news and broadcasts live.
+  // In production it starts automatically (15s); locally only if you set MARKET_TICK_MS.
   const tickMs = Number(process.env.MARKET_TICK_MS ?? (config.isProd ? 15000 : 0));
   if (tickMs > 0) {
     let tick = 1;
     setInterval(() => {
-      tickMarket(tick++).catch((err) => console.error('Eroare la tick de piață:', err));
+      tickMarket(tick++).catch((err) => console.error('Market tick error:', err));
     }, tickMs);
-    console.log(`Loop de piață activ: la fiecare ${tickMs}ms.`);
+    console.log(`Market loop active: every ${tickMs}ms.`);
   }
 }
 

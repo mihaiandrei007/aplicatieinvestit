@@ -5,7 +5,7 @@ import { getWrapped } from '../services/wrappedService.js';
 
 export const wrappedRouter = Router();
 
-/** Rezumat „Wrapped" al utilizatorului. */
+/** The user's "Wrapped" summary. */
 wrappedRouter.get(
   '/wrapped',
   requireAuth,

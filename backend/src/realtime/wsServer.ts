@@ -1,6 +1,6 @@
 /**
- * Server WebSocket atașat serverului HTTP. Autentifică prin token JWT
- * (query `?token=` sau header Authorization) și gestionează abonarea la grupuri.
+ * WebSocket server attached to the HTTP server. Authenticates via JWT token
+ * (query `?token=` or Authorization header) and manages group subscriptions.
  *
  * Protocol client -> server (JSON):
  *   { "action": "subscribe", "groupId": "..." }
@@ -32,7 +32,7 @@ export function attachWebSocket(server: HttpServer): WebSocketServer {
     try {
       userId = verifyToken(token ?? '').sub;
     } catch {
-      socket.close(4001, 'Neautentificat');
+      socket.close(4001, 'Not authenticated');
       return;
     }
 
@@ -46,7 +46,7 @@ export function attachWebSocket(server: HttpServer): WebSocketServer {
         if (msg.action === 'subscribe' && msg.groupId) client.groups.add(msg.groupId);
         else if (msg.action === 'unsubscribe' && msg.groupId) client.groups.delete(msg.groupId);
       } catch {
-        // ignoră mesaje malformate
+        // ignore malformed messages
       }
     });
 

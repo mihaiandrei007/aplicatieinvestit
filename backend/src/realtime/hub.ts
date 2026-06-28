@@ -1,7 +1,7 @@
 /**
- * Hub de timp real: păstrează conexiunile WebSocket și difuzează mesaje
- * pe grupuri sau pe utilizator. Modul standalone (fără import-uri din rute),
- * ca să fie apelabil din orice serviciu fără cicluri.
+ * Real-time hub: keeps the WebSocket connections and broadcasts messages
+ * to groups or to a user. Standalone module (no imports from routes),
+ * so it can be called from any service without cycles.
  */
 
 import type { WebSocket } from 'ws';
@@ -9,7 +9,7 @@ import type { WebSocket } from 'ws';
 export interface Client {
   socket: WebSocket;
   userId: string;
-  /** Grupurile la care e abonat clientul. */
+  /** The groups the client is subscribed to. */
   groups: Set<string>;
 }
 
@@ -29,12 +29,12 @@ class RealtimeHub {
     this.clients.delete(client);
   }
 
-  /** Câți clienți sunt conectați (util pt. teste/monitorizare). */
+  /** How many clients are connected (useful for tests/monitoring). */
   get size(): number {
     return this.clients.size;
   }
 
-  /** Trimite tuturor clienților abonați la un grup. */
+  /** Sends to all clients subscribed to a group. */
   broadcastToGroup(groupId: string, message: RealtimeMessage): void {
     const data = JSON.stringify(message);
     for (const client of this.clients) {
@@ -42,7 +42,7 @@ class RealtimeHub {
     }
   }
 
-  /** Trimite tuturor conexiunilor unui utilizator (poate avea mai multe device-uri). */
+  /** Sends to all of a user's connections (they may have multiple devices). */
   sendToUser(userId: string, message: RealtimeMessage): void {
     const data = JSON.stringify(message);
     for (const client of this.clients) {
@@ -50,7 +50,7 @@ class RealtimeHub {
     }
   }
 
-  /** Difuzează tuturor (ex. actualizări de preț ale pieței globale). */
+  /** Broadcasts to everyone (e.g. global market price updates). */
   broadcastAll(message: RealtimeMessage): void {
     const data = JSON.stringify(message);
     for (const client of this.clients) this.safeSend(client, data);
@@ -63,5 +63,5 @@ class RealtimeHub {
   }
 }
 
-/** Singleton partajat în proces. */
+/** Shared in-process singleton. */
 export const hub = new RealtimeHub();

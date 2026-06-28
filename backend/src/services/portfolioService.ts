@@ -1,6 +1,6 @@
 /**
- * Serviciu care leagă datele din DB de logica pură din lib/portfolio.
- * Nu conține reguli de business proprii — doar încărcare + delegare.
+ * Service that connects the DB data to the pure logic in lib/portfolio.
+ * Contains no business rules of its own — only loading + delegation.
  */
 
 import { prisma } from '../db.js';
@@ -24,13 +24,13 @@ export interface PortfolioSnapshot {
   }>;
 }
 
-/** Construiește mapa simbol -> preț curent din toate instrumentele. */
+/** Builds the symbol -> current price map from all instruments. */
 async function currentPrices(): Promise<Record<string, number>> {
   const instruments = await prisma.instrument.findMany();
   return Object.fromEntries(instruments.map((i) => [i.symbol, i.currentPrice]));
 }
 
-/** Tranzacțiile unui utilizator, în formă pură (cronologic). */
+/** A user's transactions, in pure form (chronological). */
 export async function loadTrades(userId: string): Promise<Trade[]> {
   const txs = await prisma.transaction.findMany({
     where: { userId },
@@ -45,7 +45,7 @@ export async function loadTrades(userId: string): Promise<Trade[]> {
   }));
 }
 
-/** Snapshot complet al portofoliului unui utilizator la prețurile curente. */
+/** Full snapshot of a user's portfolio at current prices. */
 export async function buildSnapshot(userId: string): Promise<PortfolioSnapshot> {
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
   const [trades, prices] = await Promise.all([loadTrades(userId), currentPrices()]);
@@ -81,7 +81,7 @@ export async function buildSnapshot(userId: string): Promise<PortfolioSnapshot> 
   };
 }
 
-/** Doar capitalul total (equity) — folosit de clasament, evită calculul detaliat. */
+/** Just the total equity — used by the leaderboard, avoids the detailed computation. */
 export async function computeEquity(userId: string): Promise<{ equity: number; startingCash: number }> {
   const snapshot = await buildSnapshot(userId);
   return { equity: snapshot.equity, startingCash: snapshot.startingCash };

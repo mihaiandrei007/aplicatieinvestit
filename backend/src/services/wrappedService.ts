@@ -1,6 +1,6 @@
 /**
- * Serviciu „Wrapped": un rezumat shareable al activității utilizatorului.
- * Doar agregări peste datele existente (fără reguli noi).
+ * "Wrapped" service: a shareable summary of the user's activity.
+ * Only aggregations over the existing data (no new rules).
  */
 
 import { prisma } from '../db.js';
@@ -20,7 +20,7 @@ export async function getWrapped(userId: string) {
   const distinctSymbols = new Set(trades.map((t) => t.symbol)).size;
   const roi = (snapshot.equity - snapshot.startingCash) / snapshot.startingCash;
 
-  // Cea mai bună deținere curentă (după P&L nerealizat).
+  // The best current holding (by unrealized P&L).
   const best = [...snapshot.holdings].sort((a, b) => b.unrealizedPnL - a.unrealizedPnL)[0] ?? null;
 
   const predWon = predictions.filter((p) => p.status === 'WON').length;

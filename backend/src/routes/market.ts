@@ -9,8 +9,8 @@ export const marketRouter = Router();
 let tickCounter = 1;
 
 /**
- * Avansează manual piața cu un pas (dev/demo).
- * În producție, asta rulează pe un timer (vezi server.ts) sau pe un cron.
+ * Manually advance the market by one step (dev/demo).
+ * In production this runs on a timer (see server.ts) or on a cron.
  */
 marketRouter.post(
   '/tick',
@@ -21,7 +21,7 @@ marketRouter.post(
   }),
 );
 
-/** Prețurile curente ale pieței. */
+/** Current market prices. */
 marketRouter.get(
   '/prices',
   requireAuth,
@@ -31,7 +31,7 @@ marketRouter.get(
   }),
 );
 
-/** Fluxul de știri (cele mai recente). Opțional filtrabil pe simbol. */
+/** The news feed (most recent). Optionally filterable by symbol. */
 marketRouter.get(
   '/news',
   requireAuth,
@@ -42,7 +42,7 @@ marketRouter.get(
       orderBy: { createdAt: 'desc' },
       take: 30,
     });
-    // Nu expunem `impact` — utilizatorul trebuie să interpreteze singur știrea.
+    // We don't expose `impact` — the user must interpret the news themselves.
     res.json({
       news: news.map((n) => ({ id: n.id, symbol: n.symbol, headline: n.headline, body: n.body, source: n.source, createdAt: n.createdAt })),
     });

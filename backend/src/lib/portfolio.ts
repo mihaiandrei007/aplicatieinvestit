@@ -1,49 +1,49 @@
 /**
- * lib/portfolio — dețineri și P&L derivate din istoricul tranzacțiilor.
+ * lib/portfolio — holdings and P&L derived from the trade history.
  *
- * Funcții PURE, fără efecte secundare și fără dependență de bază de date sau UI.
- * Portate din proiectul „Portofoliu Virtual". Orice modificare aici e însoțită
- * de teste (vezi portfolio.test.ts).
+ * PURE functions, with no side effects and no dependency on a database or UI.
+ * Ported from the "Virtual portfolio" project. Any change here comes with
+ * tests (see portfolio.test.ts).
  */
 
 export type Side = 'BUY' | 'SELL';
 
-/** O tranzacție executată, în forma minimă necesară calculelor. */
+/** An executed trade, in the minimal form needed for the calculations. */
 export interface Trade {
   symbol: string;
   side: Side;
-  /** Cantitate strict pozitivă. */
+  /** Strictly positive quantity. */
   quantity: number;
-  /** Preț de execuție per unitate, strict pozitiv. */
+  /** Execution price per unit, strictly positive. */
   price: number;
 }
 
-/** Deținere curentă pentru un simbol, cu cost mediu ponderat. */
+/** Current holding for a symbol, with weighted average cost. */
 export interface Holding {
   symbol: string;
   quantity: number;
-  /** Cost mediu ponderat per unitate pentru cantitatea încă deținută. */
+  /** Weighted average cost per unit for the quantity still held. */
   avgCost: number;
 }
 
-/** Rezultatul agregării: dețineri + P&L realizat din vânzări. */
+/** The result of aggregation: holdings + realized P&L from sales. */
 export interface PortfolioState {
   holdings: Holding[];
-  /** Profit/pierdere deja „închis" prin vânzări. */
+  /** Profit/loss already "closed" through sales. */
   realizedPnL: number;
 }
 
 function assertPositive(value: number, label: string): void {
   if (!Number.isFinite(value) || value <= 0) {
-    throw new Error(`${label} trebuie să fie un număr finit pozitiv (primit: ${value}).`);
+    throw new Error(`${label} must be a positive finite number (received: ${value}).`);
   }
 }
 
 /**
- * Agregă o listă de tranzacții (în ordine cronologică) în dețineri curente,
- * folosind cost mediu ponderat. La vânzare, P&L realizat = (preț - cost mediu) * cantitate.
+ * Aggregates a list of trades (in chronological order) into current holdings,
+ * using weighted average cost. On a sale, realized P&L = (price - avg cost) * quantity.
  *
- * Aruncă dacă se încearcă vânzarea mai multor unități decât sunt deținute.
+ * Throws if a sale of more units than are held is attempted.
  */
 export function aggregate(trades: readonly Trade[]): PortfolioState {
   const map = new Map<string, Holding>();
@@ -63,7 +63,7 @@ export function aggregate(trades: readonly Trade[]): PortfolioState {
     } else {
       if (trade.quantity > current.quantity + 1e-9) {
         throw new Error(
-          `Vânzare invalidă pentru ${trade.symbol}: cantitate ${trade.quantity} > deținut ${current.quantity}.`,
+          `Invalid sale for ${trade.symbol}: quantity ${trade.quantity} > held ${current.quantity}.`,
         );
       }
       realizedPnL += (trade.price - current.avgCost) * trade.quantity;
@@ -80,35 +80,35 @@ export function aggregate(trades: readonly Trade[]): PortfolioState {
   return { holdings, realizedPnL };
 }
 
-/** Convenabil: doar deținerile curente. */
+/** Convenience: just the current holdings. */
 export function computeHoldings(trades: readonly Trade[]): Holding[] {
   return aggregate(trades).holdings;
 }
 
-/** Valoarea de piață a unei dețineri la prețul curent. */
+/** The market value of a holding at the current price. */
 export function holdingMarketValue(holding: Holding, price: number): number {
   return holding.quantity * price;
 }
 
-/** P&L nerealizat al unei dețineri: (preț curent - cost mediu) * cantitate. */
+/** A holding's unrealized P&L: (current price - avg cost) * quantity. */
 export function unrealizedPnL(holding: Holding, price: number): number {
   return (price - holding.avgCost) * holding.quantity;
 }
 
-/** Suma valorilor de piață ale tuturor deținerilor (necesită preț pentru fiecare simbol). */
+/** The sum of the market values of all holdings (requires a price for each symbol). */
 export function holdingsMarketValue(holdings: readonly Holding[], prices: Readonly<Record<string, number>>): number {
   return holdings.reduce((sum, h) => {
     const price = prices[h.symbol];
     if (price === undefined) {
-      throw new Error(`Lipsește prețul pentru simbolul ${h.symbol}.`);
+      throw new Error(`Missing price for symbol ${h.symbol}.`);
     }
     return sum + holdingMarketValue(h, price);
   }, 0);
 }
 
 /**
- * Capitalul total al contului = numerar + valoarea de piață a deținerilor.
- * Aceasta e baza pentru ROI și clasament.
+ * The account's total capital = cash + the market value of the holdings.
+ * This is the basis for ROI and the leaderboard.
  */
 export function accountEquity(
   cash: number,

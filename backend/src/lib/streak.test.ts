@@ -4,26 +4,26 @@ import { applyCheckIn, daysBetween, checkInCredits, type StreakState } from './s
 const fresh: StreakState = { currentStreak: 0, longestStreak: 0, lastCheckIn: null, freezes: 0 };
 
 describe('daysBetween', () => {
-  it('calculează diferența de zile', () => {
+  it('computes the difference in days', () => {
     expect(daysBetween('2026-06-01', '2026-06-02')).toBe(1);
     expect(daysBetween('2026-06-01', '2026-06-08')).toBe(7);
     expect(daysBetween('2026-06-02', '2026-06-01')).toBe(-1);
   });
 
-  it('traversează luni', () => {
+  it('crosses months', () => {
     expect(daysBetween('2026-06-30', '2026-07-01')).toBe(1);
   });
 });
 
 describe('applyCheckIn', () => {
-  it('primul check-in pornește streak-ul la 1', () => {
+  it('first check-in starts the streak at 1', () => {
     const r = applyCheckIn(fresh, '2026-06-01');
     expect(r.state.currentStreak).toBe(1);
     expect(r.state.lastCheckIn).toBe('2026-06-01');
     expect(r.alreadyCheckedIn).toBe(false);
   });
 
-  it('zile consecutive cresc streak-ul', () => {
+  it('consecutive days increase the streak', () => {
     let s = applyCheckIn(fresh, '2026-06-01').state;
     s = applyCheckIn(s, '2026-06-02').state;
     s = applyCheckIn(s, '2026-06-03').state;
@@ -31,22 +31,22 @@ describe('applyCheckIn', () => {
     expect(s.longestStreak).toBe(3);
   });
 
-  it('al doilea check-in în aceeași zi nu are efect', () => {
+  it('a second check-in on the same day has no effect', () => {
     const s = applyCheckIn(fresh, '2026-06-01').state;
     const r = applyCheckIn(s, '2026-06-01');
     expect(r.alreadyCheckedIn).toBe(true);
     expect(r.state.currentStreak).toBe(1);
   });
 
-  it('o zi pierdută fără freeze resetează streak-ul', () => {
+  it('a missed day without a freeze resets the streak', () => {
     let s = { currentStreak: 5, longestStreak: 5, lastCheckIn: '2026-06-01', freezes: 0 };
-    const r = applyCheckIn(s, '2026-06-03'); // a sărit 2026-06-02
+    const r = applyCheckIn(s, '2026-06-03'); // skipped 2026-06-02
     expect(r.streakReset).toBe(true);
     expect(r.state.currentStreak).toBe(1);
-    expect(r.state.longestStreak).toBe(5); // recordul rămâne
+    expect(r.state.longestStreak).toBe(5); // the record stays
   });
 
-  it('un freeze acoperă o zi pierdută și păstrează streak-ul', () => {
+  it('a freeze covers a missed day and keeps the streak', () => {
     const s = { currentStreak: 5, longestStreak: 5, lastCheckIn: '2026-06-01', freezes: 1 };
     const r = applyCheckIn(s, '2026-06-03');
     expect(r.usedFreeze).toBe(true);
@@ -55,7 +55,7 @@ describe('applyCheckIn', () => {
     expect(r.state.freezes).toBe(0);
   });
 
-  it('câștigă un freeze la atingerea a 7 zile', () => {
+  it('earns a freeze when reaching 7 days', () => {
     let s: StreakState = { currentStreak: 6, longestStreak: 6, lastCheckIn: '2026-06-06', freezes: 0 };
     const r = applyCheckIn(s, '2026-06-07');
     expect(r.state.currentStreak).toBe(7);
@@ -63,18 +63,18 @@ describe('applyCheckIn', () => {
     expect(r.state.freezes).toBe(1);
   });
 
-  it('nu câștigă freeze la resetare', () => {
+  it('does not earn a freeze on reset', () => {
     const s = { currentStreak: 20, longestStreak: 20, lastCheckIn: '2026-06-01', freezes: 0 };
-    const r = applyCheckIn(s, '2026-06-10'); // gap mare, fără freeze -> reset
+    const r = applyCheckIn(s, '2026-06-10'); // big gap, no freeze -> reset
     expect(r.streakReset).toBe(true);
     expect(r.earnedFreeze).toBe(false);
   });
 });
 
 describe('checkInCredits', () => {
-  it('credite de bază + bonus crescător', () => {
+  it('base credits + increasing bonus', () => {
     expect(checkInCredits(1)).toBe(5);
     expect(checkInCredits(3)).toBe(6);
-    expect(checkInCredits(30)).toBe(10); // bonus plafonat la +5
+    expect(checkInCredits(30)).toBe(10); // bonus capped at +5
   });
 });

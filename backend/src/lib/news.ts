@@ -1,15 +1,15 @@
 /**
- * lib/news — generator de știri FALSE, dar care „sună" ca știri financiare reale.
+ * lib/news — generator of FAKE news that "sounds" like real financial news.
  *
- * Fiecare știre are titlu + corp de articol + sursă, cu specificuri realiste
- * (analiști, ținte de preț, trimestre, sume, regiuni) generate DETERMINIST dintr-un
- * rng (toți utilizatorii văd aceeași știre). Titlurile sunt în general AMBIGUE —
- * impactul (urcă/coboară) e intern și nu se dezvăluie; utilizatorul interpretează.
+ * Each news item has a headline + article body + source, with realistic specifics
+ * (analysts, price targets, quarters, amounts, regions) generated DETERMINISTICALLY from
+ * an rng (all users see the same news). Headlines are generally AMBIGUOUS — the
+ * impact (up/down) is internal and not revealed; the user interprets it.
  *
- * Funcții pure, testate.
+ * Pure, tested functions.
  */
 
-/** Context cu specificuri realiste, generat determinist. */
+/** Context with realistic specifics, generated deterministically. */
 export interface NewsCtx {
   pct: number;
   money: string;
@@ -25,26 +25,26 @@ export interface NewsCtx {
 
 export interface NewsTemplate {
   category: string;
-  /** +1 = tinde să împingă prețul în sus, -1 în jos (intern, nedezvăluit). */
+  /** +1 = tends to push the price up, -1 down (internal, undisclosed). */
   polarity: 1 | -1;
-  /** Magnitudinea de bază a mișcării (fracțiune). */
+  /** Base magnitude of the move (fraction). */
   magnitude: number;
   headline: (name: string, c: NewsCtx) => string;
   body: (name: string, c: NewsCtx) => string;
 }
 
 const FIRMS = ['Goldman Sachs', 'Morgan Stanley', 'JPMorgan', 'UBS', 'Barclays', 'Citi', 'Bank of America', 'Jefferies'];
-const REGIONS = ['SUA', 'Uniunea Europeană', 'Marea Britanie', 'Asia'];
-const SECTORS = ['tehnologie', 'semiconductori', 'energie', 'retail', 'sănătate', 'auto', 'fintech'];
-const PRODUCTS = ['noua generație de produse', 'platforma cloud', 'liniile de producție', 'serviciul principal', 'modelul de bază'];
-const TRENDS = ['în creștere', 'în scădere', 'sub așteptări', 'peste estimări', 'mixtă'];
-const SOURCES = ['Bursa de Azi', 'Capital Markets RO', 'Financial Wire', 'Piața Globală', 'Investitorul', 'Reuters Markets'];
+const REGIONS = ['the US', 'the European Union', 'the United Kingdom', 'Asia'];
+const SECTORS = ['technology', 'semiconductors', 'energy', 'retail', 'healthcare', 'auto', 'fintech'];
+const PRODUCTS = ['the next generation of products', 'the cloud platform', 'the production lines', 'the core service', 'the base model'];
+const TRENDS = ['improving', 'softening', 'below expectations', 'above estimates', 'mixed'];
+const SOURCES = ['Markets Today', 'Capital Markets Wire', 'Financial Wire', 'Global Market', 'The Investor', 'Reuters Markets'];
 
 function pick<T>(rng: () => number, arr: readonly T[]): T {
   return arr[Math.floor(rng() * arr.length)]!;
 }
 
-/** Construiește contextul de specificuri (consumă un număr fix de valori din rng). */
+/** Builds the specifics context (consumes a fixed number of values from rng). */
 export function buildCtx(rng: () => number): NewsCtx {
   const pct = 3 + Math.floor(rng() * 16);
   const mld = (5 + Math.floor(rng() * 120)) / 10;
@@ -58,8 +58,8 @@ export function buildCtx(rng: () => number): NewsCtx {
   const trend = pick(rng, TRENDS);
   return {
     pct,
-    money: `${mld.toFixed(1).replace('.', ',')} mld $`,
-    moneyM: `${mil} mil $`,
+    money: `$${mld.toFixed(1)} bn`,
+    moneyM: `$${mil} mn`,
     quarter,
     firm,
     region,
@@ -71,170 +71,170 @@ export function buildCtx(rng: () => number): NewsCtx {
 }
 
 /**
- * Toate titlurile sunt NEUTRE — nu poți deduce direcția (sus/jos) nici din titlu,
- * nici din corp. Polaritatea/magnitudinea rămân interne (mișcă prețul), dar
- * jucătorul nu le poate citi, ca să nu transforme predicțiile în câștig sigur.
+ * All headlines are NEUTRAL — you cannot infer the direction (up/down) from either the
+ * headline or the body. Polarity/magnitude stay internal (they move the price), but the
+ * player cannot read them, so predictions don't turn into a sure win.
  */
 export const NEWS_TEMPLATES: readonly NewsTemplate[] = [
   {
     category: 'corporate',
     polarity: 1,
     magnitude: 0.05,
-    headline: (n) => `${n} reorganizează una dintre diviziile sale`,
+    headline: (n) => `${n} reorganizes one of its divisions`,
     body: (n) =>
-      `${n} a anunțat o reorganizare internă a uneia dintre divizii. Compania nu a oferit detalii financiare, iar reacția pieței rămâne incertă.`,
+      `${n} announced an internal reorganization of one of its divisions. The company provided no financial details, and the market's reaction remains uncertain.`,
   },
   {
     category: 'volume',
     polarity: -1,
     magnitude: 0.05,
-    headline: (n) => `Volum de tranzacționare neobișnuit pe ${n} astăzi`,
+    headline: (n) => `Unusual trading volume in ${n} today`,
     body: (n) =>
-      `Acțiunile ${n} au înregistrat un volum peste medie în ședința de azi. Analiștii nu au identificat un motiv clar; mișcarea poate fi tehnică sau pe baza unor poziționări.`,
+      `Shares of ${n} saw above-average volume in today's session. Analysts have not identified a clear reason; the move may be technical or driven by positioning.`,
   },
   {
     category: 'investor',
     polarity: 1,
     magnitude: 0.06,
-    headline: (n) => `${n} susține o prezentare pentru investitori săptămâna aceasta`,
+    headline: (n) => `${n} is holding an investor presentation this week`,
     body: (n) =>
-      `${n} va prezenta în fața investitorilor săptămâna aceasta. Conținutul nu a fost dezvăluit, iar piața așteaptă detalii înainte de a reacționa.`,
+      `${n} will present to investors this week. The content has not been disclosed, and the market is awaiting details before reacting.`,
   },
   {
     category: 'analyst',
     polarity: -1,
     magnitude: 0.05,
-    headline: (n) => `Analiștii reevaluează ${n} înaintea raportării`,
+    headline: (n) => `Analysts reassess ${n} ahead of earnings`,
     body: (n, c) =>
-      `Mai multe case de brokeraj, printre care ${c.firm}, își revizuiesc modelele pentru ${n} înaintea următoarei raportări. Opiniile rămân împărțite, fără o direcție clară.`,
+      `Several brokerages, including ${c.firm}, are revising their models for ${n} ahead of the next earnings report. Opinions remain divided, with no clear direction.`,
   },
   {
     category: 'fund',
     polarity: 1,
     magnitude: 0.04,
-    headline: (n) => `Un fond și-a ajustat poziția în ${n}`,
+    headline: (n) => `A fund has adjusted its position in ${n}`,
     body: (n) =>
-      `Documente recente arată că un fond instituțional și-a modificat deținerea în ${n}. Nu este clar dacă a cumpărat sau a redus, iar mărimea ajustării nu a fost detaliată.`,
+      `Recent filings show that an institutional fund changed its holding in ${n}. It is unclear whether it bought or trimmed, and the size of the adjustment was not detailed.`,
   },
   {
     category: 'mna',
     polarity: -1,
     magnitude: 0.06,
-    headline: (n, c) => `${n} ar fi în discuții pe o temă din sectorul ${c.sector}`,
+    headline: (n, c) => `${n} is reportedly in talks on a matter in the ${c.sector} sector`,
     body: (n, c) =>
-      `Surse din piață vorbesc despre discuții implicând ${n} legate de sectorul ${c.sector}. Nu există confirmare oficială, iar natura tranzacției e neclară.`,
+      `Market sources point to talks involving ${n} related to the ${c.sector} sector. There is no official confirmation, and the nature of the deal is unclear.`,
   },
   {
     category: 'supply',
     polarity: -1,
     magnitude: 0.05,
-    headline: (n) => `${n} face ajustări în lanțul de aprovizionare`,
+    headline: (n) => `${n} makes supply-chain adjustments`,
     body: (n, c) =>
-      `${n} a comunicat ajustări la ${c.product}. Compania nu a precizat dacă acestea cresc sau scad costurile; efectul net rămâne de văzut.`,
+      `${n} communicated adjustments to ${c.product}. The company did not specify whether these raise or lower costs; the net effect remains to be seen.`,
   },
   {
     category: 'leadership',
     polarity: 1,
     magnitude: 0.04,
-    headline: (n) => `Schimbări în echipa de management a ${n}`,
+    headline: (n) => `Changes to ${n}'s management team`,
     body: (n) =>
-      `${n} a anunțat schimbări de personal în conducere. Impactul asupra strategiei nu este deocamdată clar, iar reacțiile sunt mixte.`,
+      `${n} announced personnel changes in its leadership. The impact on strategy is not yet clear, and reactions are mixed.`,
   },
   {
     category: 'contract',
     polarity: 1,
     magnitude: 0.05,
-    headline: (n) => `${n} actualizează termenii unui contract existent`,
+    headline: (n) => `${n} updates the terms of an existing contract`,
     body: (n) =>
-      `${n} a renegociat termenii unui contract. Valoarea și implicațiile asupra marjelor nu au fost dezvăluite public.`,
+      `${n} renegotiated the terms of a contract. The value and the implications for margins have not been publicly disclosed.`,
   },
   {
     category: 'compliance',
     polarity: -1,
     magnitude: 0.05,
-    headline: (n, c) => `${n} poartă discuții de conformitate cu autoritățile din ${c.region}`,
+    headline: (n, c) => `${n} is in compliance talks with authorities in ${c.region}`,
     body: (n, c) =>
-      `${n} este în dialog cu autoritățile din ${c.region} pe o temă de conformitate de rutină. Compania spune că procesul e standard; consecințele rămân neclare.`,
+      `${n} is in dialogue with authorities in ${c.region} on a routine compliance matter. The company says the process is standard; the consequences remain unclear.`,
   },
   {
     category: 'options',
     polarity: 1,
     magnitude: 0.05,
-    headline: (n) => `Activitate crescută a opțiunilor pe ${n}`,
+    headline: (n) => `Elevated options activity in ${n}`,
     body: (n) =>
-      `Piața de opțiuni pe ${n} a fost mai activă decât de obicei. Pozițiile sunt împărțite între pariuri pe creștere și pe scădere, fără o tendință dominantă.`,
+      `The options market in ${n} was more active than usual. Positions are split between bets on a rise and on a decline, with no dominant trend.`,
   },
   {
     category: 'product',
     polarity: 1,
     magnitude: 0.05,
-    headline: (n, c) => `${n} testează intern ${c.product}`,
+    headline: (n, c) => `${n} is testing ${c.product} internally`,
     body: (n, c) =>
-      `${n} ar testa intern ${c.product}. Stadiul e incipient și nu există un calendar oficial, deci impactul comercial e incert.`,
+      `${n} is reportedly testing ${c.product} internally. The stage is early and there is no official timeline, so the commercial impact is uncertain.`,
   },
   {
     category: 'sector',
     polarity: -1,
     magnitude: 0.05,
-    headline: (n, c) => `Dezbatere în industrie despre viitorul sectorului ${c.sector}`,
+    headline: (n, c) => `Industry debate over the future of the ${c.sector} sector`,
     body: (n, c) =>
-      `Un raport sectorial despre ${c.sector} a stârnit dezbateri, iar ${n} este menționată printre companiile vizate. Concluziile sunt nuanțate, fără o direcție unică.`,
+      `A sector report on ${c.sector} has sparked debate, and ${n} is mentioned among the companies in focus. The conclusions are nuanced, with no single direction.`,
   },
   {
     category: 'guidance',
     polarity: 1,
     magnitude: 0.05,
-    headline: (n) => `${n} își reiterează obiectivele pentru anul în curs`,
+    headline: (n) => `${n} reiterates its targets for the current year`,
     body: (n, c) =>
-      `${n} și-a reconfirmat obiectivele anuale, fără a oferi cifre noi. Conducerea a descris mediul drept ${c.trend}, formulare interpretată diferit de analiști.`,
+      `${n} reaffirmed its annual targets without providing new figures. Management described the environment as ${c.trend}, wording that analysts interpreted differently.`,
   },
   {
     category: 'event',
     polarity: -1,
     magnitude: 0.04,
-    headline: (n) => `${n} a programat o conferință de presă`,
+    headline: (n) => `${n} has scheduled a press conference`,
     body: (n) =>
-      `${n} a anunțat o conferință de presă, fără a preciza tema. Speculațiile circulă în ambele direcții până la momentul evenimentului.`,
+      `${n} announced a press conference without specifying the topic. Speculation is circulating in both directions until the event takes place.`,
   },
   {
     category: 'data',
     polarity: 1,
     magnitude: 0.05,
-    headline: (n, c) => `Date noi din sectorul ${c.sector} ajung la piață`,
+    headline: (n, c) => `New data from the ${c.sector} sector reaches the market`,
     body: (n, c) =>
-      `Indicatori proaspeți din ${c.sector}, relevanți pentru ${n}, sunt analizați de piață. Citirea lor este mixtă și ar putea fi revizuită.`,
+      `Fresh indicators from ${c.sector}, relevant to ${n}, are being analyzed by the market. Their reading is mixed and could be revised.`,
   },
   {
     category: 'investment',
     polarity: -1,
     magnitude: 0.05,
-    headline: (n) => `${n} își continuă programul de investiții`,
+    headline: (n) => `${n} continues its investment program`,
     body: (n, c) =>
-      `${n} a confirmat că își continuă planul de investiții de ${c.money}. Investitorii dezbat dacă efortul susține creșterea sau apasă pe fluxul de numerar.`,
+      `${n} confirmed that it is continuing its investment plan of ${c.money}. Investors are debating whether the effort supports growth or weighs on cash flow.`,
   },
   {
     category: 'analyst',
     polarity: 1,
     magnitude: 0.04,
-    headline: (n, c) => `${c.firm} publică o notă amplă despre ${n}`,
+    headline: (n, c) => `${c.firm} publishes an extensive note on ${n}`,
     body: (n, c) =>
-      `${c.firm} a publicat o analiză detaliată despre ${n}, cu argumente atât pentru, cât și împotriva poziției. Nota nu trage o concluzie tranșantă.`,
+      `${c.firm} published a detailed analysis of ${n}, with arguments both for and against the position. The note does not draw a firm conclusion.`,
   },
   {
     category: 'partnership',
     polarity: 1,
     magnitude: 0.05,
-    headline: (n, c) => `${n} explorează o colaborare în ${c.sector}`,
+    headline: (n, c) => `${n} explores a collaboration in ${c.sector}`,
     body: (n, c) =>
-      `${n} ar explora o posibilă colaborare în ${c.sector}. Discuțiile sunt la început, fără termeni stabiliți, deci efectul e greu de estimat.`,
+      `${n} is reportedly exploring a possible collaboration in ${c.sector}. Talks are at an early stage with no settled terms, so the effect is hard to estimate.`,
   },
   {
     category: 'macro',
     polarity: -1,
     magnitude: 0.05,
-    headline: (n, c) => `Piața digeră semnalele băncii centrale; ${c.sector} în atenție`,
+    headline: (n, c) => `Market digests central bank signals; ${c.sector} in focus`,
     body: (n, c) =>
-      `Ultimele comentarii ale băncii centrale sunt analizate de piață. Sectorul ${c.sector}, din care face parte ${n}, e urmărit, dar reacțiile pe titluri sunt eterogene.`,
+      `The central bank's latest comments are being analyzed by the market. The ${c.sector} sector, which ${n} belongs to, is being watched, but reactions across individual stocks are uneven.`,
   },
 ];
 
@@ -243,7 +243,7 @@ export interface GeneratedNews {
   source: string;
   headline: string;
   body: string;
-  /** Impact semnat asupra prețului (intern, nedezvăluit). */
+  /** Signed impact on the price (internal, undisclosed). */
   impact: number;
 }
 
@@ -253,8 +253,8 @@ export interface Instrumentish {
 }
 
 /**
- * Poate genera o știre pentru un instrument ales determinist din `rng`.
- * Cu probabilitatea `probability` produce o știre; altfel `null`.
+ * Can generate a news item for an instrument chosen deterministically from `rng`.
+ * With probability `probability` it produces a news item; otherwise `null`.
  */
 export function maybeGenerateNews(
   rng: () => number,
@@ -268,9 +268,9 @@ export function maybeGenerateNews(
   const tpl = pick(rng, NEWS_TEMPLATES);
   const ctx = buildCtx(rng);
   const source = pick(rng, SOURCES);
-  const factor = 0.7 + rng() * 0.6; // variază magnitudinea 0.7x–1.3x
+  const factor = 0.7 + rng() * 0.6; // varies the magnitude 0.7x–1.3x
 
-  // Curăță punctuația dublă (nume care se termină cu „.", ex. „Intel Corp.").
+  // Tidy up double punctuation (names ending in ".", e.g. "Intel Corp.").
   const tidy = (s: string) => s.replace(/\.{2,}/g, '.').replace(/\.\s*,/g, ',');
 
   return {

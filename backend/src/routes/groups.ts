@@ -15,25 +15,25 @@ import { emitToGroup } from '../services/activityService.js';
 
 export const groupsRouter = Router();
 
-/** Generează un cod de invitație unic, reîncercând la coliziune. */
+/** Generates a unique invite code, retrying on collision. */
 async function uniqueInviteCode(): Promise<string> {
   for (let attempt = 0; attempt < 10; attempt++) {
     const code = generateInviteCode(makeRng(randomInt(0, 2 ** 31)));
     const exists = await prisma.group.findUnique({ where: { inviteCode: code } });
     if (!exists) return code;
   }
-  throw new Error('Nu s-a putut genera un cod de invitație unic.');
+  throw new Error('Could not generate a unique invite code.');
 }
 
 const createSchema = z.object({ name: z.string().min(2).max(60) });
 
-/** Creează un grup; creatorul devine OWNER și membru. */
+/** Creates a group; the creator becomes OWNER and a member. */
 groupsRouter.post(
   '/',
   requireAuth,
   asyncHandler(async (req: AuthedRequest, res) => {
     const parsed = createSchema.safeParse(req.body);
-    if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? 'Nume invalid.');
+    if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? 'Invalid name.');
 
     const inviteCode = await uniqueInviteCode();
     const group = await prisma.group.create({
@@ -52,23 +52,23 @@ groupsRouter.post(
 
 const joinSchema = z.object({ inviteCode: z.string().min(1) });
 
-/** Intră într-un grup cu un cod de invitație. */
+/** Join a group with an invite code. */
 groupsRouter.post(
   '/join',
   requireAuth,
   asyncHandler(async (req: AuthedRequest, res) => {
     const parsed = joinSchema.safeParse(req.body);
-    if (!parsed.success) throw badRequest('Cod de invitație lipsă.');
-    if (!isValidInviteCode(parsed.data.inviteCode)) throw badRequest('Cod de invitație invalid.');
+    if (!parsed.success) throw badRequest('Missing invite code.');
+    if (!isValidInviteCode(parsed.data.inviteCode)) throw badRequest('Invalid invite code.');
 
     const code = normalizeInviteCode(parsed.data.inviteCode);
     const group = await prisma.group.findUnique({ where: { inviteCode: code } });
-    if (!group) throw notFound('Nu există niciun grup cu acest cod.');
+    if (!group) throw notFound('No group exists with this code.');
 
     const existing = await prisma.membership.findUnique({
       where: { groupId_userId: { groupId: group.id, userId: req.userId! } },
     });
-    if (existing) throw conflict('Ești deja membru al acestui grup.');
+    if (existing) throw conflict('You are already a member of this group.');
 
     await prisma.membership.create({ data: { groupId: group.id, userId: req.userId!, role: 'MEMBER' } });
     await emitToGroup(group.id, req.userId!, 'JOINED_GROUP', {});
@@ -76,7 +76,7 @@ groupsRouter.post(
   }),
 );
 
-/** Grupurile din care fac parte. */
+/** The groups I belong to. */
 groupsRouter.get(
   '/',
   requireAuth,
@@ -98,7 +98,7 @@ groupsRouter.get(
   }),
 );
 
-/** Membrii grupului cu profil public minimal (email mascat pentru intimitate). */
+/** Group members with a minimal public profile (email masked for privacy). */
 groupsRouter.get(
   '/:id/members',
   requireAuth,
@@ -107,7 +107,7 @@ groupsRouter.get(
     const me = await prisma.membership.findUnique({
       where: { groupId_userId: { groupId, userId: req.userId! } },
     });
-    if (!me) throw notFound('Grup inexistent sau nu ești membru.');
+    if (!me) throw notFound('Group not found or you are not a member.');
 
     const members = await prisma.membership.findMany({
       where: { groupId },
@@ -128,7 +128,7 @@ groupsRouter.get(
   }),
 );
 
-/** Clasamentul grupului după ROI. Doar membrii îl pot vedea. */
+/** The group's leaderboard by ROI. Only members can see it. */
 groupsRouter.get(
   '/:id/leaderboard',
   requireAuth,
@@ -138,7 +138,7 @@ groupsRouter.get(
       where: { groupId_userId: { groupId, userId: req.userId! } },
       include: { group: { include: { memberships: { include: { user: true } } } } },
     });
-    if (!membership) throw notFound('Grup inexistent sau nu ești membru.');
+    if (!membership) throw notFound('Group not found or you are not a member.');
 
     const members = membership.group.memberships;
     const participants: Participant[] = await Promise.all(
@@ -162,7 +162,7 @@ groupsRouter.get(
   }),
 );
 
-/** Clasament ajustat la risc (Sharpe), din instantaneele de capital. */
+/** Risk-adjusted leaderboard (Sharpe), from the equity snapshots. */
 groupsRouter.get(
   '/:id/leaderboard/sharpe',
   requireAuth,
@@ -172,7 +172,7 @@ groupsRouter.get(
       where: { groupId_userId: { groupId, userId: req.userId! } },
       include: { group: { include: { memberships: { include: { user: true } } } } },
     });
-    if (!membership) throw notFound('Grup inexistent sau nu ești membru.');
+    if (!membership) throw notFound('Group not found or you are not a member.');
 
     const participants: SharpeParticipant[] = await Promise.all(
       membership.group.memberships.map(async (m) => {
