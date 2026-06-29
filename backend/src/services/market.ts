@@ -91,6 +91,10 @@ export async function tickMarket(seed: number): Promise<Array<{ symbol: string; 
   lastTickAt = now;
   hub.broadcastAll({ type: 'PRICE_UPDATE', payload: changes });
 
+  // Record price history for the chart, then prune points older than 24h.
+  await prisma.pricePoint.createMany({ data: changes.map((c) => ({ symbol: c.symbol, price: c.next })) });
+  await prisma.pricePoint.deleteMany({ where: { at: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) } } });
+
   // Resolve the quick predictions with the new prices.
   await resolvePredictions(Object.fromEntries(changes.map((c) => [c.symbol, c.next])));
   await recheckOvertakes();

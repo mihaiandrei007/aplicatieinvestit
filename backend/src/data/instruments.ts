@@ -25,6 +25,9 @@ export const SECTOR_LEADERS: Readonly<Record<string, string>> = {
   Finance: 'JPM',
   Consumer: 'KO',
   Aerospace: 'BA',
+  Energy: 'XOM',
+  Health: 'LLY',
+  Crypto: 'COIN',
 };
 
 export const SEED_INSTRUMENTS: readonly SeedInstrument[] = [
@@ -69,6 +72,28 @@ export const SEED_INSTRUMENTS: readonly SeedInstrument[] = [
 
   // --- Aerospace (independent) ---
   { symbol: 'BA', name: 'Boeing Co.', basePrice: 180, volatility: 0.42, drift: 0.04, beta: 1.4, liquidity: 300_000, sector: 'Aerospace', correlation: 0 },
+
+  // --- More AI / Big Tech / Media fills ---
+  { symbol: 'QCOM', name: 'Qualcomm Inc.', basePrice: 168, volatility: 0.4, drift: 0.08, beta: 1.3, liquidity: 400_000, sector: 'AI', correlation: 0.45 },
+  { symbol: 'ORCL', name: 'Oracle Corp.', basePrice: 138, volatility: 0.26, drift: 0.08, beta: 1.0, liquidity: 600_000, sector: 'BigTech', correlation: 0.35 },
+  { symbol: 'CRM', name: 'Salesforce Inc.', basePrice: 270, volatility: 0.3, drift: 0.07, beta: 1.2, liquidity: 450_000, sector: 'BigTech', correlation: 0.4 },
+  { symbol: 'WBD', name: 'Warner Bros. Disc.', basePrice: 9, volatility: 0.42, drift: 0.03, beta: 1.4, liquidity: 200_000, sector: 'Media', correlation: 0.45 },
+
+  // --- Energy (leader: XOM) ---
+  { symbol: 'XOM', name: 'Exxon Mobil', basePrice: 112, volatility: 0.24, drift: 0.05, beta: 0.9, liquidity: 600_000, sector: 'Energy', correlation: 0 },
+  { symbol: 'CVX', name: 'Chevron Corp.', basePrice: 158, volatility: 0.24, drift: 0.05, beta: 0.9, liquidity: 500_000, sector: 'Energy', correlation: 0.55 },
+  { symbol: 'COP', name: 'ConocoPhillips', basePrice: 108, volatility: 0.3, drift: 0.05, beta: 1.1, liquidity: 350_000, sector: 'Energy', correlation: 0.5 },
+
+  // --- Health (leader: LLY) ---
+  { symbol: 'LLY', name: 'Eli Lilly & Co.', basePrice: 880, volatility: 0.3, drift: 0.1, beta: 0.9, liquidity: 500_000, sector: 'Health', correlation: 0 },
+  { symbol: 'PFE', name: 'Pfizer Inc.', basePrice: 28, volatility: 0.24, drift: 0.03, beta: 0.7, liquidity: 400_000, sector: 'Health', correlation: 0.4 },
+  { symbol: 'JNJ', name: 'Johnson & Johnson', basePrice: 152, volatility: 0.18, drift: 0.04, beta: 0.6, liquidity: 500_000, sector: 'Health', correlation: 0.35 },
+  { symbol: 'NVO', name: 'Novo Nordisk', basePrice: 120, volatility: 0.32, drift: 0.09, beta: 0.95, liquidity: 400_000, sector: 'Health', correlation: 0.45 },
+
+  // --- Crypto-exposed (leader: COIN), high volatility ---
+  { symbol: 'COIN', name: 'Coinbase Global', basePrice: 240, volatility: 0.75, drift: 0.12, beta: 2.2, liquidity: 250_000, sector: 'Crypto', correlation: 0 },
+  { symbol: 'MSTR', name: 'MicroStrategy', basePrice: 165, volatility: 0.85, drift: 0.14, beta: 2.6, liquidity: 200_000, sector: 'Crypto', correlation: 0.65 },
+  { symbol: 'MARA', name: 'Marathon Digital', basePrice: 20, volatility: 0.95, drift: 0.1, beta: 2.8, liquidity: 120_000, sector: 'Crypto', correlation: 0.7 },
 ];
 
 /** The initial current price for an instrument (deterministic from the index). */

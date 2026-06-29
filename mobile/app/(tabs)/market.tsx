@@ -1,36 +1,29 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { useFocusEffect } from 'expo-router';
-import { Screen, Label, H1, Mono, Hairline, SymbolTile, Button, Segmented, Loading } from '../../src/components/ui';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { Screen, Label, H1, Mono, Hairline, SymbolTile, Loading } from '../../src/components/ui';
 import { Caret, IconSearch } from '../../src/components/icons';
-import { endpoints, ApiError, type Instrument, type SentimentValue } from '../../src/api/client';
+import { endpoints, type Instrument } from '../../src/api/client';
 import { useRealtime } from '../../src/realtime/useRealtime';
 import { theme, formatMoney, gainColor } from '../../src/theme';
 
 export default function MarketScreen() {
   const c = theme.colors;
+  const router = useRouter();
   const [instruments, setInstruments] = useState<Instrument[] | null>(null);
   const [prev, setPrev] = useState<Record<string, number>>({});
   const [watched, setWatched] = useState<Set<string>>(new Set());
   const [onlyWatched, setOnlyWatched] = useState(false);
-  const [selected, setSelected] = useState<Instrument | null>(null);
-  const [qty, setQty] = useState(10);
-  const [stance, setStance] = useState<SentimentValue>('BULLISH');
-  const [busy, setBusy] = useState(false);
   const [credits, setCredits] = useState<number | null>(null);
-  const [predStake, setPredStake] = useState('100');
-  const [multiplier, setMultiplier] = useState(1.9);
 
   const load = useCallback(async () => {
-    const [{ instruments }, st, rules, wl] = await Promise.all([
+    const [{ instruments }, st, wl] = await Promise.all([
       endpoints.instruments(),
       endpoints.streak(),
-      endpoints.predictionRules(),
       endpoints.watchlist(),
     ]);
     setInstruments(instruments);
     setCredits(st.tradeCredits);
-    setMultiplier(rules.multiplier);
     setWatched(new Set(wl.symbols));
     setPrev((p) => {
       const next = { ...p };
@@ -46,8 +39,8 @@ export default function MarketScreen() {
         Alert.alert(
           r.won ? 'Prediction won' : 'Prediction lost',
           r.won
-            ? `${r.symbol} ${r.direction === 'UP' ? 'UP' : 'DOWN'}: you won ${formatMoney(r.payout)} (stake ${formatMoney(r.stake)}).`
-            : `${r.symbol} ${r.direction === 'UP' ? 'UP' : 'DOWN'}: you lost the stake of ${formatMoney(r.stake)}.`,
+            ? `${r.symbol} ${r.direction}: you won ${formatMoney(r.payout)} (stake ${formatMoney(r.stake)}).`
+            : `${r.symbol} ${r.direction}: you lost the stake of ${formatMoney(r.stake)}.`,
         );
         return;
       }
@@ -60,11 +53,6 @@ export default function MarketScreen() {
   });
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
-
-  async function setSentiment(value: SentimentValue) {
-    setStance(value);
-    if (selected) await endpoints.setSentiment(selected.symbol, value).catch(() => {});
-  }
 
   async function toggleWatch(symbol: string) {
     try {
@@ -79,44 +67,8 @@ export default function MarketScreen() {
     }
   }
 
-  async function predict(direction: 'UP' | 'DOWN') {
-    if (!selected) return;
-    const stake = Number(predStake);
-    if (!Number.isFinite(stake) || stake <= 0) {
-      Alert.alert('Invalid stake', 'Enter a positive amount.');
-      return;
-    }
-    setBusy(true);
-    try {
-      await endpoints.placePrediction(selected.symbol, direction, stake);
-      Alert.alert(
-        'Prediction placed',
-        `${selected.symbol} ${direction === 'UP' ? 'UP' : 'DOWN'}, stake ${formatMoney(stake)}. Resolves at the next tick (×${multiplier}).`,
-      );
-    } catch (e) {
-      Alert.alert('Error', e instanceof ApiError ? e.message : 'Prediction failed.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function trade(side: 'BUY' | 'SELL') {
-    if (!selected || qty <= 0) return;
-    setBusy(true);
-    try {
-      const res = await endpoints.trade(selected.symbol, side, qty);
-      setCredits(res.tradeCredits);
-      Alert.alert(side === 'BUY' ? 'Buy successful' : 'Sell successful', `Cash: ${formatMoney(res.cash)} · Credits: ${res.tradeCredits}`);
-      setSelected(null);
-      load();
-    } catch (e) {
-      Alert.alert('Error', e instanceof ApiError ? e.message : 'Trade failed.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
   if (!instruments) return <Loading />;
+  const list = instruments.filter((i) => !onlyWatched || watched.has(i.symbol));
 
   return (
     <Screen scroll={false}>
@@ -152,16 +104,15 @@ export default function MarketScreen() {
         <Hairline inset={20} />
 
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-          {instruments.filter((i) => !onlyWatched || watched.has(i.symbol)).map((i) => {
+          {list.map((i) => {
             const base = prev[i.symbol] ?? i.currentPrice;
             const chg = base ? (i.currentPrice - base) / base : 0;
-            const sel = selected?.symbol === i.symbol;
             const star = watched.has(i.symbol);
             return (
               <View key={i.id}>
-                <Pressable onPress={() => setSelected(i)} style={{ backgroundColor: sel ? c.surface : 'transparent' }}>
+                <Pressable onPress={() => router.push(`/stock/${i.symbol}`)}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 13, gap: 10 }}>
-                    <SymbolTile symbol={i.symbol} accent={sel} />
+                    <SymbolTile symbol={i.symbol} />
                     <View style={{ flex: 1 }}>
                       <Text style={{ color: c.text, fontSize: 14, fontWeight: '600' }}>{i.name}</Text>
                       <Text style={{ color: c.muted, fontSize: 11, marginTop: 2, letterSpacing: 0.5 }}>{i.sector ?? i.currency}</Text>
@@ -182,67 +133,8 @@ export default function MarketScreen() {
               </View>
             );
           })}
+          <View style={{ height: 20 }} />
         </ScrollView>
-
-        {/* trade module */}
-        {selected && (
-          <View style={{ backgroundColor: c.surfaceAlt, borderTopWidth: 1, borderTopColor: c.border, padding: 20, gap: 12 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ color: c.text, fontSize: 13, fontWeight: '700' }}>
-                {selected.symbol} <Text style={{ color: c.muted, fontWeight: '400' }}>· {formatMoney(selected.currentPrice)} RON</Text>
-              </Text>
-              <View style={{ width: 150 }}>
-                <Segmented
-                  options={[{ key: 'BULLISH', label: 'Bullish' }, { key: 'BEARISH', label: 'Bearish' }]}
-                  value={stance}
-                  onChange={(k) => setSentiment(k as SentimentValue)}
-                />
-              </View>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: c.border, borderRadius: 6, paddingLeft: 14, height: 48 }}>
-              <View style={{ flex: 1 }}>
-                <Label>Quantity · est. {formatMoney(qty * selected.currentPrice)}</Label>
-                <Mono style={{ fontSize: 18, fontWeight: '600' }}>{qty}</Mono>
-              </View>
-              <Pressable onPress={() => setQty((q) => Math.max(1, q - 1))} style={{ width: 38, height: 46, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: c.lime, fontSize: 22, fontWeight: '600' }}>−</Text>
-              </Pressable>
-              <Pressable onPress={() => setQty((q) => q + 1)} style={{ width: 38, height: 46, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: c.lime, fontSize: 22, fontWeight: '600' }}>+</Text>
-              </Pressable>
-            </View>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <View style={{ flex: 1 }}><Button title="BUY" onPress={() => trade('BUY')} loading={busy} /></View>
-              <View style={{ flex: 1 }}><Button title="SELL" variant="ghost" onPress={() => trade('SELL')} loading={busy} /></View>
-            </View>
-
-            {/* Quick prediction (themed semi-gambling) */}
-            <View style={{ borderTopWidth: 1, borderTopColor: c.hair, paddingTop: 12, gap: 8 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Label>Quick prediction · ×{multiplier}</Label>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: c.border, borderRadius: 6, paddingHorizontal: 10, height: 32 }}>
-                  <Label>Stake</Label>
-                  <TextInput
-                    value={predStake}
-                    onChangeText={setPredStake}
-                    keyboardType="numeric"
-                    style={{ color: c.text, fontSize: 14, minWidth: 50, padding: 0, fontVariant: ['tabular-nums'] }}
-                  />
-                </View>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <Pressable onPress={() => predict('UP')} disabled={busy} style={{ flex: 1, height: 44, borderRadius: 6, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6, borderWidth: 1, borderColor: c.lime }}>
-                  <Caret up color={c.lime} size={9} />
-                  <Text style={{ color: c.lime, fontWeight: '700', letterSpacing: 0.5 }}>UP</Text>
-                </Pressable>
-                <Pressable onPress={() => predict('DOWN')} disabled={busy} style={{ flex: 1, height: 44, borderRadius: 6, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6, borderWidth: 1, borderColor: c.red }}>
-                  <Caret up={false} color={c.red} size={9} />
-                  <Text style={{ color: c.red, fontWeight: '700', letterSpacing: 0.5 }}>DOWN</Text>
-                </Pressable>
-              </View>
-            </View>
-          </View>
-        )}
       </View>
     </Screen>
   );

@@ -187,6 +187,16 @@ model Instrument {
   transactions Transaction[]
 }
 
+/// Time series of an instrument's price (for the history chart).
+model PricePoint {
+  id     String   @id @default(cuid())
+  symbol String
+  price  Float
+  at     DateTime @default(now())
+
+  @@index([symbol, at])
+}
+
 /// Știre FALSĂ (simulată) care a mișcat un instrument.
 model News {
   id        String   @id @default(cuid())

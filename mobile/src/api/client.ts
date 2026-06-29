@@ -167,6 +167,16 @@ export interface Instrument {
   sector: string | null;
 }
 
+export interface InstrumentPoint {
+  price: number;
+  at: string;
+}
+
+export interface InstrumentDetail {
+  instrument: Instrument;
+  points: InstrumentPoint[];
+}
+
 export interface GroupSummary {
   id: string;
   name: string;
@@ -243,6 +253,7 @@ export const endpoints = {
 
   portfolio: () => api.get<PortfolioSnapshot>('/api/portfolio'),
   instruments: () => api.get<{ instruments: Instrument[] }>('/api/instruments'),
+  instrumentDetail: (symbol: string) => api.get<InstrumentDetail>(`/api/instruments/${symbol}`),
   trade: (symbol: string, side: 'BUY' | 'SELL', quantity: number) =>
     api.post<{ cash: number; tradeCredits: number; newBadges: Array<{ code: string; label: string }> }>(
       '/api/portfolio/trade',

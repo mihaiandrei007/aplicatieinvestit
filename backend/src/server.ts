@@ -3,15 +3,16 @@ import { createApp } from './app.js';
 import { config } from './config.js';
 import { attachWebSocket } from './realtime/wsServer.js';
 import { tickMarket } from './services/market.js';
-import { ensureInstruments } from './bootstrap.js';
+import { ensureInstruments, ensurePriceHistory } from './bootstrap.js';
 
 const app = createApp();
 const server = createServer(app);
 attachWebSocket(server);
 
 async function start() {
-  // Auto-seed the instruments if the database is empty (one-step deploy).
+  // Auto-seed instruments (adds any missing) + an initial price history for charts.
   await ensureInstruments().catch((err) => console.error('Bootstrap failed:', err));
+  await ensurePriceHistory().catch((err) => console.error('Price history seed failed:', err));
 
   server.listen(config.port, () => {
     console.log(`InvestPals API listening on port ${config.port} (WS: /ws)`);

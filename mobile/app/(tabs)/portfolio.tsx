@@ -173,17 +173,20 @@ export default function PortfolioScreen() {
             const pl = h.unrealizedPnL / (h.avgCost * h.quantity || 1);
             return (
               <View key={h.symbol}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 11, gap: 10 }}>
-                  <SymbolTile symbol={h.symbol} accent={h.unrealizedPnL >= 0} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: c.text, fontSize: 14, fontWeight: '600' }}>{h.symbol}</Text>
-                    <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{h.quantity} sh · {formatMoney(h.avgCost)}</Mono>
+                <Pressable onPress={() => router.push(`/stock/${h.symbol}`)}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 11, gap: 10 }}>
+                    <SymbolTile symbol={h.symbol} accent={h.unrealizedPnL >= 0} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: c.text, fontSize: 14, fontWeight: '600' }}>{h.symbol}</Text>
+                      <Mono style={{ color: c.muted, fontSize: 11, marginTop: 2 }}>{h.quantity} sh · tap to sell</Mono>
+                    </View>
+                    <Mono style={{ fontSize: 14, fontWeight: '600' }}>{formatMoney(h.marketValue)}</Mono>
+                    <Mono style={{ color: gainColor(h.unrealizedPnL), fontSize: 12, fontWeight: '600', minWidth: 52, textAlign: 'right' }}>
+                      {formatPct(pl)}
+                    </Mono>
+                    <Text style={{ color: c.faint, fontSize: 18, marginLeft: 2 }}>›</Text>
                   </View>
-                  <Mono style={{ fontSize: 14, fontWeight: '600' }}>{formatMoney(h.marketValue)}</Mono>
-                  <Mono style={{ color: gainColor(h.unrealizedPnL), fontSize: 12, fontWeight: '600', minWidth: 60, textAlign: 'right' }}>
-                    {formatPct(pl)}
-                  </Mono>
-                </View>
+                </Pressable>
                 <Hairline inset={20} />
               </View>
             );

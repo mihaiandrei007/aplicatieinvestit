@@ -38,7 +38,7 @@ const REGIONS = ['the US', 'the European Union', 'the United Kingdom', 'Asia'];
 const SECTORS = ['technology', 'semiconductors', 'energy', 'retail', 'healthcare', 'auto', 'fintech'];
 const PRODUCTS = ['the next generation of products', 'the cloud platform', 'the production lines', 'the core service', 'the base model'];
 const TRENDS = ['improving', 'softening', 'below expectations', 'above estimates', 'mixed'];
-const SOURCES = ['Markets Today', 'Capital Markets Wire', 'Financial Wire', 'Global Market', 'The Investor', 'Reuters Markets'];
+const SOURCES = ['Markets Today', 'Capital Markets Wire', 'Financial Wire', 'Global Market', 'The Investor', 'Reuters Markets', 'Bloomberg Markets', 'Street Signal', 'The Ticker', 'Premarket Brief'];
 
 function pick<T>(rng: () => number, arr: readonly T[]): T {
   return arr[Math.floor(rng() * arr.length)]!;
@@ -235,6 +235,78 @@ export const NEWS_TEMPLATES: readonly NewsTemplate[] = [
     headline: (n, c) => `Market digests central bank signals; ${c.sector} in focus`,
     body: (n, c) =>
       `The central bank's latest comments are being analyzed by the market. The ${c.sector} sector, which ${n} belongs to, is being watched, but reactions across individual stocks are uneven.`,
+  },
+  {
+    category: 'rumor',
+    polarity: -1,
+    magnitude: 0.06,
+    headline: (n) => `${n} is the subject of market chatter`,
+    body: (n, c) =>
+      `Unconfirmed talk about ${n} is circulating among desks, tied loosely to the ${c.sector} space. Nothing has been verified and the company has not commented.`,
+  },
+  {
+    category: 'guidance',
+    polarity: 1,
+    magnitude: 0.06,
+    headline: (n, c) => `${n} updates its outlook for ${c.quarter}`,
+    body: (n, c) =>
+      `${n} revised its outlook for ${c.quarter}, citing trends described as ${c.trend}. Analysts disagree on what it implies going forward.`,
+  },
+  {
+    category: 'rating',
+    polarity: 1,
+    magnitude: 0.05,
+    headline: (n, c) => `${c.firm} revisits its rating on ${n}`,
+    body: (n, c) =>
+      `${c.firm} took another look at ${n}, weighing a price target near ${c.target}. The note lists both upside and downside cases without committing.`,
+  },
+  {
+    category: 'insider',
+    polarity: -1,
+    magnitude: 0.05,
+    headline: (n) => `Insider activity reported at ${n}`,
+    body: (n, c) =>
+      `Regulatory filings show insider transactions at ${n} worth about ${c.moneyM}. Such moves can mean many things and are not a clear signal on their own.`,
+  },
+  {
+    category: 'legal',
+    polarity: -1,
+    magnitude: 0.06,
+    headline: (n) => `${n} addresses an ongoing legal matter`,
+    body: (n, c) =>
+      `${n} commented on a pending matter before authorities in ${c.region}. The outcome and timing remain uncertain, with arguments on both sides.`,
+  },
+  {
+    category: 'product',
+    polarity: 1,
+    magnitude: 0.05,
+    headline: (n, c) => `${n} previews ${c.product}`,
+    body: (n, c) =>
+      `${n} gave an early look at ${c.product}. Reception across the market has been mixed, and the commercial impact is not yet clear.`,
+  },
+  {
+    category: 'capital',
+    polarity: 1,
+    magnitude: 0.05,
+    headline: (n) => `${n} weighs its capital-return options`,
+    body: (n, c) =>
+      `${n} is said to be reviewing options for returning capital, on the order of ${c.money}. Investors are split on whether it is the best use of cash.`,
+  },
+  {
+    category: 'workforce',
+    polarity: -1,
+    magnitude: 0.05,
+    headline: (n) => `${n} adjusts its headcount plans`,
+    body: (n, c) =>
+      `${n} confirmed changes to its hiring plans across ${c.sector}. The move is being read both as discipline and as caution, depending on the desk.`,
+  },
+  {
+    category: 'volume',
+    polarity: 1,
+    magnitude: 0.06,
+    headline: (n) => `Unusual options volume around ${n}`,
+    body: (n, c) =>
+      `Traders flagged heavier-than-usual options activity around ${n}, near levels of ${c.target}. Positioning like this can point either way.`,
   },
 ];
 
