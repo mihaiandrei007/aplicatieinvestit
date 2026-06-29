@@ -8,6 +8,11 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        // Smooth cross-tab transition (a subtle lateral shift) instead of an instant swap.
+        animation: 'shift',
+        // Don't keep re-rendering off-screen tabs (less jank when switching).
+        freezeOnBlur: true,
+        tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: theme.colors.lime,
         tabBarInactiveTintColor: theme.colors.faint,
         tabBarStyle: { backgroundColor: theme.colors.bg, borderTopColor: theme.colors.hair, height: 76, paddingTop: 8 },
