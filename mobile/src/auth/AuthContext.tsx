@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import * as SecureStore from 'expo-secure-store';
 import { endpoints, setAuthToken, type PublicUser } from '../api/client';
 import { registerForPush } from '../push/registerPush';
+import { storage } from '../storage';
 
 const TOKEN_KEY = 'investpals_token';
 const ONBOARD_KEY = 'investpals_onboarded';
@@ -30,16 +30,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const seen = await SecureStore.getItemAsync(ONBOARD_KEY);
+        const seen = await storage.getItem(ONBOARD_KEY);
         setOnboarded(seen === '1');
-        const token = await SecureStore.getItemAsync(TOKEN_KEY);
+        const token = await storage.getItem(TOKEN_KEY);
         if (token) {
           setAuthToken(token);
           const { user } = await endpoints.me();
           setUser(user);
         }
       } catch {
-        await SecureStore.deleteItemAsync(TOKEN_KEY);
+        await storage.removeItem(TOKEN_KEY);
         setAuthToken(null);
       } finally {
         setLoading(false);
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   async function persist(token: string, user: PublicUser): Promise<void> {
-    await SecureStore.setItemAsync(TOKEN_KEY, token);
+    await storage.setItem(TOKEN_KEY, token);
     setAuthToken(token);
     setUser(user);
   }
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     onboarded,
     completeOnboarding: async () => {
-      await SecureStore.setItemAsync(ONBOARD_KEY, '1');
+      await storage.setItem(ONBOARD_KEY, '1');
       setOnboarded(true);
     },
     signIn: async (email, password) => {
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await persist(res.token, res.user);
     },
     signOut: async () => {
-      await SecureStore.deleteItemAsync(TOKEN_KEY);
+      await storage.removeItem(TOKEN_KEY);
       setAuthToken(null);
       setUser(null);
     },
