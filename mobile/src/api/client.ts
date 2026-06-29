@@ -253,7 +253,8 @@ export const endpoints = {
 
   portfolio: () => api.get<PortfolioSnapshot>('/api/portfolio'),
   instruments: () => api.get<{ instruments: Instrument[] }>('/api/instruments'),
-  instrumentDetail: (symbol: string) => api.get<InstrumentDetail>(`/api/instruments/${symbol}`),
+  instrumentDetail: (symbol: string, range: '1h' | '6h' | '24h' = '1h') =>
+    api.get<InstrumentDetail>(`/api/instruments/${symbol}?range=${range}`),
   trade: (symbol: string, side: 'BUY' | 'SELL', quantity: number) =>
     api.post<{ cash: number; tradeCredits: number; newBadges: Array<{ code: string; label: string }> }>(
       '/api/portfolio/trade',

@@ -21,10 +21,11 @@ export default function StockDetail() {
   const [predStake, setPredStake] = useState('100');
   const [multiplier, setMultiplier] = useState(1.9);
   const [busy, setBusy] = useState(false);
+  const [range, setRange] = useState<'1h' | '6h' | '24h'>('1h');
 
   const load = useCallback(async () => {
     const [d, pf, rules] = await Promise.all([
-      endpoints.instrumentDetail(symbol),
+      endpoints.instrumentDetail(symbol, range),
       endpoints.portfolio(),
       endpoints.predictionRules(),
     ]);
@@ -33,7 +34,7 @@ export default function StockDetail() {
     setPrice(d.instrument.currentPrice);
     setMultiplier(rules.multiplier);
     setHolding(pf.holdings.find((h) => h.symbol === symbol) ?? null);
-  }, [symbol]);
+  }, [symbol, range]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
@@ -111,6 +112,22 @@ export default function StockDetail() {
         {/* chart */}
         <View style={{ marginTop: 14 }}>
           <EquitySparkline values={series} width={W} height={170} color={gainColor(chg)} />
+        </View>
+
+        {/* period selector */}
+        <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 }}>
+          {(['1h', '6h', '24h'] as const).map((r) => {
+            const on = range === r;
+            return (
+              <Pressable
+                key={r}
+                onPress={() => setRange(r)}
+                style={{ paddingHorizontal: 14, paddingVertical: 6, borderRadius: 4, borderWidth: 1, borderColor: on ? c.lime : c.border, backgroundColor: on ? c.lime : 'transparent' }}
+              >
+                <Text style={{ color: on ? c.limeInk : c.muted2, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 }}>{r.toUpperCase()}</Text>
+              </Pressable>
+            );
+          })}
         </View>
         <Hairline inset={20} />
 

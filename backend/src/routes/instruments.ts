@@ -33,12 +33,22 @@ instrumentsRouter.get(
     const inst = await prisma.instrument.findUnique({ where: { symbol } });
     if (!inst) throw notFound('Instrument not found.');
 
-    const recent = await prisma.pricePoint.findMany({
-      where: { symbol },
-      orderBy: { at: 'desc' },
-      take: 80,
-    });
-    const points = recent.reverse().map((p) => ({ price: p.price, at: p.at }));
+    // Time window for the chart: 1h / 6h / 24h.
+    const RANGES: Record<string, number> = { '1h': 60, '6h': 360, '24h': 1440 };
+    const minutes = RANGES[String(req.query.range ?? '1h')] ?? 60;
+    const cutoff = new Date(Date.now() - minutes * 60_000);
+
+    let rows = await prisma.pricePoint.findMany({ where: { symbol, at: { gte: cutoff } }, orderBy: { at: 'asc' } });
+    if (rows.length === 0) {
+      const recent = await prisma.pricePoint.findMany({ where: { symbol }, orderBy: { at: 'desc' }, take: 80 });
+      rows = recent.reverse();
+    }
+    // Downsample to at most ~90 points (keep the last one).
+    const MAX = 90;
+    const stride = Math.max(1, Math.ceil(rows.length / MAX));
+    const points = rows
+      .filter((_, i) => i % stride === 0 || i === rows.length - 1)
+      .map((p) => ({ price: p.price, at: p.at }));
 
     res.json({
       instrument: {
