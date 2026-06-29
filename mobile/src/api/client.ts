@@ -51,6 +51,8 @@ export interface PublicUser {
   displayName: string;
   cash: number;
   startingCash: number;
+  role?: string | null;
+  experience?: string | null;
   isAdmin?: boolean;
 }
 
@@ -61,6 +63,8 @@ export interface AdminUser {
   createdAt: string;
   cash: number;
   currentStreak: number;
+  role?: string | null;
+  experience?: string | null;
   trades: number;
   predictions: number;
 }
@@ -224,8 +228,14 @@ export interface TournamentEntry {
 // ---- Typed endpoints ----
 
 export const endpoints = {
-  register: (email: string, password: string, displayName: string) =>
-    api.post<AuthResponse>('/api/auth/register', { email, password, displayName }),
+  register: (email: string, password: string, displayName: string, extras?: { role?: string; experience?: string }) =>
+    api.post<AuthResponse>('/api/auth/register', {
+      email,
+      password,
+      displayName,
+      ...(extras?.role ? { role: extras.role } : {}),
+      ...(extras?.experience ? { experience: extras.experience } : {}),
+    }),
   login: (email: string, password: string) => api.post<AuthResponse>('/api/auth/login', { email, password }),
   me: () => api.get<{ user: PublicUser }>('/api/auth/me'),
 

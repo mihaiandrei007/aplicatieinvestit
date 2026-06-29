@@ -5,6 +5,10 @@ import { Screen, Label, Hairline, Mono, Loading, ErrorText } from '../src/compon
 import { endpoints, ApiError, type AdminUser } from '../src/api/client';
 import { theme, formatMoney } from '../src/theme';
 
+const ROLE: Record<string, string> = { STUDENT_M: 'Student (M)', STUDENT_F: 'Student (F)', OTHER: 'Other' };
+const EXP: Record<string, string> = { NEW: 'New', SOME: 'Some', PRO: 'Pro' };
+const lbl = (map: Record<string, string>, v?: string | null) => (v && map[v]) || '—';
+
 export default function AdminScreen() {
   const c = theme.colors;
   const [users, setUsers] = useState<AdminUser[] | null>(null);
@@ -49,7 +53,7 @@ export default function AdminScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: c.text, fontSize: 14, fontWeight: '600' }} numberOfLines={1}>{u.displayName}</Text>
                   <Text style={{ color: c.muted, fontSize: 11, marginTop: 2 }} numberOfLines={1}>{u.email}</Text>
-                  <Text style={{ color: c.faint, fontSize: 10, marginTop: 2 }}>joined {joined} · {u.predictions} bets · streak {u.currentStreak}</Text>
+                  <Text style={{ color: c.faint, fontSize: 10, marginTop: 2 }}>{lbl(ROLE, u.role)} · {lbl(EXP, u.experience)} · joined {joined} · {u.predictions} bets · streak {u.currentStreak}</Text>
                 </View>
                 <Mono style={{ width: 54, textAlign: 'right', fontSize: 14, fontWeight: '600' }}>{u.trades}</Mono>
                 <Mono style={{ width: 64, textAlign: 'right', fontSize: 13 }}>{formatMoney(u.cash)}</Mono>

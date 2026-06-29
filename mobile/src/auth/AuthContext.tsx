@@ -13,7 +13,7 @@ interface AuthState {
   onboarded: boolean;
   completeOnboarding: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, displayName: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName: string, extras?: { role?: string; experience?: string }) => Promise<void>;
   signInWithOAuth: (provider: 'google' | 'apple', idToken: string) => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -70,8 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await endpoints.login(email, password);
       await persist(res.token, res.user);
     },
-    signUp: async (email, password, displayName) => {
-      const res = await endpoints.register(email, password, displayName);
+    signUp: async (email, password, displayName, extras) => {
+      const res = await endpoints.register(email, password, displayName, extras);
       await persist(res.token, res.user);
     },
     signInWithOAuth: async (provider, idToken) => {

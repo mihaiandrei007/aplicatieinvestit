@@ -15,10 +15,16 @@ async function fetchSignups() {
       createdAt: true,
       cash: true,
       currentStreak: true,
+      role: true,
+      experience: true,
       _count: { select: { transactions: true, predictions: true } },
     },
   });
 }
+
+const ROLE_LABEL: Record<string, string> = { STUDENT_M: 'Student (M)', STUDENT_F: 'Student (F)', OTHER: 'Other' };
+const EXP_LABEL: Record<string, string> = { NEW: 'New', SOME: 'Some', PRO: 'Pro' };
+const label = (map: Record<string, string>, v: string | null) => (v && map[v]) || '—';
 
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, (ch) => {
@@ -55,6 +61,7 @@ adminRouter.get('/', async (req, res) => {
         <td class="muted">${i + 1}</td>
         <td><b>${esc(u.displayName)}</b></td>
         <td class="muted">${esc(u.email)}</td>
+        <td>${label(ROLE_LABEL, u.role)} · ${label(EXP_LABEL, u.experience)}</td>
         <td class="mono">${joined}</td>
         <td class="mono r">${u._count.transactions}</td>
         <td class="mono r">${u._count.predictions}</td>
@@ -82,8 +89,8 @@ adminRouter.get('/', async (req, res) => {
     <h1><span class="lime">Tickr</span> · users</h1>
     <div class="sub">${users.length} account${users.length === 1 ? '' : 's'} · newest first · times in UTC</div>
     <div class="wrap"><table>
-      <tr><th>#</th><th>Name</th><th>Email</th><th>Joined</th><th>Trades</th><th>Bets</th><th>Cash</th><th>Streak</th></tr>
-      ${rows || '<tr><td colspan="8" class="muted">No accounts yet.</td></tr>'}
+      <tr><th>#</th><th>Name</th><th>Email</th><th>Profile</th><th>Joined</th><th>Trades</th><th>Bets</th><th>Cash</th><th>Streak</th></tr>
+      ${rows || '<tr><td colspan="9" class="muted">No accounts yet.</td></tr>'}
     </table></div>
   </body></html>`);
 });
@@ -108,6 +115,8 @@ adminApiRouter.get(
         createdAt: u.createdAt,
         cash: u.cash,
         currentStreak: u.currentStreak,
+        role: u.role,
+        experience: u.experience,
         trades: u._count.transactions,
         predictions: u._count.predictions,
       })),

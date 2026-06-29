@@ -14,6 +14,8 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, 'Password must be at least 8 characters long.'),
   displayName: z.string().min(2).max(40),
+  role: z.enum(['STUDENT_M', 'STUDENT_F', 'OTHER']).optional(),
+  experience: z.enum(['NEW', 'SOME', 'PRO']).optional(),
 });
 
 const loginSchema = z.object({
@@ -32,6 +34,8 @@ function publicUser(u: {
   currentStreak: number;
   longestStreak: number;
   streakFreezes: number;
+  role?: string | null;
+  experience?: string | null;
 }) {
   return {
     id: u.id,
@@ -43,6 +47,8 @@ function publicUser(u: {
     currentStreak: u.currentStreak,
     longestStreak: u.longestStreak,
     streakFreezes: u.streakFreezes,
+    role: u.role ?? null,
+    experience: u.experience ?? null,
     isAdmin: isOwnerEmail(u.email),
   };
 }
@@ -52,7 +58,7 @@ authRouter.post(
   asyncHandler(async (req, res) => {
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) throw badRequest(parsed.error.issues[0]?.message ?? 'Invalid data.');
-    const { email, password, displayName } = parsed.data;
+    const { email, password, displayName, role, experience } = parsed.data;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) throw conflict('An account with this email already exists.');
@@ -62,6 +68,8 @@ authRouter.post(
         email,
         passwordHash: await hashPassword(password),
         displayName,
+        role: role ?? null,
+        experience: experience ?? null,
         cash: config.startingCash,
         startingCash: config.startingCash,
         tradeCredits: config.tradeCreditsStart,

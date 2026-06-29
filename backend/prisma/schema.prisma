@@ -31,6 +31,9 @@ model User {
   oauthProvider String?
   oauthSub      String?
   displayName  String
+  /// Self-reported at signup: role (STUDENT_M/STUDENT_F/OTHER) and investing experience (NEW/SOME/PRO).
+  role         String?
+  experience   String?
   /// Numerar virtual disponibil (necheltuit pe instrumente).
   cash         Float    @default(10000)
   /// Capitalul de start, păstrat pentru calculul ROI.
